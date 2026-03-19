@@ -2,29 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Siren, Heart, Shield, AlertTriangle } from 'lucide-react';
 
-const emergencyNumbers = [
-  {
-    label: 'SAMU (Urgences médicales)',
-    number: '15',
-    icon: Heart,
-    color: 'bg-red-500',
-    description: 'Pour toute urgence médicale'
-  },
-  {
-    label: 'Police / Gendarmerie',
-    number: '17',
-    icon: Shield,
-    color: 'bg-blue-600',
-    description: 'En cas de danger immédiat'
-  },
-  {
-    label: 'Pompiers',
-    number: '18',
-    icon: Siren,
-    color: 'bg-orange-500',
-    description: 'Incendie, accident, secours'
-  },
-];
+
 
 export default function Emergency() {
   return (
