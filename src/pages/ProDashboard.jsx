@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
@@ -8,9 +8,17 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export default function ProDashboard() {
   const queryClient = useQueryClient();
+  const { requestPermission, notify } = useNotifications();
+  const prevCountRef = useRef(null);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestPermission();
+  }, []);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
