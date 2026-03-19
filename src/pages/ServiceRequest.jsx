@@ -2,25 +2,68 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Search, CheckCircle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import QuestionStep from '@/components/request/QuestionStep';
 import PriceQuote from '@/components/request/PriceQuote';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Find the closest available professional using Haversine distance
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function findClosestPro(professionals, customerLat, customerLon, excludeIds = []) {
+  const available = professionals.filter(p =>
+    p.available !== false &&
+    p.latitude && p.longitude &&
+    p.user_type === 'professionnel' &&
+    !excludeIds.includes(p.id)
+  );
+  if (!available.length) return null;
+  return available.sort((a, b) =>
+    getDistance(customerLat, customerLon, a.latitude, a.longitude) -
+    getDistance(customerLat, customerLon, b.latitude, b.longitude)
+  )[0];
+}
+
+const STEPS = {
+  ADDRESS: 'address',
+  QUESTIONS: 'questions',
+  SEARCHING: 'searching',
+  QUOTE: 'quote',
+  CONFIRMED: 'confirmed',
+};
 
 export default function ServiceRequest() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const categoryId = urlParams.get('categoryId');
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(STEPS.ADDRESS);
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [showQuote, setShowQuote] = useState(false);
+  const [address, setAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [requestId, setRequestId] = useState(null);
+  const [assignedPro, setAssignedPro] = useState(null);
 
-  const { data: category, isLoading } = useQuery({
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: category, isLoading: loadingCategory } = useQuery({
     queryKey: ['category', categoryId],
     queryFn: async () => {
       const categories = await base44.entities.ServiceCategory.filter({ id: categoryId });
@@ -29,168 +72,292 @@ export default function ServiceRequest() {
     enabled: !!categoryId,
   });
 
-  const questions = category?.questions || [];
-  const totalSteps = questions.length;
-
-  const basePrice = category?.base_price || 50;
-  const commission = basePrice * 0.10;
-  const totalPrice = basePrice + commission;
-
-  const createRequestMutation = useMutation({
-    mutationFn: async (data) => {
-      const request = await base44.entities.ServiceRequest.create(data);
-      await base44.entities.Invoice.create({
-        request_id: request.id,
-        invoice_number: `INV-${Date.now()}`,
-        category_name: data.category_name,
-        professional_name: 'À assigner',
-        base_price: data.base_price,
-        commission: data.commission,
-        total_price: data.total_price,
-        payment_method: data.payment_method,
-        payment_status: data.payment_method === 'cash' ? 'unpaid' : 'paid',
-        customer_name: data.customer_name,
-        customer_email: data.customer_email,
-      });
-      return request;
-    },
-    onSuccess: () => {
-      toast.success('Demande envoyée avec succès !');
-      navigate('/Invoices');
-    },
+  // Pre-load all professionals
+  const { data: allProfessionals = [] } = useQuery({
+    queryKey: ['allProfessionals'],
+    queryFn: () => base44.entities.User.filter({ user_type: 'professionnel' }),
   });
 
-  const handleAnswer = (value) => {
-    setAnswers({ ...answers, [step]: value });
-  };
+  const questions = category?.questions || [];
+  const totalQuestions = questions.length;
 
-  const handleNext = () => {
-    if (step < totalSteps - 1) {
-      setStep(step + 1);
-    } else {
-      setShowQuote(true);
+  // Poll the request status when searching
+  const { data: currentRequest } = useQuery({
+    queryKey: ['request', requestId],
+    queryFn: () => base44.entities.ServiceRequest.filter({ id: requestId }).then(r => r[0]),
+    enabled: !!requestId && (step === STEPS.SEARCHING || step === STEPS.QUOTE),
+    refetchInterval: 3000,
+  });
+
+  // React to request status changes
+  useEffect(() => {
+    if (!currentRequest) return;
+    if (currentRequest.status === 'accepted' && step !== STEPS.CONFIRMED) {
+      setStep(STEPS.CONFIRMED);
+      toast.success('Un professionnel a accepté votre demande !');
     }
-  };
-
-  const handleBack = () => {
-    if (showQuote) {
-      setShowQuote(false);
-    } else if (step > 0) {
-      setStep(step - 1);
-    } else {
-      navigate('/Home');
+    if (currentRequest.status === 'searching' && step === STEPS.QUOTE) {
+      // Pro refused, find next one
+      toast.info('Le professionnel a refusé. Recherche en cours...');
+      findAndContactNextPro(currentRequest);
     }
+  }, [currentRequest?.status]);
+
+  const createRequestMutation = useMutation({
+    mutationFn: (data) => base44.entities.ServiceRequest.create(data),
+  });
+
+  const updateRequestMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.ServiceRequest.update(id, data),
+  });
+
+  const findAndContactNextPro = async (existingRequest) => {
+    setStep(STEPS.SEARCHING);
+    const req = existingRequest || currentRequest;
+    const catPros = allProfessionals.filter(p => p.category_name === category?.name);
+    const tried = req?.tried_professionals || [];
+    const customerLat = req?.customer_latitude || user?.latitude || 48.8566;
+    const customerLon = req?.customer_longitude || user?.longitude || 2.3522;
+
+    const nextPro = findClosestPro(catPros, customerLat, customerLon, tried);
+    if (!nextPro) {
+      toast.error('Aucun professionnel disponible pour ce service.');
+      setStep(STEPS.QUOTE);
+      return;
+    }
+    setAssignedPro(nextPro);
+
+    const newTried = [...tried, nextPro.id];
+    const basePrice = nextPro.base_price || category?.base_price || 80;
+    const commission = basePrice * 0.10;
+    const totalPrice = basePrice + commission;
+
+    if (req?.id) {
+      await updateRequestMutation.mutateAsync({
+        id: req.id,
+        data: {
+          status: 'pending_pro',
+          professional_id: nextPro.id,
+          professional_name: nextPro.full_name,
+          professional_email: nextPro.email,
+          tried_professionals: newTried,
+          base_price: basePrice,
+          commission: commission,
+          total_price: totalPrice,
+        },
+      });
+    }
+    setStep(STEPS.QUOTE);
   };
 
-  const handleAccept = async () => {
-    const user = await base44.auth.me();
+  const handleAddressNext = () => {
+    if (!address.trim()) return;
+    if (totalQuestions > 0) setStep(STEPS.QUESTIONS);
+    else startSearch();
+  };
+
+  const startSearch = async () => {
+    setStep(STEPS.SEARCHING);
+    const customerLat = user?.latitude || 48.8566;
+    const customerLon = user?.longitude || 2.3522;
+
+    const catPros = allProfessionals.filter(p => p.category_name === category?.name);
+    const nextPro = findClosestPro(catPros, customerLat, customerLon);
+
+    const basePrice = nextPro?.base_price || category?.base_price || 80;
+    const commission = basePrice * 0.10;
+    const totalPrice = basePrice + commission;
+
     const answersArray = questions.map((q, i) => ({
       question: q.question,
       answer: answers[i] || '',
     }));
 
-    createRequestMutation.mutate({
+    const newRequest = await createRequestMutation.mutateAsync({
       category_id: categoryId,
-      category_name: category.name,
+      category_name: category?.name,
       answers: answersArray,
+      customer_name: user?.full_name || '',
+      customer_email: user?.email || '',
+      customer_address: address,
+      customer_latitude: customerLat,
+      customer_longitude: customerLon,
+      status: nextPro ? 'pending_pro' : 'searching',
+      professional_id: nextPro?.id || null,
+      professional_name: nextPro?.full_name || null,
+      professional_email: nextPro?.email || null,
+      tried_professionals: nextPro ? [nextPro.id] : [],
       base_price: basePrice,
       commission: commission,
       total_price: totalPrice,
-      status: 'accepted',
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid',
-      customer_name: user?.full_name || '',
-      customer_email: user?.email || '',
+      payment_method: paymentMethod || 'bank_transfer',
+      payment_status: 'unpaid',
     });
+
+    setRequestId(newRequest.id);
+    setAssignedPro(nextPro);
+    setStep(nextPro ? STEPS.QUOTE : STEPS.QUOTE);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
+  const handleQuestionNext = () => {
+    if (questionIndex < totalQuestions - 1) {
+      setQuestionIndex(questionIndex + 1);
+    } else {
+      startSearch();
+    }
+  };
+
+  const handleAcceptQuote = async () => {
+    if (!paymentMethod) { toast.error('Choisissez un moyen de paiement'); return; }
+    await updateRequestMutation.mutateAsync({
+      id: requestId || currentRequest?.id,
+      data: { payment_method: paymentMethod },
+    });
+    toast.success('Paiement enregistré. En attente du professionnel...');
+  };
+
+  const handleDecline = () => navigate('/Home');
+  const handleBack = () => {
+    if (step === STEPS.QUESTIONS && questionIndex > 0) setQuestionIndex(questionIndex - 1);
+    else if (step === STEPS.QUESTIONS) setStep(STEPS.ADDRESS);
+    else if (step === STEPS.ADDRESS) navigate('/Home');
+    else navigate('/Home');
+  };
+
+  if (loadingCategory) {
+    return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
   }
 
   if (!category) {
-    return (
-      <div className="px-4 pt-6 text-center">
-        <p className="text-muted-foreground">Service non trouvé</p>
-        <Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">
-          Retour
-        </Button>
-      </div>
-    );
+    return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Service non trouvé</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
   }
+
+  const reqData = currentRequest;
+  const basePrice = reqData?.base_price || assignedPro?.base_price || category?.base_price || 80;
+  const commission = basePrice * 0.10;
+  const totalPrice = basePrice + commission;
 
   return (
     <div className="px-4 pt-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={handleBack} className="p-2 -ml-2 rounded-xl hover:bg-muted transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        {step !== STEPS.SEARCHING && step !== STEPS.CONFIRMED && (
+          <button onClick={handleBack} className="p-2 -ml-2 rounded-xl hover:bg-muted transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
         <div>
           <h1 className="text-xl font-bold">{category.name}</h1>
           <p className="text-sm text-muted-foreground">
-            {showQuote ? 'Devis' : `Question ${step + 1} / ${totalSteps}`}
+            {step === STEPS.ADDRESS && 'Votre adresse'}
+            {step === STEPS.QUESTIONS && `Question ${questionIndex + 1} / ${totalQuestions}`}
+            {step === STEPS.SEARCHING && 'Recherche en cours...'}
+            {step === STEPS.QUOTE && 'Votre devis'}
+            {step === STEPS.CONFIRMED && 'Confirmé !'}
           </p>
         </div>
       </div>
 
-      {/* Progress */}
-      {!showQuote && totalSteps > 0 && (
-        <Progress value={((step + 1) / totalSteps) * 100} className="mb-6 h-1.5" />
+      {step === STEPS.QUESTIONS && (
+        <Progress value={((questionIndex + 1) / totalQuestions) * 100} className="mb-6 h-1.5" />
       )}
 
-      {/* Content */}
       <AnimatePresence mode="wait">
-        {showQuote ? (
-          <PriceQuote
-            key="quote"
-            basePrice={basePrice}
-            commission={commission}
-            totalPrice={totalPrice}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
-            onAccept={handleAccept}
-            onDecline={() => navigate('/Home')}
-            isSubmitting={createRequestMutation.isPending}
-          />
-        ) : totalSteps > 0 ? (
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-6"
-          >
+        {/* ADDRESS STEP */}
+        {step === STEPS.ADDRESS && (
+          <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Votre adresse d'intervention</Label>
+              <Input
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder="Ex: 12 Rue de la Paix, 75001 Paris"
+                className="h-12 rounded-xl"
+              />
+            </div>
+            <Button onClick={handleAddressNext} disabled={!address.trim()} className="w-full h-14 rounded-xl text-base">
+              Continuer <ChevronRight className="w-5 h-5 ml-2" />
+            </Button>
+          </motion.div>
+        )}
+
+        {/* QUESTIONS STEP */}
+        {step === STEPS.QUESTIONS && (
+          <motion.div key={`q-${questionIndex}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
             <QuestionStep
-              question={questions[step]}
-              answer={answers[step]}
-              onChange={handleAnswer}
+              question={questions[questionIndex]}
+              answer={answers[questionIndex]}
+              onChange={val => setAnswers({ ...answers, [questionIndex]: val })}
             />
-            <Button
-              onClick={handleNext}
-              disabled={!answers[step]}
-              className="w-full h-14 rounded-xl text-base"
-            >
-              {step < totalSteps - 1 ? 'Suivant' : 'Voir le prix'}
+            <Button onClick={handleQuestionNext} disabled={!answers[questionIndex]} className="w-full h-14 rounded-xl text-base">
+              {questionIndex < totalQuestions - 1 ? 'Suivant' : 'Voir le prix'}
               <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
           </motion.div>
-        ) : (
-          <PriceQuote
-            key="quote-no-questions"
-            basePrice={basePrice}
-            commission={commission}
-            totalPrice={totalPrice}
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
-            onAccept={handleAccept}
-            onDecline={() => navigate('/Home')}
-            isSubmitting={createRequestMutation.isPending}
-          />
+        )}
+
+        {/* SEARCHING */}
+        {step === STEPS.SEARCHING && (
+          <motion.div key="searching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 space-y-4">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+              <Search className="w-10 h-10 text-primary animate-pulse" />
+            </div>
+            <h2 className="font-semibold text-lg">Recherche du professionnel le plus proche...</h2>
+            <p className="text-sm text-muted-foreground">Nous contactons les professionnels disponibles près de vous</p>
+            <div className="flex justify-center gap-1 mt-4">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* QUOTE */}
+        {step === STEPS.QUOTE && (
+          <motion.div key="quote" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            {assignedPro && (
+              <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm mb-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary">
+                  {assignedPro.full_name?.[0] || 'P'}
+                </div>
+                <div>
+                  <p className="font-semibold">{assignedPro.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{assignedPro.category_name} • En attente de réponse...</p>
+                </div>
+                <Clock className="w-5 h-5 text-muted-foreground ml-auto animate-pulse" />
+              </div>
+            )}
+            <PriceQuote
+              basePrice={basePrice}
+              commission={commission}
+              totalPrice={totalPrice}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              onAccept={handleAcceptQuote}
+              onDecline={handleDecline}
+              isSubmitting={updateRequestMutation.isPending}
+            />
+          </motion.div>
+        )}
+
+        {/* CONFIRMED */}
+        {step === STEPS.CONFIRMED && (
+          <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 space-y-4">
+            <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+              <CheckCircle className="w-12 h-12 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold">Mission confirmée !</h2>
+            {assignedPro && <p className="text-muted-foreground">{assignedPro.full_name || 'Le professionnel'} est en route vers vous.</p>}
+            <p className="text-sm text-muted-foreground">Vous recevrez une confirmation par email.</p>
+            <div className="pt-4 space-y-3">
+              <Button onClick={() => navigate('/Invoices')} className="w-full h-12 rounded-xl">
+                Voir ma facture
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/Home')} className="w-full h-12 rounded-xl">
+                Retour à l'accueil
+              </Button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
