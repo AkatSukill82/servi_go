@@ -92,15 +92,22 @@ export default function ServiceRequest() {
     refetchInterval: 3000,
   });
 
+  // Request notification permission when entering search/quote phase
+  useEffect(() => {
+    if (step === STEPS.SEARCHING || step === STEPS.QUOTE) {
+      requestPermission();
+    }
+  }, [step]);
+
   // React to request status changes
   useEffect(() => {
     if (!currentRequest) return;
     if (currentRequest.status === 'accepted' && step !== STEPS.CONFIRMED) {
       setStep(STEPS.CONFIRMED);
+      notify('✅ Mission confirmée !', `${currentRequest.professional_name || 'Un professionnel'} est en route vers vous.`);
       toast.success('Un professionnel a accepté votre demande !');
     }
     if (currentRequest.status === 'searching' && step === STEPS.QUOTE) {
-      // Pro refused, find next one
       toast.info('Le professionnel a refusé. Recherche en cours...');
       findAndContactNextPro(currentRequest);
     }
