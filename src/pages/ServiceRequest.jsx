@@ -88,7 +88,7 @@ export default function ServiceRequest() {
   const { data: currentRequest } = useQuery({
     queryKey: ['request', requestId],
     queryFn: () => base44.entities.ServiceRequest.filter({ id: requestId }).then(r => r[0]),
-    enabled: !!requestId && (step === STEPS.SEARCHING || step === STEPS.QUOTE),
+    enabled: !!requestId && (step === STEPS.SEARCHING || step === STEPS.QUOTE || step === STEPS.CONFIRMED),
     refetchInterval: 3000,
   });
 
