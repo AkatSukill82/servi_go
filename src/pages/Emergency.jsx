@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Siren, Heart, Shield, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 const emergencyNumbers = [
   {
@@ -25,32 +24,29 @@ const emergencyNumbers = [
     color: 'bg-orange-500',
     description: 'Incendie, accident, secours'
   },
-  {
-    label: 'Numéro d\'urgence européen',
-    number: '112',
-    icon: Phone,
-    color: 'bg-green-600',
-    description: 'Urgence générale'
-  },
 ];
 
 export default function Emergency() {
   return (
     <div className="px-4 pt-6">
       {/* Header */}
-      <div className="text-center mb-8">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4"
-        >
-          <AlertTriangle className="w-10 h-10 text-destructive" />
-        </motion.div>
-        <h1 className="text-2xl font-bold">Urgence</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Appuyez pour appeler les services d'urgence
-        </p>
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold mb-1">Urgence</h1>
+        <p className="text-muted-foreground text-sm">Appuyez pour appeler</p>
       </div>
+
+      {/* BIG 112 BUTTON */}
+      <motion.a
+        href="tel:112"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileTap={{ scale: 0.95 }}
+        className="flex flex-col items-center justify-center w-full bg-destructive rounded-3xl py-8 shadow-xl shadow-destructive/30 mb-6 active:scale-95 transition-transform"
+      >
+        <Phone className="w-12 h-12 text-white mb-2" />
+        <span className="text-5xl font-black text-white">112</span>
+        <span className="text-white/80 text-sm mt-1">Numéro d'urgence européen</span>
+      </motion.a>
 
       {/* Emergency Buttons */}
       <div className="space-y-3">
