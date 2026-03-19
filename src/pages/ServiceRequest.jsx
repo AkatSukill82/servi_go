@@ -357,12 +357,29 @@ export default function ServiceRequest() {
         {/* CONFIRMED */}
         {step === STEPS.CONFIRMED && (
           <motion.div key="confirmed" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-12 space-y-4">
-            <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-              <CheckCircle className="w-12 h-12 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold">Mission confirmée !</h2>
-            {assignedPro && <p className="text-muted-foreground">{assignedPro.full_name || 'Le professionnel'} est en route vers vous.</p>}
-            <p className="text-sm text-muted-foreground">Vous recevrez une confirmation par email.</p>
+            {currentRequest?.status === 'accepted' ? (
+              <>
+                <div className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                  <CheckCircle className="w-12 h-12 text-green-600" />
+                </div>
+                <h2 className="text-2xl font-bold">Mission confirmée !</h2>
+                {assignedPro && <p className="text-muted-foreground">{assignedPro.full_name || 'Le professionnel'} est en route vers vous.</p>}
+                <p className="text-sm text-muted-foreground">Vous recevrez une confirmation par email.</p>
+              </>
+            ) : (
+              <>
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                  <Clock className="w-12 h-12 text-primary animate-pulse" />
+                </div>
+                <h2 className="text-2xl font-bold">Devis accepté !</h2>
+                <p className="text-muted-foreground">En attente de confirmation du professionnel...</p>
+                <div className="flex justify-center gap-1 mt-2">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                  ))}
+                </div>
+              </>
+            )}
             <div className="pt-4 space-y-3">
               <Button onClick={() => navigate(`/TrackingMap?requestId=${requestId || currentRequest?.id}`)} className="w-full h-12 rounded-xl bg-primary">
                 <Navigation className="w-4 h-4 mr-2" /> Suivre sur la carte
