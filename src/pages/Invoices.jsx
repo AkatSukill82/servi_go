@@ -7,12 +7,16 @@ import InvoiceCard from '@/components/invoices/InvoiceCard';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Invoices() {
+  const queryClient = useQueryClient();
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ['invoices'],
     queryFn: () => base44.entities.Invoice.list('-created_date'),
   });
 
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['invoices'] });
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="px-4 pt-6">
       <h1 className="text-2xl font-bold mb-1">Mes factures</h1>
       <p className="text-sm text-muted-foreground mb-6">
