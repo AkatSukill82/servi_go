@@ -41,8 +41,8 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      <div className="pb-28">
+    <div className="h-screen flex flex-col bg-background overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      <div className="flex-1 overflow-y-auto pb-28">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}
