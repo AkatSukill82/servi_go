@@ -219,11 +219,15 @@ export default function ServiceRequest() {
 
   const handleAcceptQuote = async () => {
     if (!paymentMethod) { toast.error('Choisissez un moyen de paiement'); return; }
+    const id = requestId || currentRequest?.id;
+    if (!id) { toast.error('Erreur: demande introuvable'); return; }
     await updateRequestMutation.mutateAsync({
-      id: requestId || currentRequest?.id,
-      data: { payment_method: paymentMethod },
+      id,
+      data: { payment_method: paymentMethod, status: 'accepted' },
     });
-    toast.success('Paiement enregistré. En attente du professionnel...');
+    setStep(STEPS.CONFIRMED);
+    notify('✅ Mission confirmée !', `${assignedPro?.full_name || 'Un professionnel'} est en route vers vous.`);
+    toast.success('Demande confirmée !');
   };
 
   const handleDecline = () => navigate('/Home');
