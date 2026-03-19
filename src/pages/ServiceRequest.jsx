@@ -243,9 +243,7 @@ export default function ServiceRequest() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         {step !== STEPS.SEARCHING && step !== STEPS.CONFIRMED && (
-          <button onClick={handleBack} className="p-2 -ml-2 rounded-xl hover:bg-muted transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+          <BackButton fallback="/Home" />
         )}
         <div>
           <h1 className="text-xl font-bold">{category.name}</h1>

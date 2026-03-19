@@ -71,7 +71,10 @@ export default function ProProfile() {
   return (
     <div className="px-4 pt-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Mon profil pro</h1>
+        <div className="flex items-center gap-2">
+          <BackButton fallback="/ProDashboard" />
+          <h1 className="text-2xl font-bold">Mon profil pro</h1>
+        </div>
         <Button variant="outline" size="sm" onClick={() => navigate('/ProDashboard')} className="rounded-xl">
           <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
         </Button>
