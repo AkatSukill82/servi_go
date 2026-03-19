@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Search, CheckCircle, Clock, Navigation } from 'lucide-react';
+import { ChevronRight, Search, CheckCircle, Clock, Navigation, MessageCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import BackButton from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/button';
@@ -360,6 +360,9 @@ export default function ServiceRequest() {
             <div className="pt-4 space-y-3">
               <Button onClick={() => navigate(`/TrackingMap?requestId=${requestId || currentRequest?.id}`)} className="w-full h-12 rounded-xl bg-primary">
                 <Navigation className="w-4 h-4 mr-2" /> Suivre sur la carte
+              </Button>
+              <Button onClick={() => navigate(`/Chat?requestId=${requestId || currentRequest?.id}`)} variant="outline" className="w-full h-12 rounded-xl border-primary text-primary">
+                <MessageCircle className="w-4 h-4 mr-2" /> Contacter le professionnel
               </Button>
               <Button variant="outline" onClick={() => navigate('/Invoices')} className="w-full h-12 rounded-xl">
                 Voir ma facture
