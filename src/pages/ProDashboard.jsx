@@ -211,16 +211,26 @@ export default function ProDashboard() {
           <h2 className="font-semibold mb-3">Missions récentes</h2>
           <div className="space-y-2">
             {acceptedJobs.slice(0, 5).map(job => (
-              <div key={job.id} className="bg-card rounded-xl p-3 border border-border/50 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{job.customer_name}</p>
+              <div key={job.id} className="bg-card rounded-xl p-3 border border-border/50 flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{job.customer_name}</p>
                   <p className="text-xs text-muted-foreground">{job.category_name}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-sm">{job.base_price?.toFixed(2)} €</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {job.status === 'completed' ? 'Terminé' : 'Accepté'}
-                  </Badge>
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="text-right">
+                    <p className="font-semibold text-sm">{job.base_price?.toFixed(2)} €</p>
+                    <Badge variant="secondary" className="text-xs">
+                      {job.status === 'completed' ? 'Terminé' : 'Accepté'}
+                    </Badge>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full w-9 h-9 text-primary"
+                    onClick={() => navigate(`/Chat?requestId=${job.id}`)}
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </Button>
                 </div>
               </div>
             ))}
