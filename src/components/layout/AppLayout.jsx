@@ -17,6 +17,8 @@ export default function AppLayout() {
         setUserType(user.user_type);
       }
       setLoading(false);
+    }).catch(() => {
+      navigate('/Landing', { replace: true });
     });
   }, []);
 
