@@ -85,5 +85,13 @@
 
   body {
     @apply bg-background text-foreground font-inter;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  button, a, [role="tab"] {
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
