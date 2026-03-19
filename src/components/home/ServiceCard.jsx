@@ -44,11 +44,6 @@ export default function ServiceCard({ category, index }) {
           </div>
           <h3 className="font-semibold text-sm text-foreground">{category.name}</h3>
           <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{category.description}</p>
-          {category.base_price && (
-            <p className="text-xs font-semibold text-primary mt-2">
-              À partir de {category.base_price}€
-            </p>
-          )}
         </div>
       </Link>
     </motion.div>

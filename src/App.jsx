@@ -13,6 +13,9 @@ import MapPage from '@/pages/Map';
 import Emergency from '@/pages/Emergency';
 import Invoices from '@/pages/Invoices';
 import Profile from '@/pages/Profile';
+import SelectUserType from '@/pages/SelectUserType';
+import ProDashboard from '@/pages/ProDashboard';
+import ProProfile from '@/pages/ProProfile';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -41,6 +44,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/Home" replace />} />
+      <Route path="/SelectUserType" element={<SelectUserType />} />
       <Route element={<AppLayout />}>
         <Route path="/Home" element={<Home />} />
         <Route path="/ServiceRequest" element={<ServiceRequest />} />
@@ -48,6 +52,8 @@ const AuthenticatedApp = () => {
         <Route path="/Emergency" element={<Emergency />} />
         <Route path="/Invoices" element={<Invoices />} />
         <Route path="/Profile" element={<Profile />} />
+        <Route path="/ProDashboard" element={<ProDashboard />} />
+        <Route path="/ProProfile" element={<ProProfile />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
