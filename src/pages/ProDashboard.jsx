@@ -39,6 +39,20 @@ export default function ProDashboard() {
     refetchInterval: 5000,
   });
 
+  // Fire notification when a new request arrives
+  useEffect(() => {
+    if (incomingRequests === undefined) return;
+    const count = incomingRequests.length;
+    if (prevCountRef.current !== null && count > prevCountRef.current) {
+      const newReq = incomingRequests[0];
+      notify(
+        '🔔 Nouvelle demande !',
+        `${newReq?.category_name || 'Service'} • ${newReq?.customer_address || ''}`
+      );
+    }
+    prevCountRef.current = count;
+  }, [incomingRequests?.length]);
+
   const { data: myJobs = [] } = useQuery({
     queryKey: ['myJobs', user?.email],
     queryFn: async () => {
