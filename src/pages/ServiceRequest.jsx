@@ -221,10 +221,27 @@ export default function ServiceRequest() {
     if (!paymentMethod) { toast.error('Choisissez un moyen de paiement'); return; }
     const id = requestId || currentRequest?.id;
     if (!id) { toast.error('Erreur: demande introuvable'); return; }
+
     await updateRequestMutation.mutateAsync({
       id,
-      data: { payment_method: paymentMethod, status: 'accepted' },
+      data: { payment_method: paymentMethod, status: 'accepted', payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid' },
     });
+
+    // Créer la facture
+    await base44.entities.Invoice.create({
+      request_id: id,
+      invoice_number: `INV-${Date.now()}`,
+      category_name: category?.name,
+      professional_name: assignedPro?.full_name || '',
+      base_price: basePrice,
+      commission: commission,
+      total_price: totalPrice,
+      payment_method: paymentMethod,
+      payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid',
+      customer_name: user?.full_name || '',
+      customer_email: user?.email || '',
+    });
+
     setStep(STEPS.CONFIRMED);
     notify('✅ Mission confirmée !', `${assignedPro?.full_name || 'Un professionnel'} est en route vers vous.`);
     toast.success('Demande confirmée !');
