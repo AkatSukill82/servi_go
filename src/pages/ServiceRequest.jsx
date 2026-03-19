@@ -358,10 +358,13 @@ export default function ServiceRequest() {
             {assignedPro && <p className="text-muted-foreground">{assignedPro.full_name || 'Le professionnel'} est en route vers vous.</p>}
             <p className="text-sm text-muted-foreground">Vous recevrez une confirmation par email.</p>
             <div className="pt-4 space-y-3">
-              <Button onClick={() => navigate('/Invoices')} className="w-full h-12 rounded-xl">
+              <Button onClick={() => navigate(`/TrackingMap?requestId=${requestId || currentRequest?.id}`)} className="w-full h-12 rounded-xl bg-primary">
+                <Navigation className="w-4 h-4 mr-2" /> Suivre sur la carte
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/Invoices')} className="w-full h-12 rounded-xl">
                 Voir ma facture
               </Button>
-              <Button variant="outline" onClick={() => navigate('/Home')} className="w-full h-12 rounded-xl">
+              <Button variant="ghost" onClick={() => navigate('/Home')} className="w-full h-12 rounded-xl">
                 Retour à l'accueil
               </Button>
             </div>
