@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Search, CheckCircle, Clock } from 'lucide-react';
+import { ChevronRight, Search, CheckCircle, Clock, Navigation } from 'lucide-react';
+import { useNotifications } from '@/hooks/useNotifications';
 import BackButton from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -58,6 +59,7 @@ export default function ServiceRequest() {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [requestId, setRequestId] = useState(null);
   const [assignedPro, setAssignedPro] = useState(null);
+  const { requestPermission, notify } = useNotifications();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
