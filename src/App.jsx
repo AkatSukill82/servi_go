@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { Navigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
+import Landing from '@/pages/Landing';
 import Home from '@/pages/Home';
 import ServiceRequest from '@/pages/ServiceRequest';
 import MapPage from '@/pages/Map';

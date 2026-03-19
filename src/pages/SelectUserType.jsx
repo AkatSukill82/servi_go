@@ -26,8 +26,8 @@ export default function SelectUserType() {
         <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center mx-auto mb-4 shadow-lg">
           <span className="text-3xl font-black text-white">S</span>
         </div>
-        <h1 className="text-2xl font-bold">Bienvenue sur ServiConnect</h1>
-        <p className="text-muted-foreground mt-2">Qui êtes-vous ?</p>
+        <h1 className="text-2xl font-bold">Une dernière étape !</h1>
+        <p className="text-muted-foreground mt-2">Comment souhaitez-vous utiliser ServiConnect ?</p>
       </motion.div>
 
       <div className="w-full max-w-sm space-y-4">
