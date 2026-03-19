@@ -1,13 +1,15 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ServiceCard from '@/components/home/ServiceCard';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Home() {
   const [search, setSearch] = React.useState('');
+  const queryClient = useQueryClient();
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['serviceCategories'],
@@ -18,7 +20,10 @@ export default function Home() {
     c.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="px-4 pt-6">
       {/* Header */}
       <div className="mb-6">

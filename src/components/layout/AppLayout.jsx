@@ -41,7 +41,7 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="pb-28 overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div

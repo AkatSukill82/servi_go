@@ -1,9 +1,10 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { FileText } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import InvoiceCard from '@/components/invoices/InvoiceCard';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Invoices() {
   const { data: invoices = [], isLoading } = useQuery({

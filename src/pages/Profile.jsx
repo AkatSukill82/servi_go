@@ -193,8 +193,14 @@ export default function Profile() {
               <AlertDialogCancel>Annuler</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive hover:bg-destructive/90"
-                onClick={() => {
-                  toast.info('Contactez le support pour supprimer votre compte.');
+                onClick={async () => {
+                  try {
+                    await base44.auth.updateMe({ account_deleted: true, user_type: null });
+                    toast.success('Compte supprimé.');
+                    base44.auth.logout('/Landing');
+                  } catch {
+                    toast.error('Erreur lors de la suppression.');
+                  }
                 }}
               >
                 Supprimer
