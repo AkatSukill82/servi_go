@@ -171,6 +171,37 @@ export default function Profile() {
           <LogOut className="w-5 h-5 mr-2" />
           Déconnexion
         </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full h-12 rounded-xl text-sm text-muted-foreground hover:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Supprimer mon compte
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Toutes vos données seront définitivement supprimées.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive hover:bg-destructive/90"
+                onClick={() => {
+                  toast.info('Contactez le support pour supprimer votre compte.');
+                }}
+              >
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </motion.div>
     </div>
   );
