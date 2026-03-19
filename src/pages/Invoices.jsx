@@ -54,5 +54,6 @@ export default function Invoices() {
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }
