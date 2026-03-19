@@ -12,6 +12,7 @@ import { fr } from 'date-fns/locale';
 import { useNotifications } from '@/hooks/useNotifications';
 
 export default function ProDashboard() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { requestPermission, notify } = useNotifications();
   const prevCountRef = useRef(null);
