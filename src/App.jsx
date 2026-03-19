@@ -17,6 +17,7 @@ import Profile from '@/pages/Profile';
 import SelectUserType from '@/pages/SelectUserType';
 import ProDashboard from '@/pages/ProDashboard';
 import ProProfile from '@/pages/ProProfile';
+import TrackingMap from '@/pages/TrackingMap';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
         <Route path="/Profile" element={<Profile />} />
         <Route path="/ProDashboard" element={<ProDashboard />} />
         <Route path="/ProProfile" element={<ProProfile />} />
+        <Route path="/TrackingMap" element={<TrackingMap />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
