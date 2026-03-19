@@ -222,29 +222,14 @@ export default function ServiceRequest() {
     const id = requestId || currentRequest?.id;
     if (!id) { toast.error('Erreur: demande introuvable'); return; }
 
+    // Enregistrer le moyen de paiement et garder le statut pending_pro pour que le pro puisse accepter
     await updateRequestMutation.mutateAsync({
       id,
-      data: { payment_method: paymentMethod, status: 'accepted', payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid' },
-    });
-
-    // Créer la facture
-    await base44.entities.Invoice.create({
-      request_id: id,
-      invoice_number: `INV-${Date.now()}`,
-      category_name: category?.name,
-      professional_name: assignedPro?.full_name || '',
-      base_price: basePrice,
-      commission: commission,
-      total_price: totalPrice,
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === 'cash' ? 'unpaid' : 'paid',
-      customer_name: user?.full_name || '',
-      customer_email: user?.email || '',
+      data: { payment_method: paymentMethod },
     });
 
     setStep(STEPS.CONFIRMED);
-    notify('✅ Mission confirmée !', `${assignedPro?.full_name || 'Un professionnel'} est en route vers vous.`);
-    toast.success('Demande confirmée !');
+    toast.success('Devis accepté ! En attente de confirmation du professionnel.');
   };
 
   const handleDecline = () => navigate('/Home');
