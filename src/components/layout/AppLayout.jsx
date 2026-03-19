@@ -5,8 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
 
+const pageVariants = {
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -20 },
+};
+
+const pageTransition = { duration: 0.2, ease: 'easeInOut' };
+
 export default function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,8 +42,19 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="pb-24">
-        <Outlet />
+      <div className="pb-28 overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={location.pathname}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={pageTransition}
+          >
+            <Outlet />
+          </motion.div>
+        </AnimatePresence>
       </div>
       {userType === 'professionnel' ? <ProBottomNav /> : <BottomNav />}
     </div>
