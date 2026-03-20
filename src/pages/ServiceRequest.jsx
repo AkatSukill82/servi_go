@@ -316,16 +316,46 @@ export default function ServiceRequest() {
           <motion.div key="address" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
             <div className="space-y-2">
               <Label>Votre adresse d'intervention</Label>
-              <Input
-                value={address}
-                onChange={e => setAddress(e.target.value)}
-                placeholder="Ex: 12 Rue de la Paix, 75001 Paris"
-                className="h-12 rounded-xl"
-              />
+              {user?.address && !addressConfirmed ? (
+                <div className="space-y-3">
+                  <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
+                    <span className="text-xl">📍</span>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold text-primary mb-1">Adresse enregistrée</p>
+                      <p className="text-sm font-medium">{user.address}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground text-center">L'intervention aura-t-elle lieu à cette adresse ?</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setAddressConfirmed(true)}
+                      className="h-12 rounded-xl"
+                    >
+                      Non, changer
+                    </Button>
+                    <Button
+                      onClick={handleAddressNext}
+                      className="h-12 rounded-xl"
+                    >
+                      Oui, confirmer
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <Input
+                    value={address}
+                    onChange={e => setAddress(e.target.value)}
+                    placeholder="Ex: 12 Rue de la Paix, 75001 Paris"
+                    className="h-12 rounded-xl"
+                  />
+                  <Button onClick={handleAddressNext} disabled={!address.trim()} className="w-full h-14 rounded-xl text-base">
+                    Continuer <ChevronRight className="w-5 h-5 ml-2" />
+                  </Button>
+                </>
+              )}
             </div>
-            <Button onClick={handleAddressNext} disabled={!address.trim()} className="w-full h-14 rounded-xl text-base">
-              Continuer <ChevronRight className="w-5 h-5 ml-2" />
-            </Button>
           </motion.div>
         )}
 
