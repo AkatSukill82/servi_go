@@ -61,7 +61,18 @@ export default function InvoiceCard({ invoice, index }) {
             </>
           )}
         </div>
-        <p className="font-bold text-lg">{invoice.total_price?.toFixed(2)} €</p>
+        <div className="flex items-center gap-3">
+          <p className="font-bold text-lg">{invoice.total_price?.toFixed(2)} €</p>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="w-8 h-8 rounded-xl text-primary hover:bg-primary/10"
+            onClick={() => generateInvoicePDF(invoice)}
+            title="Télécharger la facture PDF"
+          >
+            <Download className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
