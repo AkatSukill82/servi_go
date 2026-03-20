@@ -8,11 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Camera, Save, LogOut, Briefcase, Euro, MapPin, LayoutDashboard, ArrowLeft } from 'lucide-react';
+import { Camera, Save, LogOut, Briefcase, Euro, MapPin, LayoutDashboard, CalendarDays } from 'lucide-react';
 import BackButton from '@/components/ui/BackButton';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 
 export default function ProProfile() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function ProProfile() {
   const [form, setForm] = useState({
     phone: '', address: '', bank_iban: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
-    pro_description: '', available: true,
+    pro_description: '', available: true, availability_slots: [],
   });
 
   const { data: user } = useQuery({
@@ -45,6 +46,7 @@ export default function ProProfile() {
         hourly_rate: user.hourly_rate || '',
         pro_description: user.pro_description || '',
         available: user.available !== false,
+        availability_slots: user.availability_slots || [],
       });
     }
   }, [user]);
@@ -185,6 +187,17 @@ export default function ProProfile() {
             <Label className="text-xs text-muted-foreground">IBAN</Label>
             <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="FR76 XXXX..." className="h-12 rounded-xl" />
           </div>
+        </div>
+
+        {/* Availability */}
+        <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-primary" /> Mes disponibilités
+          </h3>
+          <AvailabilityEditor
+            slots={form.availability_slots}
+            onChange={slots => setForm(f => ({ ...f, availability_slots: slots }))}
+          />
         </div>
 
         <Button onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })} disabled={updateMutation.isPending} className="w-full h-14 rounded-xl text-base bg-accent hover:bg-accent/90">
