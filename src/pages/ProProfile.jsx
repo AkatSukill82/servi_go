@@ -181,7 +181,7 @@ export default function ProProfile() {
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Adresse</Label>
-            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Votre adresse" className="h-12 rounded-xl" />
+            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">IBAN</Label>
