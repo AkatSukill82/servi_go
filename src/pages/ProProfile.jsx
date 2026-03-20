@@ -185,7 +185,7 @@ export default function ProProfile() {
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">IBAN</Label>
-            <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="FR76 XXXX..." className="h-12 rounded-xl" />
+            <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE68 XXXX XXXX XXXX" className="h-12 rounded-xl" />
           </div>
         </div>
 
