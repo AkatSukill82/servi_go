@@ -79,7 +79,7 @@ export default function SelectUserType() {
     mutationFn: (data) => base44.auth.updateMe(data),
     onSuccess: (_, data) => {
       if (data.user_type === 'particulier') navigate('/Home');
-      else navigate('/ProDashboard');
+      else navigate('/ProVerificationOnboarding');
     },
   });
 
