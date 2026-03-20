@@ -108,6 +108,15 @@ export default function ProDashboard() {
     },
   });
 
+  const { data: myReviews = [] } = useQuery({
+    queryKey: ['myReviews', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.Review.filter({ professional_email: user.email }, '-created_date', 10);
+    },
+    enabled: !!user?.email,
+  });
+
   const acceptedJobs = myJobs.filter(j => j.status === 'accepted' || j.status === 'completed');
 
   return (
