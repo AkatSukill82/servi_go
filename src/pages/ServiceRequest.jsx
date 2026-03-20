@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Search, CheckCircle, Clock, Navigation, MessageCircle } from 'lucide-react';
+import { ChevronRight, Search, CheckCircle, Clock, Navigation, MessageCircle, CalendarDays } from 'lucide-react';
+import SlotPicker from '@/components/request/SlotPicker';
 import { useNotifications } from '@/hooks/useNotifications';
 import BackButton from '@/components/ui/BackButton';
 import { Button } from '@/components/ui/button';
@@ -42,6 +43,7 @@ function findClosestPro(professionals, customerLat, customerLon, excludeIds = []
 const STEPS = {
   ADDRESS: 'address',
   QUESTIONS: 'questions',
+  SLOT: 'slot',
   SEARCHING: 'searching',
   QUOTE: 'quote',
   CONFIRMED: 'confirmed',
@@ -57,6 +59,8 @@ export default function ServiceRequest() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [address, setAddress] = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [requestId, setRequestId] = useState(null);
   const [assignedPro, setAssignedPro] = useState(null);
