@@ -27,17 +27,19 @@ export default function ProDashboard() {
     queryFn: () => base44.auth.me(),
   });
 
-  // Poll for incoming requests every 5 seconds
+  const proCategory = user?.data?.category_name || user?.category_name;
+
+  // Poll toutes les demandes "searching" du bon métier — visibles par tous les pros du secteur
   const { data: incomingRequests = [] } = useQuery({
-    queryKey: ['incomingRequests', user?.email],
+    queryKey: ['incomingRequests', proCategory],
     queryFn: async () => {
-      if (!user?.email) return [];
+      if (!proCategory) return [];
       return base44.entities.ServiceRequest.filter({
-        professional_email: user.email,
-        status: 'pending_pro',
+        category_name: proCategory,
+        status: 'searching',
       }, '-created_date');
     },
-    enabled: !!user?.email,
+    enabled: !!proCategory,
     refetchInterval: 5000,
   });
 
@@ -55,6 +57,7 @@ export default function ProDashboard() {
     prevCountRef.current = count;
   }, [incomingRequests?.length]);
 
+  // Mes missions acceptées/terminées
   const { data: myJobs = [] } = useQuery({
     queryKey: ['myJobs', user?.email],
     queryFn: async () => {
@@ -71,11 +74,15 @@ export default function ProDashboard() {
   const respondMutation = useMutation({
     mutationFn: async ({ requestId, accept, request }) => {
       if (accept) {
+        // Assigner ce pro et marquer comme accepté
         await base44.entities.ServiceRequest.update(requestId, {
           status: 'accepted',
+          professional_id: user.id,
+          professional_name: user.full_name,
+          professional_email: user.email,
           payment_status: request.payment_method === 'cash' ? 'unpaid' : 'paid',
         });
-        // Create invoice
+        // Créer la facture
         await base44.entities.Invoice.create({
           request_id: requestId,
           invoice_number: `INV-${Date.now()}`,
@@ -89,22 +96,17 @@ export default function ProDashboard() {
           customer_name: request.customer_name,
           customer_email: request.customer_email,
         });
-      } else {
-        // Refuse: mark as searching again so the system finds next pro
-        const tried = [...(request.tried_professionals || []), user.id];
-        await base44.entities.ServiceRequest.update(requestId, {
-          status: 'searching',
-          professional_id: null,
-          professional_name: null,
-          professional_email: null,
-          tried_professionals: tried,
-        });
       }
+      // Pas de bouton "refuser" dans le nouveau modèle broadcast — on ignore simplement
     },
-    onSuccess: (_, { accept }) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
-      toast.success(accept ? 'Mission acceptée ! Le client est notifié.' : 'Demande refusée.');
+      toast.success('Mission acceptée ! Le client est notifié.');
+    },
+    onError: () => {
+      toast.error('Cette mission a déjà été prise par un autre professionnel.');
+      queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
     },
   });
 
