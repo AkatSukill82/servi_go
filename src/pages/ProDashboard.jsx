@@ -214,6 +214,30 @@ export default function ProDashboard() {
         </div>
       )}
 
+      {/* Reviews */}
+      {myReviews.length > 0 && (
+        <div>
+          <h2 className="font-semibold mb-3">Avis clients</h2>
+          <div className="space-y-2">
+            {myReviews.slice(0, 5).map(review => (
+              <div key={review.id} className="bg-card rounded-xl p-3 border border-border/50">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
+                  <div className="flex gap-0.5">
+                    {[1,2,3,4,5].map(s => (
+                      <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`} />
+                    ))}
+                  </div>
+                </div>
+                {review.comment && (
+                  <p className="text-xs text-muted-foreground">{review.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Recent jobs */}
       {acceptedJobs.length > 0 && (
         <div>
