@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, FileText, User, Phone } from 'lucide-react';
+import { Home, MapPin, FileText, User, Phone, Heart } from 'lucide-react';
 
 const navItems = [
   { path: '/Home', icon: Home, label: 'Accueil' },
   { path: '/Map', icon: MapPin, label: 'Carte' },
   { path: '/Emergency', icon: Phone, label: 'Urgence' },
-  { path: '/Invoices', icon: FileText, label: 'Factures' },
+  { path: '/Favorites', icon: Heart, label: 'Favoris' },
   { path: '/Profile', icon: User, label: 'Profil' },
 ];
 
