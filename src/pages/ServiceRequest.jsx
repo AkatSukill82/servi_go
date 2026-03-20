@@ -26,14 +26,29 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+// Normalize a User record: fields may be at root level or inside .data
+function normalizePro(p) {
+  return {
+    ...p,
+    user_type: p.user_type || p.data?.user_type,
+    available: p.available !== undefined ? p.available : p.data?.available,
+    category_name: p.category_name || p.data?.category_name,
+    base_price: p.base_price || p.data?.base_price,
+    latitude: p.latitude || p.data?.latitude,
+    longitude: p.longitude || p.data?.longitude,
+    account_deleted: p.account_deleted || p.data?.account_deleted,
+  };
+}
+
 function findClosestPro(professionals, customerLat, customerLon, excludeIds = []) {
-  const available = professionals.filter(p =>
+  const normalized = professionals.map(normalizePro);
+  const available = normalized.filter(p =>
     p.available === true &&
     p.user_type === 'professionnel' &&
+    !p.account_deleted &&
     !excludeIds.includes(p.id)
   );
   if (!available.length) return null;
-  // Sort by distance if coordinates available, otherwise keep order
   return available.sort((a, b) => {
     if (!a.latitude || !a.longitude) return 1;
     if (!b.latitude || !b.longitude) return -1;
