@@ -192,7 +192,11 @@ export default function Chat() {
             )}
           </div>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
+          {/* Client can favorite the pro */}
+          {user?.user_type === 'particulier' && request?.professional_id && (
+            <FavoriteButton proId={request.professional_id} />
+          )}
           {request?.status === 'accepted' && (
             <Button variant="ghost" size="icon" className="rounded-full"
               onClick={() => navigate(`/TrackingMap?requestId=${requestId}`)}>
