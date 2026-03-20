@@ -20,6 +20,7 @@ import Invoices from './pages/Invoices';
 import TrackingMap from './pages/TrackingMap';
 import Map from './pages/Map';
 import MissionHistory from './pages/MissionHistory';
+import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
