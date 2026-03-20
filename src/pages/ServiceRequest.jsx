@@ -194,11 +194,14 @@ export default function ServiceRequest() {
 
   const startSearch = async () => {
     setStep(STEPS.SEARCHING);
-    const customerLat = user?.latitude || 48.8566;
-    const customerLon = user?.longitude || 2.3522;
+    const customerLat = user?.latitude || 50.8503;
+    const customerLon = user?.longitude || 4.3517;
+
+    // Fetch fresh pros directly — never rely on potentially empty cache
+    const freshPros = await fetchFreshPros();
 
     // Match by category if both sides have a value, otherwise accept all pros
-    const catPros = allProfessionals.filter(p => {
+    const catPros = freshPros.filter(p => {
       if (category?.name && p.category_name && p.category_name !== category.name) return false;
       return true;
     });
@@ -206,7 +209,7 @@ export default function ServiceRequest() {
     // If a priority pro is specified (from favorites), try them first
     let nextPro;
     if (priorityProId) {
-      nextPro = catPros.find(p => p.id === priorityProId && p.available !== false) || findClosestPro(catPros, customerLat, customerLon);
+      nextPro = catPros.find(p => p.id === priorityProId && p.available === true) || findClosestPro(catPros, customerLat, customerLon);
     } else {
       nextPro = findClosestPro(catPros, customerLat, customerLon);
     }
