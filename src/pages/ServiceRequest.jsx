@@ -72,7 +72,19 @@ export default function ServiceRequest() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    onSuccess: (u) => {
+      if (u?.address && !address) {
+        setAddress(u.address);
+      }
+    },
   });
+
+  // Pre-fill address from user profile when loaded
+  React.useEffect(() => {
+    if (user?.address && !address) {
+      setAddress(user.address);
+    }
+  }, [user?.address]);
 
   const { data: category, isLoading: loadingCategory } = useQuery({
     queryKey: ['category', categoryId],
