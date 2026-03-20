@@ -137,17 +137,13 @@ export default function ServiceRequest() {
     }
   }, [step]);
 
-  // React to request status changes
+  // React to request status changes — dès qu'un pro accepte, on passe à CONFIRMED
   useEffect(() => {
     if (!currentRequest) return;
     if (currentRequest.status === 'accepted' && step !== STEPS.CONFIRMED) {
       setStep(STEPS.CONFIRMED);
-      notify('✅ Mission confirmée !', `${currentRequest.professional_name || 'Un professionnel'} est en route vers vous.`);
+      notify('✅ Mission confirmée !', `${currentRequest.professional_name || 'Un professionnel'} a pris votre demande.`);
       toast.success('Un professionnel a accepté votre demande !');
-    }
-    if (currentRequest.status === 'searching' && step === STEPS.QUOTE) {
-      toast.info('Le professionnel a refusé. Recherche en cours...');
-      findAndContactNextPro(currentRequest);
     }
   }, [currentRequest?.status]);
 
