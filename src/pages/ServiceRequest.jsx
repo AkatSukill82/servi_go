@@ -162,7 +162,9 @@ export default function ServiceRequest() {
   const findAndContactNextPro = async (existingRequest) => {
     setStep(STEPS.SEARCHING);
     const req = existingRequest || currentRequest;
-    const catPros = allProfessionals.filter(p => {
+    const freshPros2 = await fetchFreshPros();
+    const catPros = freshPros2.map(normalizePro).filter(p => {
+      if (p.account_deleted) return false;
       if (category?.name && p.category_name && p.category_name !== category.name) return false;
       return true;
     });
