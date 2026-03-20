@@ -40,7 +40,12 @@ export default function ProFavoriteCard({ pro, categories, index }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="font-semibold truncate">{pro.full_name}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-semibold truncate">{pro.full_name}</p>
+                {pro.verification_status === 'verified' && (
+                  <ShieldCheck className="w-4 h-4 text-green-600 shrink-0" />
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">{pro.category_name}</p>
             </div>
             <FavoriteButton proId={pro.id} />
