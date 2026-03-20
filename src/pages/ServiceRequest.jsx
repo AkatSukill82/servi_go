@@ -211,28 +211,8 @@ export default function ServiceRequest() {
 
   const startSearch = async () => {
     setStep(STEPS.SEARCHING);
-    const customerLat = user?.latitude || 50.8503;
-    const customerLon = user?.longitude || 4.3517;
 
-    // Fetch fresh pros directly — never rely on potentially empty cache
-    const freshPros = await fetchFreshPros();
-
-    // Normalize and filter pros
-    const catPros = freshPros.map(normalizePro).filter(p => {
-      if (p.account_deleted) return false;
-      if (category?.name && p.category_name && p.category_name !== category.name) return false;
-      return true;
-    });
-
-    // If a priority pro is specified (from favorites), try them first
-    let nextPro;
-    if (priorityProId) {
-      nextPro = catPros.find(p => p.id === priorityProId && p.available === true) || findClosestPro(catPros, customerLat, customerLon);
-    } else {
-      nextPro = findClosestPro(catPros, customerLat, customerLon);
-    }
-
-    const basePrice = nextPro?.base_price || category?.base_price || 80;
+    const basePrice = category?.base_price || 80;
     const commission = basePrice * 0.10;
     const totalPrice = basePrice + commission;
 
@@ -241,6 +221,7 @@ export default function ServiceRequest() {
       answer: answers[i] || '',
     }));
 
+    // Broadcast : la demande est publiée à tous les pros du même métier
     const newRequest = await createRequestMutation.mutateAsync({
       category_id: categoryId,
       category_name: category?.name,
@@ -248,13 +229,13 @@ export default function ServiceRequest() {
       customer_name: user?.full_name || '',
       customer_email: user?.email || '',
       customer_address: address,
-      customer_latitude: customerLat,
-      customer_longitude: customerLon,
-      status: nextPro ? 'pending_pro' : 'searching',
-      professional_id: nextPro?.id || null,
-      professional_name: nextPro?.full_name || null,
-      professional_email: nextPro?.email || null,
-      tried_professionals: nextPro ? [nextPro.id] : [],
+      customer_latitude: user?.data?.latitude || user?.latitude || 50.8503,
+      customer_longitude: user?.data?.longitude || user?.longitude || 4.3517,
+      status: 'searching',
+      professional_id: null,
+      professional_name: null,
+      professional_email: null,
+      tried_professionals: [],
       base_price: basePrice,
       commission: commission,
       total_price: totalPrice,
@@ -265,8 +246,7 @@ export default function ServiceRequest() {
     });
 
     setRequestId(newRequest.id);
-    setAssignedPro(nextPro);
-    setStep(nextPro ? STEPS.QUOTE : STEPS.QUOTE);
+    setStep(STEPS.QUOTE);
   };
 
   const handleQuestionNext = () => {
