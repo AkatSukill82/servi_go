@@ -325,6 +325,30 @@ export default function ServiceRequest() {
           </motion.div>
         )}
 
+        {/* SLOT PICKER */}
+        {step === STEPS.SLOT && (
+          <motion.div key="slot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+            <SlotPicker
+              proSlots={assignedPro?.availability_slots || []}
+              selectedDate={scheduledDate}
+              selectedTime={scheduledTime}
+              onDateChange={setScheduledDate}
+              onTimeChange={setScheduledTime}
+            />
+            <Button
+              onClick={startSearch}
+              disabled={!scheduledDate || !scheduledTime}
+              className="w-full h-14 rounded-xl text-base"
+            >
+              <CalendarDays className="w-5 h-5 mr-2" />
+              Confirmer le créneau
+            </Button>
+            <button onClick={startSearch} className="w-full text-center text-sm text-muted-foreground underline underline-offset-2">
+              Passer (sans choisir de créneau)
+            </button>
+          </motion.div>
+        )}
+
         {/* SEARCHING */}
         {step === STEPS.SEARCHING && (
           <motion.div key="searching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 space-y-4">
