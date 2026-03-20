@@ -1,25 +1,32 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+
+// Pages
+import Landing from './pages/Landing';
+import Home from './pages/Home';
+import SelectUserType from './pages/SelectUserType';
+import ServiceRequest from './pages/ServiceRequest';
+import Chat from './pages/Chat';
+import Profile from './pages/Profile';
+import ProDashboard from './pages/ProDashboard';
+import ProProfile from './pages/ProProfile';
+import Favorites from './pages/Favorites';
+import Invoices from './pages/Invoices';
+import TrackingMap from './pages/TrackingMap';
+import Map from './pages/Map';
 import MissionHistory from './pages/MissionHistory';
 
-const { Pages, Layout, mainPage } = pagesConfig;
-const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
-
-const LayoutWrapper = ({ children, currentPageName }) => Layout ?
-  <Layout currentPageName={currentPageName}>{children}</Layout>
-  : <>{children}</>;
+// Layout
+import AppLayout from './components/layout/AppLayout';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -28,45 +35,45 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Handle authentication errors
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
       navigateToLogin();
       return null;
     }
   }
 
-  // Render the main app
   return (
     <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
-      <Route path="/MissionHistory" element={<MissionHistory />} />
+      {/* Public pages (no layout) */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/Landing" element={<Landing />} />
+      <Route path="/SelectUserType" element={<SelectUserType />} />
+
+      {/* App pages with shared layout */}
+      <Route element={<AppLayout />}>
+        <Route path="/Home" element={<Home />} />
+        <Route path="/ServiceRequest" element={<ServiceRequest />} />
+        <Route path="/Profile" element={<Profile />} />
+        <Route path="/ProDashboard" element={<ProDashboard />} />
+        <Route path="/ProProfile" element={<ProProfile />} />
+        <Route path="/Favorites" element={<Favorites />} />
+        <Route path="/Invoices" element={<Invoices />} />
+        <Route path="/Map" element={<Map />} />
+        <Route path="/MissionHistory" element={<MissionHistory />} />
+      </Route>
+
+      {/* Full screen pages (no layout) */}
+      <Route path="/Chat" element={<Chat />} />
+      <Route path="/TrackingMap" element={<TrackingMap />} />
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
 };
 
-
 function App() {
-
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
