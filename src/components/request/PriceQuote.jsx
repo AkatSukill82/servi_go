@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Check, X, CreditCard, Banknote, Smartphone, CalendarDays } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -13,7 +15,9 @@ export default function PriceQuote({
   setPaymentMethod,
   onAccept,
   onDecline,
-  isSubmitting
+  isSubmitting,
+  scheduledDate,
+  scheduledTime,
 }) {
   return (
     <motion.div
@@ -33,6 +37,16 @@ export default function PriceQuote({
             <span className="text-muted-foreground">Frais de service (10%)</span>
             <span className="font-medium">{commission.toFixed(2)} €</span>
           </div>
+          {scheduledDate && scheduledTime && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <CalendarDays className="w-3.5 h-3.5" /> Intervention prévue
+              </span>
+              <span className="font-medium">
+                {format(new Date(scheduledDate), 'dd MMM', { locale: fr })} à {scheduledTime}
+              </span>
+            </div>
+          )}
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">
               <span className="font-semibold text-lg">Total</span>
