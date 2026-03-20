@@ -21,6 +21,7 @@ import TrackingMap from './pages/TrackingMap';
 import Map from './pages/Map';
 import MissionHistory from './pages/MissionHistory';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
+import AdminVerification from './pages/AdminVerification';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
