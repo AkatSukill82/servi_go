@@ -58,6 +58,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/MissionHistory" element={<MissionHistory />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
