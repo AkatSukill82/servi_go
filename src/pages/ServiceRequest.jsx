@@ -29,15 +29,17 @@ function getDistance(lat1, lon1, lat2, lon2) {
 function findClosestPro(professionals, customerLat, customerLon, excludeIds = []) {
   const available = professionals.filter(p =>
     p.available !== false &&
-    p.latitude && p.longitude &&
     p.user_type === 'professionnel' &&
     !excludeIds.includes(p.id)
   );
   if (!available.length) return null;
-  return available.sort((a, b) =>
-    getDistance(customerLat, customerLon, a.latitude, a.longitude) -
-    getDistance(customerLat, customerLon, b.latitude, b.longitude)
-  )[0];
+  // Sort by distance if coordinates available, otherwise keep order
+  return available.sort((a, b) => {
+    if (!a.latitude || !a.longitude) return 1;
+    if (!b.latitude || !b.longitude) return -1;
+    return getDistance(customerLat, customerLon, a.latitude, a.longitude) -
+      getDistance(customerLat, customerLon, b.latitude, b.longitude);
+  })[0];
 }
 
 const STEPS = {
