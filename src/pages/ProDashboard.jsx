@@ -124,10 +124,25 @@ export default function ProDashboard() {
   return (
     <div className="px-4 pt-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Tableau de bord</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold">Tableau de bord</h1>
+          {user?.verification_status === 'verified' && (
+            <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 border border-green-200 rounded-full px-2.5 py-1">
+              <ShieldCheck className="w-3.5 h-3.5" /> Vérifié
+            </span>
+          )}
+        </div>
         <p className="text-muted-foreground text-sm">
           {user?.category_name || 'Professionnel'} • {user?.full_name}
         </p>
+        {!user?.verification_status && (
+          <button
+            onClick={() => navigate('/ProProfile')}
+            className="mt-2 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1 font-medium"
+          >
+            ⚠️ Obtenez le badge Pro Vérifié → Profil
+          </button>
+        )}
       </div>
 
       {/* Stats */}
