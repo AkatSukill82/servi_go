@@ -294,7 +294,8 @@ export default function Chat() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={sending}
-            className="p-2.5 rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
+            aria-label="Joindre une photo"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
           >
             <Image className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -316,7 +317,8 @@ export default function Chat() {
           <button
             onClick={handleSend}
             disabled={!text.trim() || sending}
-            className="p-2.5 rounded-full bg-primary hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-40"
+            aria-label="Envoyer le message"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-40"
           >
             <Send className="w-5 h-5 text-white" />
           </button>
