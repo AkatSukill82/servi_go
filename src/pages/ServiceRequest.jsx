@@ -217,8 +217,9 @@ export default function ServiceRequest() {
     // Fetch fresh pros directly — never rely on potentially empty cache
     const freshPros = await fetchFreshPros();
 
-    // Match by category if both sides have a value, otherwise accept all pros
-    const catPros = freshPros.filter(p => {
+    // Normalize and filter pros
+    const catPros = freshPros.map(normalizePro).filter(p => {
+      if (p.account_deleted) return false;
       if (category?.name && p.category_name && p.category_name !== category.name) return false;
       return true;
     });
