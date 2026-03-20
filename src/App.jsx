@@ -1,25 +1,20 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
+import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { Navigate } from 'react-router-dom';
-import AppLayout from '@/components/layout/AppLayout';
-import Landing from '@/pages/Landing';
-import Home from '@/pages/Home';
-import ServiceRequest from '@/pages/ServiceRequest';
-import MapPage from '@/pages/Map';
-import Emergency from '@/pages/Emergency';
-import Invoices from '@/pages/Invoices';
-import Profile from '@/pages/Profile';
-import SelectUserType from '@/pages/SelectUserType';
-import ProDashboard from '@/pages/ProDashboard';
-import ProProfile from '@/pages/ProProfile';
-import TrackingMap from '@/pages/TrackingMap';
-import Chat from '@/pages/Chat';
-import Favorites from '@/pages/Favorites';
+import MissionHistory from './pages/MissionHistory';
+
+const { Pages, Layout, mainPage } = pagesConfig;
+const mainPageKey = mainPage ?? Object.keys(Pages)[0];
+const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+
+const LayoutWrapper = ({ children, currentPageName }) => Layout ?
+  <Layout currentPageName={currentPageName}>{children}</Layout>
+  : <>{children}</>;
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -47,22 +42,22 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/Landing" replace />} />
-      <Route path="/Landing" element={<Landing />} />
-      <Route path="/SelectUserType" element={<SelectUserType />} />
-      <Route element={<AppLayout />}>
-        <Route path="/Home" element={<Home />} />
-        <Route path="/ServiceRequest" element={<ServiceRequest />} />
-        <Route path="/Map" element={<MapPage />} />
-        <Route path="/Emergency" element={<Emergency />} />
-        <Route path="/Invoices" element={<Invoices />} />
-        <Route path="/Profile" element={<Profile />} />
-        <Route path="/ProDashboard" element={<ProDashboard />} />
-        <Route path="/ProProfile" element={<ProProfile />} />
-        <Route path="/TrackingMap" element={<TrackingMap />} />
-        <Route path="/Chat" element={<Chat />} />
-        <Route path="/Favorites" element={<Favorites />} />
-      </Route>
+      <Route path="/" element={
+        <LayoutWrapper currentPageName={mainPageKey}>
+          <MainPage />
+        </LayoutWrapper>
+      } />
+      {Object.entries(Pages).map(([path, Page]) => (
+        <Route
+          key={path}
+          path={`/${path}`}
+          element={
+            <LayoutWrapper currentPageName={path}>
+              <Page />
+            </LayoutWrapper>
+          }
+        />
+      ))}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
