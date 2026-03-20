@@ -51,6 +51,7 @@ export default function ServiceRequest() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const categoryId = urlParams.get('categoryId');
+  const priorityProId = urlParams.get('priorityProId');
 
   const [step, setStep] = useState(STEPS.ADDRESS);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -172,7 +173,14 @@ export default function ServiceRequest() {
     const customerLon = user?.longitude || 2.3522;
 
     const catPros = allProfessionals.filter(p => p.category_name === category?.name);
-    const nextPro = findClosestPro(catPros, customerLat, customerLon);
+
+    // If a priority pro is specified (from favorites), try them first
+    let nextPro;
+    if (priorityProId) {
+      nextPro = catPros.find(p => p.id === priorityProId && p.available !== false) || findClosestPro(catPros, customerLat, customerLon);
+    } else {
+      nextPro = findClosestPro(catPros, customerLat, customerLon);
+    }
 
     const basePrice = nextPro?.base_price || category?.base_price || 80;
     const commission = basePrice * 0.10;
