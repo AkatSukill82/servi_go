@@ -14,8 +14,11 @@ export default function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-      <div className="flex items-center justify-around px-2 py-2">
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+    >
+      <div className="flex items-center justify-around px-2 pt-2">
         {navItems.map(({ path, icon: Icon, label }) => {
           const isActive = location.pathname === path;
           const isEmergency = path === '/Emergency';
@@ -25,7 +28,8 @@ export default function BottomNav() {
               <Link
                 key={path}
                 to={path}
-                className="flex flex-col items-center -mt-5"
+                aria-label="SOS Urgence"
+                className="flex flex-col items-center -mt-5 min-w-[44px]"
               >
                 <div className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center shadow-lg shadow-destructive/30">
                   <Icon className="w-6 h-6 text-white" />
@@ -39,7 +43,8 @@ export default function BottomNav() {
             <Link
               key={path}
               to={path}
-              className="flex flex-col items-center gap-0.5 py-1 px-3"
+              aria-label={label}
+              className="flex flex-col items-center gap-0.5 py-1 px-3 min-w-[44px] min-h-[44px] justify-center"
             >
               <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
               <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>

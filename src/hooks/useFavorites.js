@@ -23,6 +23,25 @@ export function useFavorites() {
       await base44.auth.updateMe({ favorite_professionals: updated });
       return updated;
     },
+    onMutate: async (proId) => {
+      await queryClient.cancelQueries({ queryKey: ['currentUser'] });
+      const previous = queryClient.getQueryData(['currentUser']);
+      queryClient.setQueryData(['currentUser'], (old) => {
+        if (!old) return old;
+        const current = old.favorite_professionals || [];
+        const updated = current.includes(proId)
+          ? current.filter(id => id !== proId)
+          : [...current, proId];
+        return { ...old, favorite_professionals: updated };
+      });
+      return { previous };
+    },
+    onError: (_err, _proId, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['currentUser'], context.previous);
+      }
+      toast.error('Erreur lors de la mise à jour des favoris');
+    },
     onSuccess: (updated, proId) => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       const added = updated.includes(proId);
