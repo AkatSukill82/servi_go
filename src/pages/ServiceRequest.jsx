@@ -28,7 +28,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 function findClosestPro(professionals, customerLat, customerLon, excludeIds = []) {
   const available = professionals.filter(p =>
-    p.available !== false &&
+    p.available === true &&
     p.user_type === 'professionnel' &&
     !excludeIds.includes(p.id)
   );
