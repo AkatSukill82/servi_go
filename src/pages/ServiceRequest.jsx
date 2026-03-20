@@ -279,6 +279,7 @@ export default function ServiceRequest() {
           <p className="text-sm text-muted-foreground">
             {step === STEPS.ADDRESS && 'Votre adresse'}
             {step === STEPS.QUESTIONS && `Question ${questionIndex + 1} / ${totalQuestions}`}
+            {step === STEPS.SLOT && 'Date & heure'}
             {step === STEPS.SEARCHING && 'Recherche en cours...'}
             {step === STEPS.QUOTE && 'Votre devis'}
             {step === STEPS.CONFIRMED && 'Confirmé !'}
