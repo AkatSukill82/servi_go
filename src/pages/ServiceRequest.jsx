@@ -193,9 +193,11 @@ export default function ServiceRequest() {
     const customerLat = user?.latitude || 48.8566;
     const customerLon = user?.longitude || 2.3522;
 
-    const catPros = allProfessionals.filter(p =>
-      !category?.name || p.category_name === category?.name
-    );
+    // Match by category if both sides have a value, otherwise accept all pros
+    const catPros = allProfessionals.filter(p => {
+      if (category?.name && p.category_name && p.category_name !== category.name) return false;
+      return true;
+    });
 
     // If a priority pro is specified (from favorites), try them first
     let nextPro;
