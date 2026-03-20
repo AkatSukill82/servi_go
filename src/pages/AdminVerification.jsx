@@ -219,8 +219,8 @@ export default function AdminVerification() {
             <ProCard
               key={pro.id}
               pro={pro}
-              onApprove={id => updateMutation.mutate({ id, status: 'verified' })}
-              onReject={id => updateMutation.mutate({ id, status: 'rejected' })}
+              onApprove={id => updateMutation.mutate({ id, status: 'verified', pro })}
+              onReject={id => updateMutation.mutate({ id, status: 'rejected', pro })}
               isPending={updateMutation.isPending}
             />
           ))}
