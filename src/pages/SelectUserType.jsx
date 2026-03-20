@@ -97,19 +97,20 @@ export default function SelectUserType() {
       async (pos) => {
         const { latitude, longitude } = pos.coords;
         setCoords({ latitude, longitude });
+        const detectedLang = detectLanguage(latitude, longitude);
+        setLang(detectedLang);
         try {
           const address = await reverseGeocode(latitude, longitude);
           setDetectedAddress(address);
           setStep('confirm');
         } catch {
-          // Geocoding failed, use coords only
           setDetectedAddress(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
           setStep('confirm');
         }
       },
       () => {
-        // User denied or error — skip geolocation
-        toast.info('Géolocalisation ignorée. Vous pourrez la saisir plus tard.');
+        const t = LANG_TEXTS[lang];
+        toast.info(t.skipped);
         updateMutation.mutate({ user_type: type });
       },
       { timeout: 10000, enableHighAccuracy: true }
