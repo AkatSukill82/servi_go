@@ -137,9 +137,9 @@ export default function ProDashboard() {
         <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm">
           <div className="flex items-center gap-1">
             <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-            <p className="text-xs text-muted-foreground">Note</p>
+            <p className="text-xs text-muted-foreground">Note ({user?.reviews_count || 0} avis)</p>
           </div>
-          <p className="text-2xl font-bold">{user?.rating || '—'}</p>
+          <p className="text-2xl font-bold">{user?.rating ? user.rating.toFixed(1) : '—'}</p>
         </div>
       </div>
 
