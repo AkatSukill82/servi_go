@@ -389,6 +389,8 @@ export default function ServiceRequest() {
               onAccept={handleAcceptQuote}
               onDecline={handleDecline}
               isSubmitting={updateRequestMutation.isPending}
+              scheduledDate={scheduledDate}
+              scheduledTime={scheduledTime}
             />
           </motion.div>
         )}
