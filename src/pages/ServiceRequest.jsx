@@ -214,6 +214,8 @@ export default function ServiceRequest() {
       total_price: totalPrice,
       payment_method: paymentMethod || 'bank_transfer',
       payment_status: 'unpaid',
+      scheduled_date: scheduledDate || null,
+      scheduled_time: scheduledTime || null,
     });
 
     setRequestId(newRequest.id);
