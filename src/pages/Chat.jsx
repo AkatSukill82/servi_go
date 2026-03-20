@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Send, Image, MapPin, CheckCheck, CheckCircle, Star } from 'lucide-react';
+import { Send, Image, MapPin, CheckCheck, CheckCircle, Star, CalendarDays } from 'lucide-react';
 import FavoriteButton from '@/components/favorites/FavoriteButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '@/components/ui/BackButton';
@@ -226,6 +226,9 @@ export default function Chat() {
           <p className="text-xs text-muted-foreground">
             Mission · <span className="font-medium text-foreground">{request.category_name}</span>
             {request.customer_address && <> · <span>{request.customer_address}</span></>}
+            {request.scheduled_date && request.scheduled_time && (
+              <> · <CalendarDays className="w-3 h-3 inline mb-0.5" /> <span className="font-medium text-foreground">{format(parseISO(request.scheduled_date), 'dd MMM', { locale: fr })} à {request.scheduled_time}</span></>
+            )}
           </p>
         </div>
       )}
