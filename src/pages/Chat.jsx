@@ -165,6 +165,14 @@ export default function Chat() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      {showRating && (
+        <RatingModal
+          request={request}
+          onSubmit={(data) => reviewMutation.mutate(data)}
+          onClose={() => setShowRating(false)}
+          isSubmitting={reviewMutation.isPending}
+        />
+      )}
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-card border-b border-border/50 shadow-sm"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
