@@ -190,6 +190,20 @@ export default function Chat() {
               <MapPin className="w-5 h-5 text-primary" />
             </Button>
           )}
+          {/* Pro can mark mission as completed */}
+          {request?.status === 'accepted' && user?.user_type === 'professionnel' && (
+            <Button size="sm" className="rounded-xl bg-green-600 hover:bg-green-700 text-xs px-3"
+              onClick={() => completeMutation.mutate()} disabled={completeMutation.isPending}>
+              <CheckCircle className="w-4 h-4 mr-1" /> Terminer
+            </Button>
+          )}
+          {/* Client can rate after mission is completed */}
+          {request?.status === 'completed' && user?.user_type === 'particulier' && (
+            <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3"
+              onClick={() => setShowRating(true)}>
+              <Star className="w-4 h-4 mr-1" /> Noter
+            </Button>
+          )}
         </div>
       </div>
 
