@@ -41,7 +41,7 @@ export default function BottomNav() {
               to={path}
               className="flex flex-col items-center gap-0.5 py-1 px-3"
             >
-              <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+              <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
               <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
                 {label}
               </span>
