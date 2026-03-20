@@ -152,8 +152,8 @@ export default function ServiceRequest() {
       return true;
     });
     const tried = req?.tried_professionals || [];
-    const customerLat = req?.customer_latitude || user?.latitude || 48.8566;
-    const customerLon = req?.customer_longitude || user?.longitude || 2.3522;
+    const customerLat = req?.customer_latitude || user?.latitude || 50.8503;
+    const customerLon = req?.customer_longitude || user?.longitude || 4.3517;
 
     const nextPro = findClosestPro(catPros, customerLat, customerLon, tried);
     if (!nextPro) {
