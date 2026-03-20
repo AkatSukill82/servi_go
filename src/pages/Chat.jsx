@@ -27,6 +27,7 @@ export default function Chat() {
 
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [showRating, setShowRating] = useState(false);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
 
