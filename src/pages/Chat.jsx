@@ -198,7 +198,7 @@ export default function Chat() {
             <FavoriteButton proId={request.professional_id} />
           )}
           {request?.status === 'accepted' && (
-            <Button variant="ghost" size="icon" className="rounded-full"
+            <Button variant="ghost" size="icon" aria-label="Suivre sur la carte" className="rounded-full min-w-[44px] min-h-[44px]"
               onClick={() => navigate(`/TrackingMap?requestId=${requestId}`)}>
               <MapPin className="w-5 h-5 text-primary" />
             </Button>
