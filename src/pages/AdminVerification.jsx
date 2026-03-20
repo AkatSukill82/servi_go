@@ -135,11 +135,11 @@ export default function AdminVerification() {
 
       const isVerified = status === 'verified';
       const subject = isVerified
-        ? '✅ Votre compte ServiConnect est vérifié !'
-        : '❌ Votre dossier ServiConnect a été refusé';
+        ? '✅ Votre compte ServiGo est vérifié !'
+        : '❌ Votre dossier ServiGo a été refusé';
       const body = isVerified
-        ? `Bonjour ${pro.full_name},\n\nFélicitations ! Votre dossier a été examiné et votre compte est maintenant vérifié.\n\nVous bénéficiez désormais du badge "Pro Vérifié ✓" visible par tous les clients, ce qui augmente votre crédibilité et vos chances d'obtenir des missions.\n\nConnectez-vous à ServiConnect pour commencer à recevoir des demandes.\n\nL'équipe ServiConnect`
-        : `Bonjour ${pro.full_name},\n\nNous avons examiné votre dossier mais malheureusement nous ne pouvons pas valider votre compte pour le moment.\n\nCela peut être dû à des documents illisibles, expirés ou incomplets. Veuillez vous connecter à ServiConnect et soumettre à nouveau vos documents dans la section "Mon profil".\n\nEn cas de questions, contactez notre support.\n\nL'équipe ServiConnect`;
+        ? `Bonjour ${pro.full_name},\n\nFélicitations ! Votre dossier a été examiné et votre compte est maintenant vérifié.\n\nVous bénéficiez désormais du badge "Pro Vérifié ✓" visible par tous les clients, ce qui augmente votre crédibilité et vos chances d'obtenir des missions.\n\nConnectez-vous à ServiGo pour commencer à recevoir des demandes.\n\nL'équipe ServiGo`
+        : `Bonjour ${pro.full_name},\n\nNous avons examiné votre dossier mais malheureusement nous ne pouvons pas valider votre compte pour le moment.\n\nCela peut être dû à des documents illisibles, expirés ou incomplets. Veuillez vous connecter à ServiGo et soumettre à nouveau vos documents dans la section "Mon profil".\n\nEn cas de questions, contactez notre support.\n\nL'équipe ServiGo`;
 
       await base44.integrations.Core.SendEmail({
         to: pro.email,

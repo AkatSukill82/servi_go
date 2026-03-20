@@ -28,7 +28,7 @@ export default function Landing() {
         <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/30">
           <span className="text-3xl font-black text-white">S</span>
         </div>
-        <h1 className="text-3xl font-black text-foreground mb-1">ServiConnect</h1>
+        <h1 className="text-3xl font-black text-foreground mb-1">ServiGo</h1>
         <p className="text-muted-foreground text-sm text-center max-w-xs">
           La plateforme qui connecte particuliers et professionnels du bâtiment
         </p>

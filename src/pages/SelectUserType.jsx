@@ -28,7 +28,7 @@ async function reverseGeocode(lat, lon) {
 const LANG_TEXTS = {
   fr: {
     title: 'Une dernière étape !',
-    subtitle: 'Comment souhaitez-vous utiliser ServiConnect ?',
+    subtitle: 'Comment souhaitez-vous utiliser ServiGo ?',
     customer: 'Particulier', customerSub: 'Je cherche un professionnel',
     pro: 'Professionnel', proSub: 'Je propose mes services',
     detecting: 'Détection de votre position…',
@@ -41,7 +41,7 @@ const LANG_TEXTS = {
   },
   nl: {
     title: 'Nog één stap!',
-    subtitle: 'Hoe wilt u ServiConnect gebruiken?',
+    subtitle: 'Hoe wilt u ServiGo gebruiken?',
     customer: 'Particulier', customerSub: 'Ik zoek een professional',
     pro: 'Professional', proSub: 'Ik bied mijn diensten aan',
     detecting: 'Uw locatie detecteren…',
@@ -54,7 +54,7 @@ const LANG_TEXTS = {
   },
   de: {
     title: 'Noch ein letzter Schritt!',
-    subtitle: 'Wie möchten Sie ServiConnect nutzen?',
+    subtitle: 'Wie möchten Sie ServiGo nutzen?',
     customer: 'Privatperson', customerSub: 'Ich suche einen Fachmann',
     pro: 'Fachmann', proSub: 'Ich biete meine Dienste an',
     detecting: 'Ihren Standort ermitteln…',
