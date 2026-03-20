@@ -51,6 +51,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/Landing" element={<Landing />} />
       <Route path="/SelectUserType" element={<SelectUserType />} />
+      <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
 
       {/* App pages with shared layout */}
       <Route element={<AppLayout />}>
