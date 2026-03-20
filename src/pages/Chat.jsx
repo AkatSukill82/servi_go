@@ -70,6 +70,44 @@ export default function Chat() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages', requestId] }),
   });
 
+  const completeMutation = useMutation({
+    mutationFn: () => base44.entities.ServiceRequest.update(requestId, { status: 'completed' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['request', requestId] });
+      toast.success('Mission terminée !');
+    },
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: async ({ rating, comment }) => {
+      // Create review
+      await base44.entities.Review.create({
+        request_id: requestId,
+        professional_email: request.professional_email,
+        customer_name: user.full_name,
+        customer_email: user.email,
+        rating,
+        comment,
+        category_name: request.category_name,
+      });
+      // Update pro's average rating
+      const allReviews = await base44.entities.Review.filter({ professional_email: request.professional_email });
+      const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+      const pros = await base44.entities.User.filter({ email: request.professional_email });
+      if (pros[0]) {
+        await base44.entities.User.update(pros[0].id, {
+          rating: Math.round(avg * 10) / 10,
+          reviews_count: allReviews.length,
+        });
+      }
+    },
+    onSuccess: () => {
+      setShowRating(false);
+      queryClient.invalidateQueries({ queryKey: ['request', requestId] });
+      toast.success('Merci pour votre évaluation !');
+    },
+  });
+
   const handleSend = async () => {
     if (!text.trim() || !user) return;
     setSending(true);
