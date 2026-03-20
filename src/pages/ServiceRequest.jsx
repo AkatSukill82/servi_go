@@ -168,7 +168,7 @@ export default function ServiceRequest() {
   const handleAddressNext = () => {
     if (!address.trim()) return;
     if (totalQuestions > 0) setStep(STEPS.QUESTIONS);
-    else startSearch();
+    else setStep(STEPS.SLOT);
   };
 
   const startSearch = async () => {
@@ -225,7 +225,7 @@ export default function ServiceRequest() {
     if (questionIndex < totalQuestions - 1) {
       setQuestionIndex(questionIndex + 1);
     } else {
-      startSearch();
+      setStep(STEPS.SLOT);
     }
   };
 
