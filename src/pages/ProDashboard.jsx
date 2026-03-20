@@ -145,12 +145,12 @@ export default function ProDashboard() {
         </div>
       </div>
 
-      {/* Incoming requests */}
+      {/* Incoming requests — broadcast à tous les pros du même métier */}
       {incomingRequests.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Bell className="w-4 h-4 text-accent" />
-            <h2 className="font-semibold">Nouvelle demande</h2>
+            <h2 className="font-semibold">Demandes disponibles</h2>
             <Badge className="bg-accent text-accent-foreground text-xs">{incomingRequests.length}</Badge>
           </div>
           <div className="space-y-3">
@@ -167,9 +167,12 @@ export default function ProDashboard() {
                     <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3" /> {req.customer_address || 'Adresse non précisée'}
                     </p>
+                    {req.scheduled_date && (
+                      <p className="text-xs text-primary mt-0.5">📅 {req.scheduled_date} {req.scheduled_time && `à ${req.scheduled_time}`}</p>
+                    )}
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-lg text-primary">{req.base_price?.toFixed(2)} €</p>
+                    <p className="font-bold text-lg text-primary">{(req.base_price || 80).toFixed(2)} €</p>
                     <p className="text-xs text-muted-foreground">votre part</p>
                   </div>
                 </div>
@@ -185,23 +188,13 @@ export default function ProDashboard() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => respondMutation.mutate({ requestId: req.id, accept: false, request: req })}
-                    disabled={respondMutation.isPending}
-                    className="flex-1 h-11 rounded-xl text-destructive hover:text-destructive"
-                  >
-                    <X className="w-4 h-4 mr-1" /> Refuser
-                  </Button>
-                  <Button
-                    onClick={() => respondMutation.mutate({ requestId: req.id, accept: true, request: req })}
-                    disabled={respondMutation.isPending}
-                    className="flex-1 h-11 rounded-xl bg-green-600 hover:bg-green-700"
-                  >
-                    <Check className="w-4 h-4 mr-1" /> Accepter
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => respondMutation.mutate({ requestId: req.id, accept: true, request: req })}
+                  disabled={respondMutation.isPending}
+                  className="w-full h-11 rounded-xl bg-green-600 hover:bg-green-700"
+                >
+                  <Check className="w-4 h-4 mr-1" /> Je prends cette mission
+                </Button>
               </motion.div>
             ))}
           </div>
@@ -211,8 +204,8 @@ export default function ProDashboard() {
       {incomingRequests.length === 0 && (
         <div className="bg-card rounded-2xl p-6 border border-border/50 text-center">
           <Clock className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm font-medium">En attente de demandes</p>
-          <p className="text-xs text-muted-foreground mt-1">Vous serez notifié dès qu'un client vous contacte</p>
+          <p className="text-sm font-medium">Aucune demande disponible</p>
+          <p className="text-xs text-muted-foreground mt-1">Les nouvelles demandes de {proCategory || 'votre métier'} apparaîtront ici</p>
         </div>
       )}
 
