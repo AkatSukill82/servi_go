@@ -180,7 +180,9 @@ export default function ServiceRequest() {
     const customerLat = user?.latitude || 48.8566;
     const customerLon = user?.longitude || 2.3522;
 
-    const catPros = allProfessionals.filter(p => p.category_name === category?.name);
+    const catPros = allProfessionals.filter(p =>
+      !category?.name || p.category_name === category?.name
+    );
 
     // If a priority pro is specified (from favorites), try them first
     let nextPro;
