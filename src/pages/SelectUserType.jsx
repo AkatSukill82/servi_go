@@ -7,9 +7,19 @@ import { User, Briefcase, MapPin, CheckCircle, XCircle, Loader2, Navigation } fr
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
+// Belgique: zones linguistiques approximatives par longitude
+// <4.0 = Wallonie (fr), >4.8 = Flandre (nl), entre les deux = Bruxelles (fr/nl)
+// Province de Liège est incluse (~5.5-6.0) avec communauté germanophone
+function detectLanguage(lat, lon) {
+  if (lon > 5.7 && lat < 50.7) return 'de'; // Communauté germanophone (Eupen/Malmedy)
+  if (lon > 4.7) return 'nl'; // Flandre
+  return 'fr'; // Wallonie + Bruxelles (par défaut)
+}
+
 async function reverseGeocode(lat, lon) {
+  const lang = detectLanguage(lat, lon);
   const res = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fr`
+    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=${lang}`
   );
   const data = await res.json();
   return data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
