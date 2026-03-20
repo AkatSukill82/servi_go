@@ -127,9 +127,10 @@ export default function SelectUserType() {
   };
 
   const handleRejectAddress = () => {
-    // Save user type but without the address
     updateMutation.mutate({ user_type: pendingType });
   };
+
+  const t = LANG_TEXTS[lang];
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
@@ -137,26 +138,18 @@ export default function SelectUserType() {
 
         {/* STEP: Choose type */}
         {step === 'choose' && (
-          <motion.div
-            key="choose"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="w-full max-w-sm"
-          >
+          <motion.div key="choose" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-sm">
             <div className="text-center mb-10">
               <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <span className="text-3xl font-black text-white">S</span>
               </div>
-              <h1 className="text-2xl font-bold">Une dernière étape !</h1>
-              <p className="text-muted-foreground mt-2">Comment souhaitez-vous utiliser ServiConnect ?</p>
+              <h1 className="text-2xl font-bold">{t.title}</h1>
+              <p className="text-muted-foreground mt-2">{t.subtitle}</p>
             </div>
 
             <div className="space-y-4">
               <motion.button
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
+                initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
                 onClick={() => handleChoose('particulier')}
                 className="w-full bg-card border-2 border-border hover:border-primary/40 rounded-2xl p-6 text-left transition-all active:scale-95 shadow-sm"
               >
@@ -165,16 +158,14 @@ export default function SelectUserType() {
                     <User className="w-7 h-7 text-primary" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-lg">Particulier</h2>
-                    <p className="text-sm text-muted-foreground">Je cherche un professionnel</p>
+                    <h2 className="font-bold text-lg">{t.customer}</h2>
+                    <p className="text-sm text-muted-foreground">{t.customerSub}</p>
                   </div>
                 </div>
               </motion.button>
 
               <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
+                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
                 onClick={() => handleChoose('professionnel')}
                 className="w-full bg-card border-2 border-border hover:border-accent/40 rounded-2xl p-6 text-left transition-all active:scale-95 shadow-sm"
               >
@@ -183,8 +174,8 @@ export default function SelectUserType() {
                     <Briefcase className="w-7 h-7 text-accent" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-lg">Professionnel</h2>
-                    <p className="text-sm text-muted-foreground">Je propose mes services</p>
+                    <h2 className="font-bold text-lg">{t.pro}</h2>
+                    <p className="text-sm text-muted-foreground">{t.proSub}</p>
                   </div>
                 </div>
               </motion.button>
@@ -194,41 +185,25 @@ export default function SelectUserType() {
 
         {/* STEP: Geolocating */}
         {step === 'geolocating' && (
-          <motion.div
-            key="geolocating"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0 }}
-            className="text-center space-y-5"
-          >
+          <motion.div key="geolocating" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="text-center space-y-5">
             <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
               <Navigation className="w-10 h-10 text-primary animate-pulse" />
             </div>
-            <h2 className="text-xl font-bold">Détection de votre position…</h2>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-              Autorisez la géolocalisation pour pré-remplir votre adresse automatiquement lors de vos demandes.
-            </p>
+            <h2 className="text-xl font-bold">{t.detecting}</h2>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">{t.detectingSub}</p>
             <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
           </motion.div>
         )}
 
         {/* STEP: Confirm address */}
         {step === 'confirm' && (
-          <motion.div
-            key="confirm"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="w-full max-w-sm space-y-6"
-          >
+          <motion.div key="confirm" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-sm space-y-6">
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="text-xl font-bold">Votre adresse détectée</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Confirmez-vous que c'est bien votre adresse habituelle ?
-              </p>
+              <h2 className="text-xl font-bold">{t.addressTitle}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t.addressSub}</p>
             </div>
 
             <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
@@ -239,22 +214,13 @@ export default function SelectUserType() {
             </div>
 
             <div className="space-y-3">
-              <Button
-                onClick={handleConfirmAddress}
-                disabled={updateMutation.isPending}
-                className="w-full h-14 rounded-xl text-base"
-              >
+              <Button onClick={handleConfirmAddress} disabled={updateMutation.isPending} className="w-full h-14 rounded-xl text-base">
                 <CheckCircle className="w-5 h-5 mr-2" />
-                Oui, c'est bien mon adresse
+                {t.confirm}
               </Button>
-              <Button
-                variant="outline"
-                onClick={handleRejectAddress}
-                disabled={updateMutation.isPending}
-                className="w-full h-14 rounded-xl text-base"
-              >
+              <Button variant="outline" onClick={handleRejectAddress} disabled={updateMutation.isPending} className="w-full h-14 rounded-xl text-base">
                 <XCircle className="w-5 h-5 mr-2" />
-                Non, je saisirai mon adresse manuellement
+                {t.reject}
               </Button>
             </div>
 
