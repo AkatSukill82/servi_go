@@ -131,7 +131,9 @@ export default function ServiceRequest() {
   const findAndContactNextPro = async (existingRequest) => {
     setStep(STEPS.SEARCHING);
     const req = existingRequest || currentRequest;
-    const catPros = allProfessionals.filter(p => p.category_name === category?.name);
+    const catPros = allProfessionals.filter(p =>
+      !category?.name || p.category_name === category?.name
+    );
     const tried = req?.tried_professionals || [];
     const customerLat = req?.customer_latitude || user?.latitude || 48.8566;
     const customerLon = req?.customer_longitude || user?.longitude || 2.3522;
