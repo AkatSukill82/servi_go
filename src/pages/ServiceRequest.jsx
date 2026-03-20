@@ -95,11 +95,14 @@ export default function ServiceRequest() {
     enabled: !!categoryId,
   });
 
-  // Pre-load all professionals
+  // Pre-load all professionals (kept for findAndContactNextPro fallback)
   const { data: allProfessionals = [] } = useQuery({
     queryKey: ['allProfessionals'],
     queryFn: () => base44.entities.User.filter({ user_type: 'professionnel' }),
   });
+
+  // Always fetch fresh pros at search time to avoid stale/empty cache
+  const fetchFreshPros = () => base44.entities.User.filter({ user_type: 'professionnel' });
 
   const questions = category?.questions || [];
   const totalQuestions = questions.length;
