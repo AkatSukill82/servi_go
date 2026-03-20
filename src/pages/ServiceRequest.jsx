@@ -356,7 +356,7 @@ export default function ServiceRequest() {
                   <Input
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    placeholder="Ex: 12 Rue de la Paix, 75001 Paris"
+                    placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles"
                     className="h-12 rounded-xl"
                   />
                   <Button onClick={handleAddressNext} disabled={!address.trim()} className="w-full h-14 rounded-xl text-base">
