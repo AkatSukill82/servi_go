@@ -25,12 +25,55 @@ async function reverseGeocode(lat, lon) {
   return data.display_name || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
 }
 
+const LANG_TEXTS = {
+  fr: {
+    title: 'Une dernière étape !',
+    subtitle: 'Comment souhaitez-vous utiliser ServiConnect ?',
+    customer: 'Particulier', customerSub: 'Je cherche un professionnel',
+    pro: 'Professionnel', proSub: 'Je propose mes services',
+    detecting: 'Détection de votre position…',
+    detectingSub: 'Autorisez la géolocalisation pour pré-remplir votre adresse automatiquement.',
+    addressTitle: 'Votre adresse détectée',
+    addressSub: 'Confirmez-vous que c\'est bien votre adresse habituelle ?',
+    confirm: 'Oui, c\'est bien mon adresse',
+    reject: 'Non, je saisirai manuellement',
+    skipped: 'Géolocalisation ignorée. Vous pourrez la saisir plus tard.',
+  },
+  nl: {
+    title: 'Nog één stap!',
+    subtitle: 'Hoe wilt u ServiConnect gebruiken?',
+    customer: 'Particulier', customerSub: 'Ik zoek een professional',
+    pro: 'Professional', proSub: 'Ik bied mijn diensten aan',
+    detecting: 'Uw locatie detecteren…',
+    detectingSub: 'Sta geolokalisatie toe om uw adres automatisch in te vullen.',
+    addressTitle: 'Gedetecteerd adres',
+    addressSub: 'Bevestigt u dat dit uw gewone adres is?',
+    confirm: 'Ja, dit is mijn adres',
+    reject: 'Nee, ik vul het handmatig in',
+    skipped: 'Geolokalisatie overgeslagen. U kunt dit later invullen.',
+  },
+  de: {
+    title: 'Noch ein letzter Schritt!',
+    subtitle: 'Wie möchten Sie ServiConnect nutzen?',
+    customer: 'Privatperson', customerSub: 'Ich suche einen Fachmann',
+    pro: 'Fachmann', proSub: 'Ich biete meine Dienste an',
+    detecting: 'Ihren Standort ermitteln…',
+    detectingSub: 'Erlauben Sie die Geolokalisierung, um Ihre Adresse automatisch auszufüllen.',
+    addressTitle: 'Erkannte Adresse',
+    addressSub: 'Bestätigen Sie, dass dies Ihre übliche Adresse ist?',
+    confirm: 'Ja, das ist meine Adresse',
+    reject: 'Nein, ich gebe sie manuell ein',
+    skipped: 'Geolokalisierung übersprungen. Sie können sie später eingeben.',
+  },
+};
+
 export default function SelectUserType() {
   const navigate = useNavigate();
-  const [step, setStep] = useState('choose'); // 'choose' | 'geolocating' | 'confirm'
+  const [step, setStep] = useState('choose');
   const [pendingType, setPendingType] = useState(null);
   const [detectedAddress, setDetectedAddress] = useState('');
   const [coords, setCoords] = useState(null);
+  const [lang, setLang] = useState('fr');
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
