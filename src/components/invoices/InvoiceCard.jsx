@@ -2,8 +2,10 @@ import React from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
-import { Receipt, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Receipt, CreditCard, Banknote, Smartphone, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { generateInvoicePDF } from '@/utils/generateInvoicePDF';
 
 const paymentIcons = {
   apple_pay: Smartphone,
