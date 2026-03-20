@@ -177,7 +177,7 @@ export default function ProProfile() {
           </h3>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Téléphone</Label>
-            <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+33 6 12 34 56 78" className="h-12 rounded-xl" />
+            <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+32 470 12 34 56" className="h-12 rounded-xl" />
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Adresse</Label>
