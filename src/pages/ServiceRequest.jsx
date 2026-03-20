@@ -61,6 +61,7 @@ export default function ServiceRequest() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [address, setAddress] = useState('');
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
