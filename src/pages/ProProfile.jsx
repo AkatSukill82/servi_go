@@ -190,6 +190,9 @@ export default function ProProfile() {
           </div>
         </div>
 
+        {/* Vérification */}
+        <VerificationSection user={user} onUpdate={() => queryClient.invalidateQueries({ queryKey: ['currentUser'] })} />
+
         {/* Availability */}
         <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
           <h3 className="font-semibold flex items-center gap-2">
