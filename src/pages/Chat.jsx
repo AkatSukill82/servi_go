@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Send, Image, ArrowLeft, Phone, MapPin, CheckCheck } from 'lucide-react';
+import { Send, Image, MapPin, CheckCheck, CheckCircle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,8 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '@/components/ui/BackButton';
+import RatingModal from '@/components/review/RatingModal';
+import { toast } from 'sonner';
 
 const STATUS_LABELS = {
   accepted: { label: 'Acceptée', color: 'bg-green-100 text-green-700' },
