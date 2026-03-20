@@ -424,18 +424,13 @@ export default function ServiceRequest() {
         {/* QUOTE */}
         {step === STEPS.QUOTE && (
           <motion.div key="quote" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            {assignedPro && (
-              <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm mb-4 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary">
-                  {assignedPro.full_name?.[0] || 'P'}
-                </div>
-                <div>
-                  <p className="font-semibold">{assignedPro.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{assignedPro.category_name} • En attente de réponse...</p>
-                </div>
-                <Clock className="w-5 h-5 text-muted-foreground ml-auto animate-pulse" />
+            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-4 flex items-center gap-3">
+              <Search className="w-5 h-5 text-primary animate-pulse shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-primary">Demande envoyée à tous les {category?.name}s disponibles</p>
+                <p className="text-xs text-muted-foreground">Le premier à accepter prendra votre mission</p>
               </div>
-            )}
+            </div>
             <PriceQuote
               basePrice={basePrice}
               commission={commission}
