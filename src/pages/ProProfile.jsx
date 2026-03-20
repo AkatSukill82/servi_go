@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
+import VerificationSection from '@/components/pro/VerificationSection';
 
 export default function ProProfile() {
   const navigate = useNavigate();
