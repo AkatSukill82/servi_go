@@ -12,6 +12,7 @@ const features = [
 ];
 
 export default function Landing() {
+  useDarkMode(); // Apply saved theme on landing page
   const handleGetStarted = () => base44.auth.redirectToLogin('/SelectUserType');
   const handleLogin = () => base44.auth.redirectToLogin('/Home');
 
