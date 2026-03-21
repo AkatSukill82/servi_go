@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
@@ -36,6 +37,18 @@ export default function AppLayout() {
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      {/* Theme toggle — top right */}
+      <button
+        onClick={() => setDark(d => !d)}
+        className="fixed top-3 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
+        style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
+        aria-label="Changer le thème"
+      >
+        {dark
+          ? <Sun className="w-4 h-4 text-foreground" strokeWidth={1.8} />
+          : <Moon className="w-4 h-4 text-foreground" strokeWidth={1.8} />
+        }
+      </button>
       <div className="flex-1 overflow-y-auto pb-20">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
