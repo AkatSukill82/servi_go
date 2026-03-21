@@ -114,8 +114,91 @@ function ProCard({ pro, onApprove, onReject, isPending }) {
   );
 }
 
+function ProStatsTable({ pros }) {
+  const { data: allRequests = [] } = useQuery({
+    queryKey: ['allRequestsAdmin'],
+    queryFn: () => base44.entities.ServiceRequest.list('-created_date', 500),
+  });
+
+  const statsPerPro = useMemo(() => {
+    return pros.map(pro => {
+      const jobs = allRequests.filter(r =>
+        r.professional_email === pro.email &&
+        (r.status === 'accepted' || r.status === 'completed' || r.status === 'in_progress')
+      );
+      const totalPaid = jobs.reduce((sum, j) => sum + (j.base_price || 0), 0);
+      return { ...pro, missionsCount: jobs.length, totalPaid };
+    }).sort((a, b) => b.missionsCount - a.missionsCount);
+  }, [pros, allRequests]);
+
+  const totalMissions = statsPerPro.reduce((s, p) => s + p.missionsCount, 0);
+  const totalRevenue = statsPerPro.reduce((s, p) => s + p.totalPaid, 0);
+
+  return (
+    <div className="space-y-4">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-1.5 mb-1">
+            <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
+            <p className="text-xs text-muted-foreground font-medium">Total missions</p>
+          </div>
+          <p className="text-3xl font-bold tracking-tight">{totalMissions}</p>
+        </div>
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Euro className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
+            <p className="text-xs text-muted-foreground font-medium">Total payé (pros)</p>
+          </div>
+          <p className="text-3xl font-bold tracking-tight">{totalRevenue.toFixed(0)} €</p>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="grid grid-cols-12 px-4 py-2.5 border-b border-border bg-muted/50">
+          <p className="col-span-5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Professionnel</p>
+          <p className="col-span-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Missions</p>
+          <p className="col-span-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Payé (HT)</p>
+        </div>
+        {statsPerPro.length === 0 ? (
+          <p className="text-center text-sm text-muted-foreground py-10">Aucune donnée</p>
+        ) : (
+          statsPerPro.map((pro, i) => (
+            <div
+              key={pro.id}
+              className={`grid grid-cols-12 px-4 py-3 items-center ${i < statsPerPro.length - 1 ? 'border-b border-border/50' : ''}`}
+            >
+              <div className="col-span-5 flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold overflow-hidden">
+                  {pro.photo_url
+                    ? <img src={pro.photo_url} alt="" className="w-full h-full object-cover" />
+                    : (pro.full_name?.[0] || '?')}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{pro.full_name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{pro.category_name || '—'}</p>
+                </div>
+              </div>
+              <div className="col-span-3 text-center">
+                <span className={`text-sm font-bold ${pro.missionsCount > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {pro.missionsCount}
+                </span>
+              </div>
+              <div className="col-span-4 text-right">
+                <span className="text-sm font-semibold">{pro.totalPaid.toFixed(2)} €</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminVerification() {
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState('verif');
   const [filter, setFilter] = useState('pending');
 
   const { data: currentUser } = useQuery({
