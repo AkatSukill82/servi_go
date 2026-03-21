@@ -187,7 +187,14 @@ export default function ProDashboard() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{req.category_name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm">{req.category_name}</p>
+                      {req.is_urgent && (
+                        <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5 flex items-center gap-0.5">
+                          ⚡ SOS
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                       <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
                       <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
