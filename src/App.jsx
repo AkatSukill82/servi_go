@@ -72,7 +72,6 @@ const AuthenticatedApp = () => {
       {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />
       <Route path="/TrackingMap" element={<TrackingMap />} />
-      <Route path="/Emergency" element={<Emergency />} />
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
