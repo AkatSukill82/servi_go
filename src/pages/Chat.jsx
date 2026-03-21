@@ -243,6 +243,13 @@ export default function Chat() {
         </div>
       )}
 
+      {/* Cash reminder banner for pro */}
+      {request?.status === 'completed' && user?.user_type === 'professionnel' && request?.payment_method === 'cash' && request?.payment_status === 'unpaid' && (
+        <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
+          <p className="text-xs text-yellow-800 font-medium">💵 Rappel : Mission terminée — n'oubliez pas de collecter <strong>{request.total_price?.toFixed(2)} €</strong> en espèces auprès du client.</p>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.length === 0 && (
