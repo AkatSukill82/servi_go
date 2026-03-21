@@ -63,8 +63,8 @@ export default function AppLayout() {
         </AnimatePresence>
       </div>
       {userType === 'professionnel'
-        ? <ProBottomNav dark={dark} setDark={setDark} />
-        : <BottomNav dark={dark} setDark={setDark} />
+        ? <ProBottomNav />
+        : <BottomNav />
       }
     </div>
   );

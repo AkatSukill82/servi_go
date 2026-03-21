@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, Phone, Heart, User, Sun, Moon } from 'lucide-react';
+import { Home, MapPin, Phone, Heart, User } from 'lucide-react';
 
 const navItems = [
   { path: '/Home', icon: Home, label: 'Accueil' },
@@ -10,7 +10,7 @@ const navItems = [
   { path: '/Profile', icon: User, label: 'Profil' },
 ];
 
-export default function BottomNav({ dark, setDark }) {
+export default function BottomNav() {
   const location = useLocation();
 
   return (
@@ -48,16 +48,7 @@ export default function BottomNav({ dark, setDark }) {
           );
         })}
 
-        <button
-          onClick={() => setDark(d => !d)}
-          className="flex flex-col items-center gap-0.5 px-3 py-1"
-        >
-          {dark
-            ? <Sun style={{ width: 20, height: 20 }} strokeWidth={1.6} className="text-muted-foreground" />
-            : <Moon style={{ width: 20, height: 20 }} strokeWidth={1.6} className="text-muted-foreground" />
-          }
-          <span className="text-[9px] font-medium text-muted-foreground">{dark ? 'Clair' : 'Sombre'}</span>
-        </button>
+
       </div>
     </nav>
   );
