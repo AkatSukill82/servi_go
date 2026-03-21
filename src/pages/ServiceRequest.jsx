@@ -244,6 +244,7 @@ export default function ServiceRequest() {
       payment_status: 'unpaid',
       scheduled_date: scheduledDate || null,
       scheduled_time: scheduledTime || null,
+      is_urgent: isUrgent,
     });
 
     setRequestId(newRequest.id);
