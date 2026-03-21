@@ -485,6 +485,7 @@ export default function ServiceRequest() {
               isSubmitting={updateRequestMutation.isPending}
               scheduledDate={scheduledDate}
               scheduledTime={scheduledTime}
+              isUrgent={isUrgent}
             />
           </motion.div>
         )}
