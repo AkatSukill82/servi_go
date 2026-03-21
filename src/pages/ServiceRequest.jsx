@@ -71,6 +71,8 @@ export default function ServiceRequest() {
   const urlParams = new URLSearchParams(window.location.search);
   const categoryId = urlParams.get('categoryId');
   const priorityProId = urlParams.get('priorityProId');
+  const isUrgent = urlParams.get('urgent') === 'true';
+  const URGENCY_SURCHARGE = 0.5; // +50%
 
   const [step, setStep] = useState(STEPS.ADDRESS);
   const [questionIndex, setQuestionIndex] = useState(0);
