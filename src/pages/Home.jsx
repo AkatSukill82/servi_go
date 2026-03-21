@@ -26,21 +26,19 @@ export default function Home() {
     <PullToRefresh onRefresh={handleRefresh}>
     <div className="px-4 pt-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Bonjour 👋</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          De quel service avez-vous besoin ?
-        </p>
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-foreground tracking-tight">Bonjour 👋</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">De quel service avez-vous besoin ?</p>
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      <div className="relative mb-5">
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Rechercher un service..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="pl-10 bg-card border-border/50 rounded-xl h-12"
+          className="pl-10 bg-card border-border rounded-2xl h-11 text-sm"
         />
       </div>
 
