@@ -22,6 +22,7 @@ import Map from './pages/Map';
 import MissionHistory from './pages/MissionHistory';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
+import Emergency from './pages/Emergency';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
