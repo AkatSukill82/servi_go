@@ -212,7 +212,8 @@ export default function ServiceRequest() {
   const startSearch = async () => {
     setStep(STEPS.SEARCHING);
 
-    const basePrice = category?.base_price || 80;
+    const rawBase = category?.base_price || 80;
+    const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
     const commission = basePrice * 0.10;
     const totalPrice = basePrice + commission;
 
@@ -323,7 +324,8 @@ export default function ServiceRequest() {
   }
 
   const reqData = currentRequest;
-  const basePrice = reqData?.base_price || assignedPro?.base_price || category?.base_price || 80;
+  const rawBase = reqData?.base_price || assignedPro?.base_price || category?.base_price || 80;
+  const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
   const commission = basePrice * 0.10;
   const totalPrice = basePrice + commission;
 
