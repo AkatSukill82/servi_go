@@ -258,56 +258,81 @@ export default function AdminVerification() {
   return (
     <div className="min-h-screen bg-background px-4 pt-6 pb-20 max-w-lg mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <ShieldCheck className="w-6 h-6 text-green-600" />
-          <h1 className="text-2xl font-bold">Vérifications Pro</h1>
-          {pendingCount > 0 && (
-            <span className="text-xs font-bold bg-accent text-accent-foreground rounded-full px-2 py-0.5">{pendingCount}</span>
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold tracking-tight">Admin</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Gestion des professionnels</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-5">
+        <button
+          onClick={() => setTab('verif')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+            tab === 'verif' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5" />
+          Vérifications
+          {pendingCount > 0 && tab !== 'verif' && (
+            <span className="text-xs font-bold bg-white/20 rounded-full px-1.5">{pendingCount}</span>
           )}
-        </div>
-        <p className="text-sm text-muted-foreground">Approuvez ou refusez les dossiers des professionnels</p>
+        </button>
+        <button
+          onClick={() => setTab('stats')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+            tab === 'stats' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" />
+          Statistiques
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
-        {STATUS_FILTERS.map(f => (
-          <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
-            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              filter === f.value
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card text-foreground border-border hover:border-primary/30'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* List */}
-      {isLoading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
-          <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Aucun professionnel dans cette catégorie</p>
-        </div>
+      {tab === 'stats' ? (
+        <ProStatsTable pros={pros} />
       ) : (
-        <div className="space-y-3">
-          {filtered.map(pro => (
-            <ProCard
-              key={pro.id}
-              pro={pro}
-              onApprove={id => updateMutation.mutate({ id, status: 'verified', pro })}
-              onReject={id => updateMutation.mutate({ id, status: 'rejected', pro })}
-              isPending={updateMutation.isPending}
-            />
-          ))}
-        </div>
+        <>
+          {/* Filters */}
+          <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+            {STATUS_FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setFilter(f.value)}
+                className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                  filter === f.value
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-card text-foreground border-border hover:border-primary/30'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* List */}
+          {isLoading ? (
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">Aucun professionnel dans cette catégorie</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map(pro => (
+                <ProCard
+                  key={pro.id}
+                  pro={pro}
+                  onApprove={id => updateMutation.mutate({ id, status: 'verified', pro })}
+                  onReject={id => updateMutation.mutate({ id, status: 'rejected', pro })}
+                  isPending={updateMutation.isPending}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
