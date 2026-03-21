@@ -128,7 +128,7 @@ export default function Profile() {
             <Input
               value={form.phone}
               onChange={e => setForm({ ...form, phone: e.target.value })}
-              placeholder="+33 6 12 34 56 78"
+              placeholder="+32 123 34 56 78"
               className="h-12 rounded-xl"
             />
           </div>
