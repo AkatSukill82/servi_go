@@ -22,36 +22,36 @@ export default function Landing() {
 
       {/* Logo + Title */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex flex-col items-center pt-12 pb-6"
+        transition={{ duration: 0.35 }}
+        className="flex flex-col items-center pt-14 pb-8"
       >
-        <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center mb-4 shadow-xl shadow-primary/30">
-          <span className="text-3xl font-black text-white">S</span>
+        <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-5">
+          <span className="text-2xl font-black text-white">S</span>
         </div>
-        <h1 className="text-3xl font-black text-foreground mb-1">ServiGo</h1>
-        <p className="text-muted-foreground text-sm text-center max-w-xs">
-          La plateforme qui connecte particuliers et professionnels du bâtiment
+        <h1 className="text-3xl font-black text-foreground tracking-tight">ServiGo</h1>
+        <p className="text-muted-foreground text-sm text-center max-w-xs mt-2 leading-relaxed">
+          Trouvez un professionnel près de chez vous en quelques minutes
         </p>
       </motion.div>
 
       {/* Features */}
-      <div className="flex-1 flex flex-col justify-center gap-3">
+      <div className="flex-1 flex flex-col justify-center gap-2.5">
         {features.map((f, i) => {
           const Icon = f.icon;
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 + i * 0.1 }}
-              className="flex items-center gap-4 bg-card rounded-2xl p-4 border border-border/50 shadow-sm"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.08 }}
+              className="flex items-center gap-4 bg-card rounded-2xl p-4 border border-border"
             >
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Icon className="w-5 h-5 text-primary" />
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Icon className="w-4.5 h-4.5 text-primary" style={{ width: 18, height: 18 }} />
               </div>
-              <span className="text-sm font-medium">{f.text}</span>
+              <span className="text-sm font-medium text-foreground">{f.text}</span>
             </motion.div>
           );
         })}
@@ -59,22 +59,23 @@ export default function Landing() {
 
       {/* CTA */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.45 }}
+        transition={{ delay: 0.35 }}
         className="pb-10 pt-6 space-y-3"
       >
         <Button
           onClick={handleGetStarted}
-          className="w-full h-14 rounded-2xl text-base font-semibold shadow-lg shadow-primary/20"
+          className="w-full h-13 rounded-2xl text-base font-semibold"
+          style={{ height: 52 }}
         >
           Créer un compte
-          <ChevronRight className="w-5 h-5 ml-1" />
         </Button>
         <Button
-          variant="outline"
+          variant="ghost"
           onClick={handleLogin}
-          className="w-full h-14 rounded-2xl text-base font-semibold"
+          className="w-full h-13 rounded-2xl text-base font-medium text-muted-foreground"
+          style={{ height: 48 }}
         >
           J'ai déjà un compte
         </Button>
