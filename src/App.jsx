@@ -67,6 +67,7 @@ const AuthenticatedApp = () => {
         <Route path="/Invoices" element={<Invoices />} />
         <Route path="/Map" element={<Map />} />
         <Route path="/MissionHistory" element={<MissionHistory />} />
+        <Route path="/Emergency" element={<Emergency />} />
       </Route>
 
       {/* Full screen pages (no layout) */}
