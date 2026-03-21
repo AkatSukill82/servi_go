@@ -26,6 +26,19 @@ export default function PriceQuote({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      {/* Urgent banner */}
+      {isUrgent && (
+        <div className="bg-destructive/8 border border-destructive/20 rounded-2xl p-4 flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0" strokeWidth={2} />
+          <div>
+            <p className="text-sm font-bold text-destructive flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5" /> Intervention SOS · Surcharge +50%
+            </p>
+            <p className="text-xs text-muted-foreground">Professionnel mobilisé en priorité absolue</p>
+          </div>
+        </div>
+      )}
+
       {/* Price Breakdown */}
       <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-sm">
         <h3 className="font-semibold text-lg mb-4">Détail du prix</h3>
