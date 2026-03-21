@@ -260,14 +260,48 @@ export default function ServiceRequest() {
     const id = requestId || currentRequest?.id;
     if (!id) { toast.error('Erreur: demande introuvable'); return; }
 
-    // Enregistrer le moyen de paiement et garder le statut pending_pro pour que le pro puisse accepter
     await updateRequestMutation.mutateAsync({
       id,
       data: { payment_method: paymentMethod },
     });
 
+    if (paymentMethod === 'stripe') {
+      // Vérifier iframe
+      if (window.self !== window.top) {
+        toast.error('Le paiement en ligne fonctionne uniquement depuis l\'application publiée.');
+        return;
+      }
+      const res = await base44.functions.invoke('createStripeCheckout', {
+        requestId: id,
+        totalPrice: totalPrice,
+        categoryName: category?.name,
+        proName: currentRequest?.professional_name || '',
+        successUrl: `${window.location.origin}/Invoices?payment=success`,
+        cancelUrl: window.location.href,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error('Erreur lors de la création du paiement.');
+      }
+      return;
+    }
+
+    if (paymentMethod === 'bank_transfer') {
+      // Récupérer l'IBAN du pro
+      if (currentRequest?.professional_email) {
+        const pros = await base44.entities.User.filter({ email: currentRequest.professional_email });
+        const pro = pros[0];
+        if (pro?.bank_iban) setProIban(pro.bank_iban);
+      }
+    }
+
     setStep(STEPS.CONFIRMED);
-    toast.success('Devis accepté ! En attente de confirmation du professionnel.');
+    toast.success(paymentMethod === 'cash'
+      ? 'Devis accepté ! Pensez à payer en espèces au professionnel.'
+      : paymentMethod === 'bank_transfer'
+      ? 'Devis accepté ! L\'IBAN du pro sera affiché après confirmation.'
+      : 'Devis accepté ! En attente de confirmation du professionnel.');
   };
 
   const handleDecline = () => navigate('/Home');
