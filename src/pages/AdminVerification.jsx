@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ShieldCheck, ShieldX, Eye, Clock, CheckCircle, XCircle, FileText, User } from 'lucide-react';
+import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
