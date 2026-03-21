@@ -82,6 +82,8 @@ export default function ServiceRequest() {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [requestId, setRequestId] = useState(null);
   const [assignedPro, setAssignedPro] = useState(null);
+  const [proIban, setProIban] = useState(null);
+  const [ibanCopied, setIbanCopied] = useState(false);
   const { requestPermission, notify } = useNotifications();
 
   const { data: user } = useQuery({
