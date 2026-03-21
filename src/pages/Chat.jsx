@@ -210,6 +210,16 @@ export default function Chat() {
               <CheckCircle className="w-4 h-4 mr-1" /> Terminer
             </Button>
           )}
+          {/* Pro: cash payment reminder after completion */}
+          {request?.status === 'completed' && user?.user_type === 'professionnel' && request?.payment_method === 'cash' && request?.payment_status === 'unpaid' && (
+            <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3"
+              onClick={() => {
+                base44.entities.ServiceRequest.update(request.id, { payment_status: 'paid' });
+                toast.success('Paiement cash confirmé !');
+              }}>
+              💵 Cash reçu
+            </Button>
+          )}
           {/* Client can rate after mission is completed */}
           {request?.status === 'completed' && user?.user_type === 'particulier' && (
             <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3"
