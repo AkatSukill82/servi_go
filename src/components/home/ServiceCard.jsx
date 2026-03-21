@@ -12,16 +12,16 @@ const iconMap = {
 };
 
 const colorMap = {
-  Wrench: 'from-blue-500 to-blue-600',
-  Truck: 'from-orange-400 to-orange-500',
-  Construction: 'from-amber-500 to-amber-600',
-  Pipette: 'from-cyan-500 to-cyan-600',
-  Paintbrush: 'from-violet-500 to-violet-600',
-  Zap: 'from-yellow-400 to-yellow-500',
-  Thermometer: 'from-red-400 to-red-500',
-  Lock: 'from-slate-500 to-slate-600',
-  TreePine: 'from-green-500 to-green-600',
-  Hammer: 'from-stone-500 to-stone-600',
+  Wrench: 'from-slate-700 to-slate-800',
+  Truck: 'from-slate-600 to-slate-700',
+  Construction: 'from-stone-600 to-stone-700',
+  Pipette: 'from-slate-500 to-slate-600',
+  Paintbrush: 'from-zinc-600 to-zinc-700',
+  Zap: 'from-neutral-600 to-neutral-700',
+  Thermometer: 'from-stone-500 to-stone-600',
+  Lock: 'from-slate-700 to-slate-800',
+  TreePine: 'from-zinc-500 to-zinc-600',
+  Hammer: 'from-neutral-700 to-neutral-800',
 };
 
 export default function ServiceCard({ category, index }) {
