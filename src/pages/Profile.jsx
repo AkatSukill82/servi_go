@@ -148,7 +148,7 @@ export default function Profile() {
             <Input
               value={form.bank_iban}
               onChange={e => setForm({ ...form, bank_iban: e.target.value })}
-              placeholder="FR76 XXXX XXXX XXXX XXXX"
+              placeholder="BE46 XXXX XXXX XXXX XXXX"
               className="h-12 rounded-xl"
             />
           </div>
