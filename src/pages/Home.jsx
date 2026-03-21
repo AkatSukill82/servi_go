@@ -11,6 +11,11 @@ export default function Home() {
   const [search, setSearch] = React.useState('');
   const queryClient = useQueryClient();
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['serviceCategories'],
     queryFn: () => base44.entities.ServiceCategory.list(),
@@ -22,51 +27,66 @@ export default function Home() {
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
 
+  const firstName = user?.full_name?.split(' ')[0];
+
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-    <div className="px-4 pt-6">
-      {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Bonjour 👋</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">De quel service avez-vous besoin ?</p>
+      <div className="px-5 pt-7 pb-4">
+
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            {firstName ? `Bonjour, ${firstName}` : 'Bonjour'} 👋
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Quel service recherchez-vous ?
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Plombier, électricien, déménageur..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10 h-11 rounded-xl bg-muted border-transparent focus-visible:border-border focus-visible:bg-card text-sm"
+          />
+        </div>
+
+        {/* Section label */}
+        {!search && (
+          <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
+            Nos services
+          </p>
+        )}
+
+        {/* Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="bg-card rounded-xl p-4 border border-border">
+                <Skeleton className="w-10 h-10 rounded-lg mb-3" />
+                <Skeleton className="h-3.5 w-3/4 mb-2" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map((category, index) => (
+              <ServiceCard key={category.id} category={category} index={index} />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && filtered.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-sm text-muted-foreground">Aucun service trouvé</p>
+          </div>
+        )}
+
       </div>
-
-      {/* Search */}
-      <div className="relative mb-5">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un service..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-10 bg-card border-border rounded-2xl h-11 text-sm"
-        />
-      </div>
-
-      {/* Categories Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-2 gap-3">
-          {Array(8).fill(0).map((_, i) => (
-            <div key={i} className="bg-card rounded-2xl p-4 border border-border/50">
-              <Skeleton className="w-12 h-12 rounded-xl mb-3" />
-              <Skeleton className="h-4 w-20 mb-2" />
-              <Skeleton className="h-3 w-full" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-3">
-          {filtered.map((category, index) => (
-            <ServiceCard key={category.id} category={category} index={index} />
-          ))}
-        </div>
-      )}
-
-      {!isLoading && filtered.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Aucun service trouvé</p>
-        </div>
-      )}
-    </div>
     </PullToRefresh>
   );
 }

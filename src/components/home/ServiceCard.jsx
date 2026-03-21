@@ -11,40 +11,30 @@ const iconMap = {
   Zap, Thermometer, Lock, TreePine, Hammer
 };
 
-const colorMap = {
-  Wrench: 'from-slate-700 to-slate-800',
-  Truck: 'from-slate-600 to-slate-700',
-  Construction: 'from-stone-600 to-stone-700',
-  Pipette: 'from-slate-500 to-slate-600',
-  Paintbrush: 'from-zinc-600 to-zinc-700',
-  Zap: 'from-neutral-600 to-neutral-700',
-  Thermometer: 'from-stone-500 to-stone-600',
-  Lock: 'from-slate-700 to-slate-800',
-  TreePine: 'from-zinc-500 to-zinc-600',
-  Hammer: 'from-neutral-700 to-neutral-800',
-};
-
 export default function ServiceCard({ category, index }) {
   const IconComponent = iconMap[category.icon] || Wrench;
-  const gradient = colorMap[category.icon] || 'from-primary to-primary';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
+      transition={{ delay: index * 0.04, duration: 0.25 }}
     >
-      <Link
-        to={`/ServiceRequest?categoryId=${category.id}`}
-        className="block group"
-      >
-        <div className="bg-card rounded-2xl p-4 border border-border active:scale-95 transition-transform duration-150">
-          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-3`}>
-            <IconComponent className="w-5 h-5 text-white" />
+      <Link to={`/ServiceRequest?categoryId=${category.id}`} className="block group">
+        <div className="bg-card rounded-xl p-4 border border-border active:scale-[0.97] transition-all duration-150 hover:border-foreground/20">
+          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center mb-3">
+            <IconComponent className="w-5 h-5 text-foreground" strokeWidth={1.8} />
           </div>
-          <h3 className="font-semibold text-sm text-foreground">{category.name}</h3>
+          <p className="text-sm font-semibold text-foreground leading-tight">{category.name}</p>
           {category.description && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{category.description}</p>
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+              {category.description}
+            </p>
+          )}
+          {category.base_price && (
+            <p className="text-xs font-medium text-foreground mt-2">
+              À partir de {category.base_price} €
+            </p>
           )}
         </div>
       </Link>
