@@ -34,7 +34,7 @@ export default function MapPage() {
   });
 
   const validPros = professionals.filter(p => p.latitude && p.longitude);
-  const defaultCenter = [50.8503, 4.3517]; // Bruxelles
+  const defaultCenter = [50.8503, 4.3517]; // Bruxelles, Belgique
 
   return (
     <div className="relative h-screen w-full overflow-hidden">
