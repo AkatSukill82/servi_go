@@ -3,7 +3,6 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Search, CheckCircle, Clock, Navigation, MessageCircle, CalendarDays, CreditCard, Copy } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
 import SlotPicker from '@/components/request/SlotPicker';
 import { useNotifications } from '@/hooks/useNotifications';
 import BackButton from '@/components/ui/BackButton';
