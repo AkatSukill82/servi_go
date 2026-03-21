@@ -38,12 +38,14 @@ export default function ServiceCard({ category, index }) {
         to={`/ServiceRequest?categoryId=${category.id}`}
         className="block group"
       >
-        <div className="bg-card rounded-2xl p-4 shadow-sm border border-border/50 hover:shadow-md hover:border-primary/20 transition-all duration-300 group-active:scale-95">
-          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-3 shadow-sm`}>
-            <IconComponent className="w-6 h-6 text-white" />
+        <div className="bg-card rounded-2xl p-4 border border-border active:scale-95 transition-transform duration-150">
+          <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-3`}>
+            <IconComponent className="w-5 h-5 text-white" />
           </div>
           <h3 className="font-semibold text-sm text-foreground">{category.name}</h3>
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{category.description}</p>
+          {category.description && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">{category.description}</p>
+          )}
         </div>
       </Link>
     </motion.div>
