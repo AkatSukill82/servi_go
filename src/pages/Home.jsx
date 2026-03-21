@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Search } from 'lucide-react';
@@ -8,7 +8,7 @@ import ServiceCard from '@/components/home/ServiceCard';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Home() {
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = useState('');
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
