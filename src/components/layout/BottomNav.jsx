@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, FileText, User, Phone, Heart } from 'lucide-react';
+import { Home, MapPin, Phone, Heart, User, Sun, Moon } from 'lucide-react';
 
 const navItems = [
   { path: '/Home', icon: Home, label: 'Accueil' },
@@ -10,15 +10,15 @@ const navItems = [
   { path: '/Profile', icon: User, label: 'Profil' },
 ];
 
-export default function BottomNav() {
+export default function BottomNav({ dark, setDark }) {
   const location = useLocation();
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center justify-around px-2 pt-2">
+      <div className="flex items-center justify-around h-14 px-1">
         {navItems.map(({ path, icon: Icon, label }) => {
           const isActive = location.pathname === path;
           const isEmergency = path === '/Emergency';
@@ -29,12 +29,12 @@ export default function BottomNav() {
                 key={path}
                 to={path}
                 aria-label="SOS Urgence"
-                className="flex flex-col items-center -mt-5 min-w-[44px]"
+                className="flex flex-col items-center gap-0.5"
               >
-                <div className="w-14 h-14 rounded-full bg-destructive flex items-center justify-center shadow-lg shadow-destructive/30">
-                  <Icon className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-full bg-destructive flex items-center justify-center shadow-md">
+                  <Icon className="w-4.5 h-4.5 text-white" style={{ width: 18, height: 18 }} />
                 </div>
-                <span className="text-[10px] mt-1 font-semibold text-destructive">SOS</span>
+                <span className="text-[9px] font-bold text-destructive">SOS</span>
               </Link>
             );
           }
@@ -44,15 +44,31 @@ export default function BottomNav() {
               key={path}
               to={path}
               aria-label={label}
-              className="flex flex-col items-center gap-0.5 py-1 px-3 min-w-[44px] min-h-[44px] justify-center"
+              className="flex flex-col items-center gap-0.5 px-3 py-1"
             >
-              <Icon className={`w-5 h-5 transition-colors ${isActive ? 'text-primary fill-primary' : 'text-muted-foreground'}`} />
-              <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+              <Icon
+                className={`transition-all ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                style={{ width: 20, height: 20, strokeWidth: isActive ? 2.2 : 1.8 }}
+              />
+              <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
                 {label}
               </span>
             </Link>
           );
         })}
+
+        {/* Dark mode toggle */}
+        <button
+          onClick={() => setDark(d => !d)}
+          aria-label="Toggle dark mode"
+          className="flex flex-col items-center gap-0.5 px-3 py-1"
+        >
+          {dark
+            ? <Sun style={{ width: 20, height: 20, strokeWidth: 1.8 }} className="text-muted-foreground" />
+            : <Moon style={{ width: 20, height: 20, strokeWidth: 1.8 }} className="text-muted-foreground" />
+          }
+          <span className="text-[9px] font-medium text-muted-foreground">{dark ? 'Clair' : 'Sombre'}</span>
+        </button>
       </div>
     </nav>
   );
