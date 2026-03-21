@@ -337,7 +337,14 @@ export default function ServiceRequest() {
           <BackButton fallback="/Home" />
         )}
         <div>
-          <h1 className="text-xl font-bold">{category.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold">{category.name}</h1>
+            {isUrgent && (
+              <span className="text-xs font-bold bg-destructive text-white rounded-full px-2.5 py-0.5 flex items-center gap-1">
+                ⚡ SOS
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             {step === STEPS.ADDRESS && 'Votre adresse'}
             {step === STEPS.QUESTIONS && `Question ${questionIndex + 1} / ${totalQuestions}`}

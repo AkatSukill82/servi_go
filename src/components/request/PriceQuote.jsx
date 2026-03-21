@@ -18,6 +18,7 @@ export default function PriceQuote({
   isSubmitting,
   scheduledDate,
   scheduledTime,
+  isUrgent,
 }) {
   return (
     <motion.div
