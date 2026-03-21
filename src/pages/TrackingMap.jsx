@@ -1,41 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import { Badge } from '@/components/ui/badge';
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, Navigation } from 'lucide-react';
+import { CheckCircle, Clock, MessageCircle, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import BackButton from '@/components/ui/BackButton';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix leaflet icons
 delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
 
 const proIcon = L.divIcon({
   className: '',
-  html: `<div style="width:36px;height:36px;background:#f97316;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:16px;">🔧</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
+  html: `<div style="width:42px;height:42px;background:#0a0a0a;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);font-size:18px;">🔧</div>`,
+  iconSize: [42, 42],
+  iconAnchor: [21, 21],
 });
 
 const clientIcon = L.divIcon({
   className: '',
-  html: `<div style="width:36px;height:36px;background:#3b82f6;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.3);font-size:16px;">🏠</div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 18],
+  html: `<div style="width:42px;height:42px;background:#ffffff;border-radius:50%;border:3px solid #0a0a0a;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.2);font-size:18px;">🏠</div>`,
+  iconSize: [42, 42],
+  iconAnchor: [21, 21],
 });
 
 function FitBounds({ points }) {
   const map = useMap();
   useEffect(() => {
     if (points.length >= 2) {
-      map.fitBounds(points, { padding: [60, 60] });
+      map.fitBounds(points, { padding: [80, 60] });
     }
   }, [points.length]);
   return null;
@@ -45,7 +39,6 @@ export default function TrackingMap() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const requestId = urlParams.get('requestId');
-
   const [route, setRoute] = useState([]);
 
   const { data: request } = useQuery({
@@ -62,35 +55,23 @@ export default function TrackingMap() {
     refetchInterval: 15000,
   });
 
-  // Fetch route from OpenRouteService (free, no key needed for basic use via OSRM)
   useEffect(() => {
     if (!proUser?.latitude || !proUser?.longitude || !request?.customer_latitude) return;
-
-    const fromLon = proUser.longitude;
-    const fromLat = proUser.latitude;
-    const toLon = request.customer_longitude;
-    const toLat = request.customer_latitude;
-
-    fetch(
-      `https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`
-    )
+    const { latitude: fromLat, longitude: fromLon } = proUser;
+    const { customer_latitude: toLat, customer_longitude: toLon } = request;
+    fetch(`https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`)
       .then(r => r.json())
       .then(data => {
         const coords = data?.routes?.[0]?.geometry?.coordinates;
-        if (coords) {
-          setRoute(coords.map(([lng, lat]) => [lat, lng]));
-        }
+        if (coords) setRoute(coords.map(([lng, lat]) => [lat, lng]));
       })
-      .catch(() => {
-        // Fallback: straight line
-        setRoute([[fromLat, fromLon], [toLat, toLon]]);
-      });
+      .catch(() => setRoute([[fromLat, fromLon], [toLat, toLon]]));
   }, [proUser?.latitude, proUser?.longitude, request?.customer_latitude]);
 
   if (!request) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="w-8 h-8 border-2 border-border border-t-foreground rounded-full animate-spin" />
       </div>
     );
   }
@@ -98,99 +79,103 @@ export default function TrackingMap() {
   const proPos = proUser?.latitude ? [proUser.latitude, proUser.longitude] : null;
   const clientPos = request.customer_latitude ? [request.customer_latitude, request.customer_longitude] : null;
   const allPoints = [proPos, clientPos].filter(Boolean);
-  const centerPos = clientPos || proPos || [48.8566, 2.3522];
-
+  const centerPos = clientPos || proPos || [50.8503, 4.3517];
   const isCompleted = request.status === 'completed';
   const isAccepted = request.status === 'accepted';
 
   return (
-    <div className="relative">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-[1000] px-4 pt-6 pb-4 bg-gradient-to-b from-background via-background/95 to-transparent">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <Navigation className="w-5 h-5 text-primary" />
-              Suivi en temps réel
-            </h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {request.professional_name || 'Professionnel'} • {request.category_name}
-            </p>
-          </div>
-          <Badge className={isCompleted ? 'bg-green-600' : isAccepted ? 'bg-primary' : 'bg-accent'}>
-            {isCompleted ? '✅ Terminé' : isAccepted ? '🚗 En route' : '⏳ En attente'}
-          </Badge>
-        </div>
-      </div>
-
+    <div className="relative h-screen w-full overflow-hidden">
       <MapContainer
         center={centerPos}
         zoom={13}
-        className="w-full h-screen"
+        className="w-full h-full"
         style={{ zIndex: 1 }}
+        zoomControl={false}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-
         {allPoints.length >= 2 && <FitBounds points={allPoints} />}
-
-        {/* Route line */}
         {route.length > 1 && (
-          <Polyline positions={route} color="#3b82f6" weight={4} opacity={0.8} dashArray="8,4" />
+          <Polyline positions={route} color="#0a0a0a" weight={3.5} opacity={0.7} dashArray="10,6" />
         )}
-
-        {/* Pro marker */}
-        {proPos && (
-          <Marker position={proPos} icon={proIcon}>
-            <Popup>
-              <div className="p-1">
-                <p className="font-semibold text-sm">{request.professional_name}</p>
-                <p className="text-xs text-muted-foreground">{request.category_name}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
-
-        {/* Client marker */}
-        {clientPos && (
-          <Marker position={clientPos} icon={clientIcon}>
-            <Popup>
-              <div className="p-1">
-                <p className="font-semibold text-sm">Votre adresse</p>
-                <p className="text-xs text-muted-foreground">{request.customer_address}</p>
-              </div>
-            </Popup>
-          </Marker>
-        )}
+        {proPos && <Marker position={proPos} icon={proIcon} />}
+        {clientPos && <Marker position={clientPos} icon={clientIcon} />}
       </MapContainer>
 
+      {/* Header floating */}
+      <div
+        className="absolute top-0 left-0 right-0 z-[1000] px-4 pt-4"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+      >
+        <div className="bg-card/90 backdrop-blur-md rounded-2xl px-4 py-3 border border-border shadow-sm flex items-center gap-3">
+          <BackButton fallback="/Home" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold flex items-center gap-1.5">
+              <Navigation className="w-3.5 h-3.5" strokeWidth={2} />
+              Suivi en temps réel
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {request.professional_name || 'Professionnel'} · {request.category_name}
+            </p>
+          </div>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+            isCompleted ? 'bg-foreground text-background border-foreground' :
+            isAccepted ? 'bg-muted text-foreground border-border' :
+            'bg-muted text-muted-foreground border-border'
+          }`}>
+            {isCompleted ? 'Terminé' : isAccepted ? 'En route' : 'En attente'}
+          </span>
+        </div>
+      </div>
+
       {/* Bottom card */}
-      <div className="absolute bottom-32 left-4 right-4 z-[1000] bg-card/95 backdrop-blur-md rounded-2xl p-4 border border-border/50 shadow-lg">
-        {isCompleted ? (
-          <div className="text-center">
-            <CheckCircle className="w-8 h-8 text-green-600 mx-auto mb-1" />
-            <p className="font-semibold">Mission terminée !</p>
-          </div>
-        ) : isAccepted ? (
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-2xl flex-shrink-0">🔧</div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{request.professional_name} est en route</p>
-              <p className="text-xs text-muted-foreground">{request.customer_address}</p>
+      <div className="absolute bottom-8 left-4 right-4 z-[1000]">
+        <div className="bg-card/95 backdrop-blur-md rounded-2xl border border-border shadow-xl p-4 space-y-3">
+          {isCompleted ? (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center shrink-0">
+                <CheckCircle className="w-5 h-5 text-background" />
+              </div>
+              <div>
+                <p className="font-semibold text-sm">Mission terminée !</p>
+                <p className="text-xs text-muted-foreground">Le travail est complété.</p>
+              </div>
             </div>
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          ) : isAccepted ? (
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center shrink-0 text-xl">🔧</div>
+              <div className="flex-1">
+                <p className="font-semibold text-sm">{request.professional_name} est en route</p>
+                <p className="text-xs text-muted-foreground truncate">{request.customer_address}</p>
+              </div>
+              <div className="w-2 h-2 rounded-full bg-foreground animate-pulse shrink-0" />
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Clock className="w-5 h-5 text-muted-foreground shrink-0" strokeWidth={1.5} />
+              <p className="text-sm text-muted-foreground">En attente de confirmation...</p>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-10 rounded-xl text-sm"
+              onClick={() => navigate(`/Chat?requestId=${requestId}`)}
+            >
+              <MessageCircle className="w-4 h-4 mr-1.5" /> Chat
+            </Button>
+            <Button
+              variant="ghost"
+              className="flex-1 h-10 rounded-xl text-sm"
+              onClick={() => navigate('/Home')}
+            >
+              Accueil
+            </Button>
           </div>
-        ) : (
-          <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">En attente de confirmation...</p>
-          </div>
-        )}
-        <Button variant="outline" className="w-full mt-3 h-10 rounded-xl text-sm" onClick={() => navigate('/Home')}>
-          Retour à l'accueil
-        </Button>
+        </div>
       </div>
     </div>
   );
