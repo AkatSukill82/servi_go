@@ -113,7 +113,7 @@ export default function PriceQuote({
           className="flex-1 h-14 rounded-xl text-base bg-primary hover:bg-primary/90"
         >
           {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Check className="w-5 h-5 mr-2" />}
-          {isSubmitting ? 'Traitement...' : paymentMethod === 'stripe' ? 'Payer en ligne' : 'Confirmer'}
+          {isSubmitting ? 'Traitement...' : paymentMethod === 'stripe' ? 'Payer par virement' : 'Confirmer'}
         </Button>
       </div>
     </motion.div>
