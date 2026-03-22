@@ -267,7 +267,7 @@ export default function ServiceRequest() {
 
     await updateRequestMutation.mutateAsync({
       id,
-      data: { payment_method: paymentMethod },
+      data: { payment_method: paymentMethod === 'stripe' ? 'bank_transfer' : paymentMethod },
     });
 
     if (paymentMethod === 'stripe') {
