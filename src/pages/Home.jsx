@@ -19,6 +19,7 @@ export default function Home() {
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['serviceCategories'],
     queryFn: () => base44.entities.ServiceCategory.list(),
+    staleTime: 5 * 60 * 1000, // catégories stables, pas besoin de refetch souvent
   });
 
   const filtered = categories.filter(c =>
