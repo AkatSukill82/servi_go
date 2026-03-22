@@ -32,6 +32,8 @@ export default function Chat() {
   const [showRating, setShowRating] = useState(false);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  // Fix Android : recalcule la hauteur quand le clavier virtuel s'ouvre
+  const viewportHeight = useVisualViewport();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
