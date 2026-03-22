@@ -8,21 +8,11 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 // Pages
 import Landing from './pages/Landing';
-import Home from './pages/Home';
 import SelectUserType from './pages/SelectUserType';
-import ServiceRequest from './pages/ServiceRequest';
 import Chat from './pages/Chat';
-import Profile from './pages/Profile';
-import ProDashboard from './pages/ProDashboard';
-import ProProfile from './pages/ProProfile';
-import Favorites from './pages/Favorites';
-import Invoices from './pages/Invoices';
 import TrackingMap from './pages/TrackingMap';
-import Map from './pages/Map';
-import MissionHistory from './pages/MissionHistory';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
-import Emergency from './pages/Emergency';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
