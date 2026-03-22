@@ -133,7 +133,7 @@ export default function SelectUserType() {
   const t = LANG_TEXTS[lang];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+    <div className="bg-background flex flex-col items-center justify-center px-6" style={{ minHeight: '100dvh' }}>
       <AnimatePresence mode="wait">
 
         {/* STEP: Choose type */}
