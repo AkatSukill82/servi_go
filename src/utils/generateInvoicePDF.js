@@ -11,139 +11,178 @@ const paymentLabels = {
 export function generateInvoicePDF(invoice) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = 210;
-  const margin = 20;
+  const H = 297;
+  const margin = 18;
 
-  // ── Header background
-  doc.setFillColor(37, 99, 235); // primary blue
-  doc.rect(0, 0, W, 45, 'F');
+  // ── Background blanc pur
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, W, H, 'F');
 
-  // ── Logo / App name
+  // ── Bande noire en haut
+  doc.setFillColor(10, 10, 10);
+  doc.rect(0, 0, W, 52, 'F');
+
+  // ── Logo ServiGo
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.text('ServiConnect', margin, 22);
+  doc.text('ServiGo', margin, 24);
 
-  doc.setFontSize(10);
+  // ── Sous-titre
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text('Facture de service', margin, 32);
+  doc.setTextColor(160, 160, 160);
+  doc.text('Plateforme de services à domicile', margin, 33);
 
-  // Invoice number top-right
-  doc.setFontSize(10);
+  // ── Numéro de facture + date (aligné à droite dans le header)
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
   doc.text(invoice.invoice_number || '', W - margin, 22, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(160, 160, 160);
+  doc.setFontSize(8.5);
   const dateStr = invoice.created_date
     ? format(new Date(invoice.created_date), 'dd MMMM yyyy', { locale: fr })
     : '';
-  doc.text(dateStr, W - margin, 32, { align: 'right' });
+  doc.text(dateStr, W - margin, 31, { align: 'right' });
 
-  // ── Section: Parties
-  let y = 60;
-  doc.setTextColor(30, 30, 30);
-
-  // Client box
-  doc.setFillColor(245, 247, 250);
-  doc.roundedRect(margin, y, (W - 2 * margin) / 2 - 5, 35, 3, 3, 'F');
-  doc.setFontSize(8);
-  doc.setTextColor(100, 116, 139);
+  // ── Mot "FACTURE" en grand
+  doc.setTextColor(10, 10, 10);
+  doc.setFontSize(28);
   doc.setFont('helvetica', 'bold');
-  doc.text('CLIENT', margin + 5, y + 8);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(30, 30, 30);
-  doc.text(invoice.customer_name || 'N/A', margin + 5, y + 17);
+  doc.text('FACTURE', margin, 76);
+
+  // Ligne séparatrice fine
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.line(margin, 82, W - margin, 82);
+
+  // ── Parties (CLIENT / PROFESSIONNEL) côte à côte
+  let y = 92;
+  const colW = (W - 2 * margin - 10) / 2;
+
+  // CLIENT
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(150, 150, 150);
+  doc.text('CLIENT', margin, y);
+
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(10, 10, 10);
+  doc.text(invoice.customer_name || 'N/A', margin, y + 8);
+
   doc.setFontSize(9);
-  doc.setTextColor(100, 116, 139);
-  doc.text(invoice.customer_email || '', margin + 5, y + 25);
-
-  // Professional box
-  const boxX = W / 2 + 5;
-  doc.setFillColor(245, 247, 250);
-  doc.roundedRect(boxX, y, (W - 2 * margin) / 2 - 5, 35, 3, 3, 'F');
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 116, 139);
-  doc.text('PROFESSIONNEL', boxX + 5, y + 8);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(30, 30, 30);
-  doc.text(invoice.professional_name || 'N/A', boxX + 5, y + 17);
-  doc.setFontSize(9);
-  doc.setTextColor(100, 116, 139);
-  doc.text(invoice.category_name || '', boxX + 5, y + 25);
+  doc.setTextColor(100, 100, 100);
+  doc.text(invoice.customer_email || '', margin, y + 16);
 
-  // ── Section: Service details table
-  y += 50;
-  doc.setFontSize(11);
+  // PROFESSIONNEL
+  const col2X = margin + colW + 10;
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(30, 30, 30);
-  doc.text('Détail de la prestation', margin, y);
+  doc.setTextColor(150, 150, 150);
+  doc.text('PROFESSIONNEL', col2X, y);
 
+  doc.setFontSize(10.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(10, 10, 10);
+  doc.text(invoice.professional_name || 'N/A', col2X, y + 8);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100, 100, 100);
+  doc.text(invoice.category_name || '', col2X, y + 16);
+
+  // Ligne séparatrice
+  y += 28;
+  doc.setDrawColor(220, 220, 220);
+  doc.line(margin, y, W - margin, y);
+
+  // ── Tableau des prestations
+  y += 12;
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(150, 150, 150);
+  doc.text('DÉTAIL DE LA PRESTATION', margin, y);
+
+  // En-tête du tableau
   y += 6;
-  // Table header
-  doc.setFillColor(37, 99, 235);
-  doc.rect(margin, y, W - 2 * margin, 9, 'F');
+  doc.setFillColor(10, 10, 10);
+  doc.roundedRect(margin, y, W - 2 * margin, 10, 1.5, 1.5, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setFont('helvetica', 'bold');
-  doc.text('Description', margin + 4, y + 6);
-  doc.text('Montant', W - margin - 4, y + 6, { align: 'right' });
+  doc.text('Description', margin + 5, y + 6.8);
+  doc.text('Montant HTVA', W - margin - 5, y + 6.8, { align: 'right' });
 
-  y += 9;
-  // Row 1
-  doc.setFillColor(255, 255, 255);
-  doc.rect(margin, y, W - 2 * margin, 9, 'F');
+  // Ligne service
+  y += 10;
+  doc.setFillColor(248, 248, 248);
+  doc.rect(margin, y, W - 2 * margin, 10, 'F');
   doc.setTextColor(30, 30, 30);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Service : ${invoice.category_name || 'Prestation'}`, margin + 4, y + 6);
-  doc.text(`${(invoice.base_price || 0).toFixed(2)} €`, W - margin - 4, y + 6, { align: 'right' });
+  doc.setFontSize(9);
+  doc.text(`Service : ${invoice.category_name || 'Prestation'}`, margin + 5, y + 6.8);
+  const htva = ((invoice.base_price || 0) + (invoice.commission || 0));
+  doc.text(`${htva.toFixed(2)} €`, W - margin - 5, y + 6.8, { align: 'right' });
 
-  y += 9;
-  // Row 2
-  doc.setFillColor(248, 250, 252);
-  doc.rect(margin, y, W - 2 * margin, 9, 'F');
-  doc.setTextColor(30, 30, 30);
-  doc.text('Frais de service (10%)', margin + 4, y + 6);
-  doc.text(`${(invoice.commission || 0).toFixed(2)} €`, W - margin - 4, y + 6, { align: 'right' });
+  // Ligne TVA
+  y += 10;
+  doc.setFillColor(255, 255, 255);
+  doc.rect(margin, y, W - 2 * margin, 10, 'F');
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9);
+  doc.text('TVA (21%)', margin + 5, y + 6.8);
+  const tva = htva * 0.21;
+  doc.text(`${tva.toFixed(2)} €`, W - margin - 5, y + 6.8, { align: 'right' });
 
-  y += 9;
-  // Total row
-  doc.setFillColor(37, 99, 235);
-  doc.rect(margin, y, W - 2 * margin, 11, 'F');
+  // Ligne Total
+  y += 14;
+  doc.setFillColor(10, 10, 10);
+  doc.roundedRect(margin, y, W - 2 * margin, 13, 1.5, 1.5, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.text('TOTAL TTC', margin + 4, y + 7.5);
-  doc.text(`${(invoice.total_price || 0).toFixed(2)} €`, W - margin - 4, y + 7.5, { align: 'right' });
+  doc.text('TOTAL TTC', margin + 5, y + 8.8);
+  doc.text(`${(invoice.total_price || 0).toFixed(2)} €`, W - margin - 5, y + 8.8, { align: 'right' });
 
-  // ── Payment info
-  y += 22;
-  doc.setFillColor(245, 247, 250);
-  doc.roundedRect(margin, y, W - 2 * margin, 24, 3, 3, 'F');
+  // ── Paiement + statut
+  y += 24;
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, W - margin, y);
 
-  doc.setFontSize(9);
+  y += 10;
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(100, 116, 139);
-  doc.text('MODE DE PAIEMENT', margin + 5, y + 8);
-  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(150, 150, 150);
+  doc.text('MODE DE PAIEMENT', margin, y);
+
   doc.setFontSize(10);
-  doc.setTextColor(30, 30, 30);
-  doc.text(paymentLabels[invoice.payment_method] || 'N/A', margin + 5, y + 17);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(10, 10, 10);
+  doc.text(paymentLabels[invoice.payment_method] || 'N/A', margin, y + 9);
 
-  // Payment status badge
+  // Badge statut
   const statusLabel = invoice.payment_status === 'paid' ? 'PAYÉE' : 'EN ATTENTE';
-  const statusColor = invoice.payment_status === 'paid' ? [22, 163, 74] : [245, 158, 11];
-  doc.setFillColor(...statusColor);
-  doc.roundedRect(W - margin - 30, y + 9, 28, 9, 2, 2, 'F');
+  const isPaid = invoice.payment_status === 'paid';
+  doc.setFillColor(isPaid ? 22 : 245, isPaid ? 163 : 158, isPaid ? 74 : 11);
+  doc.roundedRect(W - margin - 32, y + 2, 30, 9, 2, 2, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'bold');
-  doc.text(statusLabel, W - margin - 16, y + 15.5, { align: 'center' });
+  doc.text(statusLabel, W - margin - 17, y + 8, { align: 'center' });
 
   // ── Footer
-  doc.setTextColor(150, 150, 150);
-  doc.setFontSize(8);
+  doc.setFillColor(10, 10, 10);
+  doc.rect(0, H - 20, W, 20, 'F');
+  doc.setTextColor(160, 160, 160);
+  doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.text('ServiConnect — Plateforme de mise en relation de services à domicile', W / 2, 285, { align: 'center' });
-  doc.text('Document généré automatiquement — ne pas modifier', W / 2, 290, { align: 'center' });
+  doc.text('ServiGo — Plateforme de services à domicile', W / 2, H - 10, { align: 'center' });
+  doc.text('Document généré automatiquement', W / 2, H - 5, { align: 'center' });
 
   doc.save(`${invoice.invoice_number || 'facture'}.pdf`);
 }
