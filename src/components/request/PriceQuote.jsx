@@ -75,10 +75,10 @@ export default function PriceQuote({
         <h3 className="font-semibold text-lg mb-4">Moyen de paiement</h3>
         <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
 
-          {/* Virement bancaire */}
-          <div className={`flex items-center space-x-3 p-3 rounded-xl border transition-colors ${paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
-            <RadioGroupItem value="bank_transfer" id="bank_transfer" />
-            <Label htmlFor="bank_transfer" className="flex items-center gap-3 cursor-pointer flex-1">
+          {/* Virement bancaire via Stripe */}
+          <div className={`flex items-center space-x-3 p-3 rounded-xl border transition-colors ${paymentMethod === 'stripe' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
+            <RadioGroupItem value="stripe" id="stripe" />
+            <Label htmlFor="stripe" className="flex items-center gap-3 cursor-pointer flex-1">
               <CreditCard className="w-5 h-5 text-primary" />
               <span className="font-medium">Virement bancaire</span>
             </Label>
