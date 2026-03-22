@@ -75,12 +75,24 @@ export default function ProDashboard() {
         customer_email: request.customer_email,
       });
     },
+    // Optimistic update : retire immédiatement la demande de la liste
+    onMutate: async ({ requestId }) => {
+      await queryClient.cancelQueries({ queryKey: ['incomingRequests', proCategory] });
+      const previous = queryClient.getQueryData(['incomingRequests', proCategory]);
+      queryClient.setQueryData(['incomingRequests', proCategory], old =>
+        (old || []).filter(r => r.id !== requestId)
+      );
+      return { previous };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
       toast.success('Mission acceptée !');
     },
-    onError: () => {
+    onError: (_, __, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['incomingRequests', proCategory], context.previous);
+      }
       toast.error('Mission déjà prise par un autre professionnel.');
       queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
     },
