@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -8,21 +8,17 @@ import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
-// Pages particulier
-import Home from '@/pages/Home';
-import Map from '@/pages/Map';
-import Emergency from '@/pages/Emergency';
-import Favorites from '@/pages/Favorites';
-import Profile from '@/pages/Profile';
-
-// Pages pro
-import ProDashboard from '@/pages/ProDashboard';
-import Invoices from '@/pages/Invoices';
-import ProProfile from '@/pages/ProProfile';
-
-// Pages non-tab (stack par-dessus les onglets)
-import ServiceRequest from '@/pages/ServiceRequest';
-import MissionHistory from '@/pages/MissionHistory';
+// Lazy load — chaque page chargée uniquement à la première visite
+const Home        = lazy(() => import('@/pages/Home'));
+const Map         = lazy(() => import('@/pages/Map'));
+const Emergency   = lazy(() => import('@/pages/Emergency'));
+const Favorites   = lazy(() => import('@/pages/Favorites'));
+const Profile     = lazy(() => import('@/pages/Profile'));
+const ProDashboard = lazy(() => import('@/pages/ProDashboard'));
+const Invoices    = lazy(() => import('@/pages/Invoices'));
+const ProProfile  = lazy(() => import('@/pages/ProProfile'));
+const ServiceRequest = lazy(() => import('@/pages/ServiceRequest'));
+const MissionHistory = lazy(() => import('@/pages/MissionHistory'));
 
 const CUSTOMER_TABS = ['/Home', '/Map', '/Emergency', '/Favorites', '/Profile'];
 const PRO_TABS = ['/ProDashboard', '/Map', '/Emergency', '/Invoices', '/ProProfile'];
@@ -43,6 +39,12 @@ const STACK_COMPONENTS = {
   '/MissionHistory': MissionHistory,
 };
 
+const TabSpinner = () => (
+  <div className="flex items-center justify-center h-40">
+    <div className="w-5 h-5 border-2 border-border border-t-primary rounded-full animate-spin" />
+  </div>
+);
+
 export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,11 +53,11 @@ export default function AppLayout() {
   const [dark, setDark] = useDarkMode();
   const queryClient = useQueryClient();
 
-  // Préserve le scroll de chaque onglet
+  // Garde en mémoire les onglets déjà visités (pour ne monter qu'au premier accès)
+  const visitedTabs = useRef(new Set());
   const scrollRefs = useRef({});
 
   useEffect(() => {
-    // Utilise le cache React Query si disponible, sinon fetch
     const cached = queryClient.getQueryData(['currentUser']);
     if (cached) {
       if (!cached?.user_type) navigate('/SelectUserType', { replace: true });
@@ -89,17 +91,22 @@ export default function AppLayout() {
   const isStackPage = currentPath in STACK_COMPONENTS;
   const StackComponent = STACK_COMPONENTS[currentPath];
 
+  // Marque l'onglet courant comme visité
+  if (!isStackPage && tabs.includes(currentPath)) {
+    visitedTabs.current.add(currentPath);
+  }
+
   return (
     <div
       className="bg-background overflow-hidden"
       style={{
-        height: '100dvh',            // dynamic viewport height (mobile-correct)
+        height: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      {/* Theme toggle — respecte la safe area top */}
+      {/* Theme toggle */}
       <button
         onClick={() => setDark(d => !d)}
         className="fixed right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
@@ -112,49 +119,54 @@ export default function AppLayout() {
         }
       </button>
 
-      {/* Zone de contenu */}
       <div className="flex-1 overflow-hidden relative">
 
-        {/* Onglets persistants — montés une fois, cachés via display:none */}
+        {/* Onglets — montés seulement après la première visite, jamais démontés */}
         {tabs.map(tabPath => {
           const TabComponent = TAB_COMPONENTS[tabPath];
           const isActive = currentPath === tabPath && !isStackPage;
+          const hasBeenVisited = visitedTabs.current.has(tabPath);
+
+          // Ne pas monter du tout si jamais visité
+          if (!hasBeenVisited && !isActive) return null;
+
           return (
             <div
               key={tabPath}
               className="absolute inset-0 overflow-y-auto"
               style={{
                 display: isActive ? 'block' : 'none',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)', // 56px = hauteur navbar
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)',
               }}
               ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
             >
-              <TabComponent />
+              <Suspense fallback={<TabSpinner />}>
+                <TabComponent />
+              </Suspense>
             </div>
           );
         })}
 
-        {/* Stack pages — slide-in depuis la droite, avec animation */}
+        {/* Stack pages — slide-in, lazy-loaded */}
         <AnimatePresence>
           {isStackPage && StackComponent && (
             <motion.div
               key={currentPath}
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="absolute inset-0 overflow-y-auto bg-background"
-              style={{
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)',
-              }}
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)' }}
             >
-              <StackComponent />
+              <Suspense fallback={<TabSpinner />}>
+                <StackComponent />
+              </Suspense>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Bottom nav — safe area bottom gérée dans les navbars */}
       {userType === 'professionnel' ? <ProBottomNav /> : <BottomNav />}
     </div>
   );
