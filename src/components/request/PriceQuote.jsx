@@ -45,11 +45,7 @@ export default function PriceQuote({
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Prix du service (HTVA)</span>
-            <span className="font-medium">{basePrice.toFixed(2)} €</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Frais de service (10%)</span>
-            <span className="font-medium">{commission.toFixed(2)} €</span>
+            <span className="font-medium">{(basePrice + commission).toFixed(2)} €</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">TVA (21%)</span>
