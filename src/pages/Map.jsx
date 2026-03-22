@@ -37,7 +37,7 @@ export default function MapPage() {
   const defaultCenter = [50.8503, 4.3517]; // Bruxelles, Belgique
 
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="relative w-full overflow-hidden" style={{ height: '100dvh' }}>
       {isLoading ? (
         <Skeleton className="w-full h-screen" />
       ) : (

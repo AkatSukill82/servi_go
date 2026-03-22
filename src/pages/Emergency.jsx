@@ -42,8 +42,8 @@ export default function Emergency() {
 
   return (
     <div
-      className="min-h-screen bg-background px-4 pb-24"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+      className="bg-background px-4 pb-24 overflow-y-auto"
+      style={{ minHeight: '100dvh', paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
     >
       <AnimatePresence mode="wait">
         {step === 'select' && (
