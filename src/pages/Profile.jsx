@@ -234,6 +234,7 @@ export default function Profile() {
           </AlertDialogContent>
         </AlertDialog>
       </motion.div>
+      </>}
     </div>
   );
 }
