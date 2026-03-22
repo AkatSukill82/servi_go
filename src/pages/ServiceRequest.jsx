@@ -328,7 +328,8 @@ export default function ServiceRequest() {
   const rawBase = reqData?.base_price || assignedPro?.base_price || category?.base_price || 80;
   const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
   const commission = basePrice * 0.10;
-  const totalPrice = basePrice + commission;
+  const tva = (basePrice + commission) * 0.21;
+  const totalPrice = basePrice + commission + tva;
 
   return (
     <div className="px-4 pt-6">
