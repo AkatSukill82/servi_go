@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useVisualViewport } from '@/hooks/useVisualViewport';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Send, Image, MapPin, CheckCheck, CheckCircle, Star, CalendarDays } from 'lucide-react';
