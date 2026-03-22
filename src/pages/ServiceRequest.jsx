@@ -215,7 +215,8 @@ export default function ServiceRequest() {
     const rawBase = category?.base_price || 80;
     const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
     const commission = basePrice * 0.10;
-    const totalPrice = basePrice + commission;
+    const tva = (basePrice + commission) * 0.21;
+    const totalPrice = basePrice + commission + tva;
 
     const answersArray = questions.map((q, i) => ({
       question: q.question,
