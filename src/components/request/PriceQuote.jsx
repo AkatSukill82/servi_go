@@ -80,10 +80,7 @@ export default function PriceQuote({
             <RadioGroupItem value="bank_transfer" id="bank_transfer" />
             <Label htmlFor="bank_transfer" className="flex items-center gap-3 cursor-pointer flex-1">
               <CreditCard className="w-5 h-5 text-primary" />
-              <div>
-                <span className="font-medium">Virement bancaire</span>
-                <p className="text-xs text-muted-foreground">IBAN du professionnel affiché après confirmation</p>
-              </div>
+              <span className="font-medium">Virement bancaire</span>
             </Label>
           </div>
 
