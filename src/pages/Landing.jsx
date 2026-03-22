@@ -17,8 +17,13 @@ export default function Landing() {
 
   return (
     <div
-      className="h-screen bg-background flex flex-col overflow-hidden"
-      style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="bg-background flex flex-col overflow-hidden"
+      style={{
+        height: '100vh',
+        height: '100dvh',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)',
+      }}
     >
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 pt-8">
