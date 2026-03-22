@@ -56,19 +56,17 @@ const AuthenticatedApp = () => {
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
 
-      {/* App pages with shared layout */}
-      <Route element={<AppLayout />}>
-        <Route path="/Home" element={<Home />} />
-        <Route path="/ServiceRequest" element={<ServiceRequest />} />
-        <Route path="/Profile" element={<Profile />} />
-        <Route path="/ProDashboard" element={<ProDashboard />} />
-        <Route path="/ProProfile" element={<ProProfile />} />
-        <Route path="/Favorites" element={<Favorites />} />
-        <Route path="/Invoices" element={<Invoices />} />
-        <Route path="/Map" element={<Map />} />
-        <Route path="/MissionHistory" element={<MissionHistory />} />
-        <Route path="/Emergency" element={<Emergency />} />
-      </Route>
+      {/* App pages with shared layout (tabs persistants) */}
+      <Route path="/Home" element={<AppLayout />} />
+      <Route path="/ServiceRequest" element={<AppLayout />} />
+      <Route path="/Profile" element={<AppLayout />} />
+      <Route path="/ProDashboard" element={<AppLayout />} />
+      <Route path="/ProProfile" element={<AppLayout />} />
+      <Route path="/Favorites" element={<AppLayout />} />
+      <Route path="/Invoices" element={<AppLayout />} />
+      <Route path="/Map" element={<AppLayout />} />
+      <Route path="/MissionHistory" element={<AppLayout />} />
+      <Route path="/Emergency" element={<AppLayout />} />
 
       {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />
