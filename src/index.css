@@ -83,17 +83,54 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    /* Empêche le bounce/overscroll sur iOS et Android */
+    overscroll-behavior: none;
+    overflow: hidden;
+    /* Hauteur plein écran cross-platform (fallback pour vieux Android) */
+    height: 100%;
+    width: 100%;
+  }
+
+  #root {
+    height: 100%;
+    width: 100%;
   }
 
   body {
     @apply bg-background text-foreground font-inter;
-    overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
+    /* Évite le zoom auto sur focus input iOS */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* ✅ Inputs : font-size ≥ 16px pour éviter le zoom auto sur iOS */
+  input, textarea, select {
+    font-size: 16px !important;
+    /* Scroll fluide iOS dans les zones scrollables */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Zones scrollables fluides sur iOS */
+  .overflow-y-auto, .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch;
   }
 
   button, a, [role="tab"] {
     user-select: none;
     -webkit-user-select: none;
+    /* Évite le délai de 300ms sur tap mobile */
+    touch-action: manipulation;
+  }
+
+  /* Fix : images ne débordent pas */
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }
