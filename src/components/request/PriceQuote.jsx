@@ -44,12 +44,16 @@ export default function PriceQuote({
         <h3 className="font-semibold text-lg mb-4">Détail du prix</h3>
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Prix du service</span>
+            <span className="text-muted-foreground">Prix du service (HTVA)</span>
             <span className="font-medium">{basePrice.toFixed(2)} €</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Frais de service (10%)</span>
             <span className="font-medium">{commission.toFixed(2)} €</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">TVA (21%)</span>
+            <span className="font-medium">{((basePrice + commission) * 0.21).toFixed(2)} €</span>
           </div>
           {scheduledDate && scheduledTime && (
             <div className="flex justify-between text-sm">
@@ -63,7 +67,7 @@ export default function PriceQuote({
           )}
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">
-              <span className="font-semibold text-lg">Total</span>
+              <span className="font-semibold text-lg">Total TTC</span>
               <span className="font-bold text-2xl text-primary">{totalPrice.toFixed(2)} €</span>
             </div>
           </div>
