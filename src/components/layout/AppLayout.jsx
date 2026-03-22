@@ -53,7 +53,16 @@ export default function AppLayout() {
   const scrollRefs = useRef({});
 
   useEffect(() => {
+    // Utilise le cache React Query si disponible, sinon fetch
+    const cached = queryClient.getQueryData(['currentUser']);
+    if (cached) {
+      if (!cached?.user_type) navigate('/SelectUserType', { replace: true });
+      else setUserType(cached.user_type);
+      setLoading(false);
+      return;
+    }
     base44.auth.me().then(user => {
+      queryClient.setQueryData(['currentUser'], user);
       if (!user?.user_type) {
         navigate('/SelectUserType', { replace: true });
       } else {
