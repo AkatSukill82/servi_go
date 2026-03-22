@@ -102,6 +102,7 @@ export default function Profile() {
 
       {tab === 'recus' && <CustomerReceipts user={user} />}
 
+      {tab === 'recus' ? null : <>
       {/* Avatar */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
