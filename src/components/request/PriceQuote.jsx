@@ -89,10 +89,7 @@ export default function PriceQuote({
             <RadioGroupItem value="cash" id="cash" />
             <Label htmlFor="cash" className="flex items-center gap-3 cursor-pointer flex-1">
               <Banknote className="w-5 h-5 text-green-500" />
-              <div>
-                <span className="font-medium">Espèces</span>
-                <p className="text-xs text-muted-foreground">À remettre directement au professionnel</p>
-              </div>
+              <span className="font-medium">Espèces</span>
             </Label>
           </div>
 
