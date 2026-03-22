@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { Sun, Moon } from 'lucide-react';
 import BottomNav from './BottomNav';
@@ -18,7 +19,7 @@ import ProDashboard from '@/pages/ProDashboard';
 import Invoices from '@/pages/Invoices';
 import ProProfile from '@/pages/ProProfile';
 
-// Pages non-tab (gardées via React Router classique)
+// Pages non-tab (stack par-dessus les onglets)
 import ServiceRequest from '@/pages/ServiceRequest';
 import MissionHistory from '@/pages/MissionHistory';
 
@@ -36,7 +37,6 @@ const TAB_COMPONENTS = {
   '/ProProfile': ProProfile,
 };
 
-// Pages non-tab qui s'affichent par-dessus les onglets
 const STACK_COMPONENTS = {
   '/ServiceRequest': ServiceRequest,
   '/MissionHistory': MissionHistory,
@@ -48,6 +48,9 @@ export default function AppLayout() {
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dark, setDark] = useDarkMode();
+
+  // Préserve le scroll de chaque onglet
+  const scrollRefs = useRef({});
 
   useEffect(() => {
     base44.auth.me().then(user => {
@@ -72,20 +75,23 @@ export default function AppLayout() {
 
   const tabs = userType === 'professionnel' ? PRO_TABS : CUSTOMER_TABS;
   const currentPath = location.pathname;
-
-  // Est-ce qu'on est sur une page "stack" (par-dessus les tabs) ?
   const isStackPage = currentPath in STACK_COMPONENTS;
   const StackComponent = STACK_COMPONENTS[currentPath];
 
   return (
     <div
-      className="h-screen flex flex-col bg-background overflow-hidden"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      className="bg-background overflow-hidden"
+      style={{
+        height: '100dvh',            // dynamic viewport height (mobile-correct)
+        paddingTop: 'env(safe-area-inset-top)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
     >
-      {/* Theme toggle */}
+      {/* Theme toggle — respecte la safe area top */}
       <button
         onClick={() => setDark(d => !d)}
-        className="fixed top-3 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
+        className="fixed right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
         style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
         aria-label="Changer le thème"
       >
@@ -95,30 +101,49 @@ export default function AppLayout() {
         }
       </button>
 
-      {/* Tabs montés en permanence (display none quand inactif) */}
+      {/* Zone de contenu */}
       <div className="flex-1 overflow-hidden relative">
+
+        {/* Onglets persistants — montés une fois, cachés via display:none */}
         {tabs.map(tabPath => {
           const TabComponent = TAB_COMPONENTS[tabPath];
           const isActive = currentPath === tabPath && !isStackPage;
           return (
             <div
               key={tabPath}
-              className="absolute inset-0 overflow-y-auto pb-20"
-              style={{ display: isActive ? 'block' : 'none' }}
+              className="absolute inset-0 overflow-y-auto"
+              style={{
+                display: isActive ? 'block' : 'none',
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)', // 56px = hauteur navbar
+              }}
+              ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
             >
               <TabComponent />
             </div>
           );
         })}
 
-        {/* Stack page (ServiceRequest, MissionHistory, etc.) */}
-        {isStackPage && StackComponent && (
-          <div className="absolute inset-0 overflow-y-auto pb-20 bg-background">
-            <StackComponent />
-          </div>
-        )}
+        {/* Stack pages — slide-in depuis la droite, avec animation */}
+        <AnimatePresence>
+          {isStackPage && StackComponent && (
+            <motion.div
+              key={currentPath}
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              className="absolute inset-0 overflow-y-auto bg-background"
+              style={{
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)',
+              }}
+            >
+              <StackComponent />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
+      {/* Bottom nav — safe area bottom gérée dans les navbars */}
       {userType === 'professionnel' ? <ProBottomNav /> : <BottomNav />}
     </div>
   );
