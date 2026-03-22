@@ -168,7 +168,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex flex-col bg-background" style={{ height: '100dvh' }}>
+    <div className="flex flex-col bg-background" style={{ height: viewportHeight }}>
       {showRating && (
         <RatingModal
           request={request}
