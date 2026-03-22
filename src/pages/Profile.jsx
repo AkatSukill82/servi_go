@@ -78,7 +78,29 @@ export default function Profile() {
 
   return (
     <div className="px-4 pt-6">
-      <h1 className="text-2xl font-bold mb-6">Mon profil</h1>
+      <h1 className="text-2xl font-bold mb-5">Mon profil</h1>
+
+      {/* Onglets */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setTab('profil')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+            tab === 'profil' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <User className="w-3.5 h-3.5" /> Profil
+        </button>
+        <button
+          onClick={() => setTab('recus')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+            tab === 'recus' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <Receipt className="w-3.5 h-3.5" /> Reçus
+        </button>
+      </div>
+
+      {tab === 'recus' && <CustomerReceipts user={user} />}
 
       {/* Avatar */}
       <motion.div
