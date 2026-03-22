@@ -10,9 +10,10 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2 } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import CustomerReceipts from '@/components/profile/CustomerReceipts';
 
 export default function Profile() {
   const queryClient = useQueryClient();
