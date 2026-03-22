@@ -30,8 +30,20 @@ export default function ProDashboard() {
       return base44.entities.ServiceRequest.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
     },
     enabled: !!proCategory,
-    refetchInterval: 5000,
+    staleTime: 10000, // considère les données fraîches 10s
   });
+
+  // Subscription temps réel → remplace le polling toutes les 5s
+  useEffect(() => {
+    if (!proCategory) return;
+    const unsub = base44.entities.ServiceRequest.subscribe((event) => {
+      // Nouvelle demande ou changement de statut → rafraîchit la liste
+      if (event.type === 'create' || event.type === 'update' || event.type === 'delete') {
+        queryClient.invalidateQueries({ queryKey: ['incomingRequests', proCategory] });
+      }
+    });
+    return unsub;
+  }, [proCategory]);
 
   useEffect(() => {
     if (incomingRequests === undefined) return;

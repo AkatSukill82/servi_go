@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { Sun, Moon } from 'lucide-react';
@@ -48,6 +49,7 @@ export default function AppLayout() {
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dark, setDark] = useDarkMode();
+  const queryClient = useQueryClient();
 
   // Préserve le scroll de chaque onglet
   const scrollRefs = useRef({});
