@@ -1,11 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Sun, Moon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
+
+// Pages particulier
+import Home from '@/pages/Home';
+import Map from '@/pages/Map';
+import Emergency from '@/pages/Emergency';
+import Favorites from '@/pages/Favorites';
+import Profile from '@/pages/Profile';
+
+// Pages pro
+import ProDashboard from '@/pages/ProDashboard';
+import Invoices from '@/pages/Invoices';
+import ProProfile from '@/pages/ProProfile';
+
+// Pages non-tab (gardées via React Router classique)
+import ServiceRequest from '@/pages/ServiceRequest';
+import MissionHistory from '@/pages/MissionHistory';
+
+const CUSTOMER_TABS = ['/Home', '/Map', '/Emergency', '/Favorites', '/Profile'];
+const PRO_TABS = ['/ProDashboard', '/Map', '/Emergency', '/Invoices', '/ProProfile'];
+
+const TAB_COMPONENTS = {
+  '/Home': Home,
+  '/Map': Map,
+  '/Emergency': Emergency,
+  '/Favorites': Favorites,
+  '/Profile': Profile,
+  '/ProDashboard': ProDashboard,
+  '/Invoices': Invoices,
+  '/ProProfile': ProProfile,
+};
+
+// Pages non-tab qui s'affichent par-dessus les onglets
+const STACK_COMPONENTS = {
+  '/ServiceRequest': ServiceRequest,
+  '/MissionHistory': MissionHistory,
+};
 
 export default function AppLayout() {
   const navigate = useNavigate();
@@ -35,9 +70,19 @@ export default function AppLayout() {
     );
   }
 
+  const tabs = userType === 'professionnel' ? PRO_TABS : CUSTOMER_TABS;
+  const currentPath = location.pathname;
+
+  // Est-ce qu'on est sur une page "stack" (par-dessus les tabs) ?
+  const isStackPage = currentPath in STACK_COMPONENTS;
+  const StackComponent = STACK_COMPONENTS[currentPath];
+
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-      {/* Theme toggle — top right */}
+    <div
+      className="h-screen flex flex-col bg-background overflow-hidden"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
+      {/* Theme toggle */}
       <button
         onClick={() => setDark(d => !d)}
         className="fixed top-3 right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
@@ -49,23 +94,32 @@ export default function AppLayout() {
           : <Moon className="w-4 h-4 text-foreground" strokeWidth={1.8} />
         }
       </button>
-      <div className="flex-1 overflow-y-auto pb-20">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18, ease: 'easeOut' }}
-          >
-            <Outlet />
-          </motion.div>
-        </AnimatePresence>
+
+      {/* Tabs montés en permanence (display none quand inactif) */}
+      <div className="flex-1 overflow-hidden relative">
+        {tabs.map(tabPath => {
+          const TabComponent = TAB_COMPONENTS[tabPath];
+          const isActive = currentPath === tabPath && !isStackPage;
+          return (
+            <div
+              key={tabPath}
+              className="absolute inset-0 overflow-y-auto pb-20"
+              style={{ display: isActive ? 'block' : 'none' }}
+            >
+              <TabComponent />
+            </div>
+          );
+        })}
+
+        {/* Stack page (ServiceRequest, MissionHistory, etc.) */}
+        {isStackPage && StackComponent && (
+          <div className="absolute inset-0 overflow-y-auto pb-20 bg-background">
+            <StackComponent />
+          </div>
+        )}
       </div>
-      {userType === 'professionnel'
-        ? <ProBottomNav />
-        : <BottomNav />
-      }
+
+      {userType === 'professionnel' ? <ProBottomNav /> : <BottomNav />}
     </div>
   );
 }
