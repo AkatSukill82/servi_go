@@ -267,7 +267,7 @@ export default function ServiceRequest() {
 
     await updateRequestMutation.mutateAsync({
       id,
-      data: { payment_method: paymentMethod === 'stripe' ? 'bank_transfer' : paymentMethod },
+      data: { payment_method: paymentMethod },
     });
 
     if (paymentMethod === 'stripe') {
@@ -290,6 +290,15 @@ export default function ServiceRequest() {
         toast.error('Erreur lors de la création du paiement.');
       }
       return;
+    }
+
+    if (paymentMethod === 'bank_transfer') {
+      // Récupérer l'IBAN du pro
+      if (currentRequest?.professional_email) {
+        const pros = await base44.entities.User.filter({ email: currentRequest.professional_email });
+        const pro = pros[0];
+        if (pro?.bank_iban) setProIban(pro.bank_iban);
+      }
     }
 
     setStep(STEPS.CONFIRMED);

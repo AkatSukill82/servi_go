@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, CreditCard, Banknote, CalendarDays, Loader2, Zap, AlertTriangle } from 'lucide-react';
+import { Check, X, CreditCard, Banknote, Smartphone, CalendarDays, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -75,12 +75,27 @@ export default function PriceQuote({
         <h3 className="font-semibold text-lg mb-4">Moyen de paiement</h3>
         <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
 
-          {/* Virement bancaire via Stripe */}
+          {/* Apple Pay / Google Pay via Stripe */}
           <div className={`flex items-center space-x-3 p-3 rounded-xl border transition-colors ${paymentMethod === 'stripe' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
             <RadioGroupItem value="stripe" id="stripe" />
             <Label htmlFor="stripe" className="flex items-center gap-3 cursor-pointer flex-1">
+              <Smartphone className="w-5 h-5 text-foreground" />
+              <div>
+                <span className="font-medium">Apple Pay / Google Pay / Carte</span>
+                <p className="text-xs text-muted-foreground">Paiement sécurisé en ligne</p>
+              </div>
+            </Label>
+          </div>
+
+          {/* Virement bancaire */}
+          <div className={`flex items-center space-x-3 p-3 rounded-xl border transition-colors ${paymentMethod === 'bank_transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
+            <RadioGroupItem value="bank_transfer" id="bank_transfer" />
+            <Label htmlFor="bank_transfer" className="flex items-center gap-3 cursor-pointer flex-1">
               <CreditCard className="w-5 h-5 text-primary" />
-              <span className="font-medium">Virement bancaire</span>
+              <div>
+                <span className="font-medium">Virement bancaire</span>
+                <p className="text-xs text-muted-foreground">IBAN du professionnel affiché après confirmation</p>
+              </div>
             </Label>
           </div>
 
@@ -89,7 +104,10 @@ export default function PriceQuote({
             <RadioGroupItem value="cash" id="cash" />
             <Label htmlFor="cash" className="flex items-center gap-3 cursor-pointer flex-1">
               <Banknote className="w-5 h-5 text-green-500" />
-              <span className="font-medium">Espèces</span>
+              <div>
+                <span className="font-medium">Espèces</span>
+                <p className="text-xs text-muted-foreground">À remettre directement au professionnel</p>
+              </div>
             </Label>
           </div>
 
@@ -113,7 +131,7 @@ export default function PriceQuote({
           className="flex-1 h-14 rounded-xl text-base bg-primary hover:bg-primary/90"
         >
           {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Check className="w-5 h-5 mr-2" />}
-          {isSubmitting ? 'Traitement...' : 'Confirmer'}
+          {isSubmitting ? 'Traitement...' : paymentMethod === 'stripe' ? 'Payer en ligne' : 'Confirmer'}
         </Button>
       </div>
     </motion.div>
