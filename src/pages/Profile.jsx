@@ -17,6 +17,7 @@ import CustomerReceipts from '@/components/profile/CustomerReceipts';
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  const [tab, setTab] = useState('profil');
   const [form, setForm] = useState({
     phone: '',
     address: '',
