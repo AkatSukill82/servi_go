@@ -292,15 +292,6 @@ export default function ServiceRequest() {
       return;
     }
 
-    if (paymentMethod === 'bank_transfer') {
-      // Récupérer l'IBAN du pro
-      if (currentRequest?.professional_email) {
-        const pros = await base44.entities.User.filter({ email: currentRequest.professional_email });
-        const pro = pros[0];
-        if (pro?.bank_iban) setProIban(pro.bank_iban);
-      }
-    }
-
     setStep(STEPS.CONFIRMED);
     toast.success(paymentMethod === 'cash'
       ? 'Devis accepté ! Pensez à payer en espèces au professionnel.'
