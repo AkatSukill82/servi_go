@@ -127,12 +127,19 @@ function ProStatsTable({ pros }) {
         (r.status === 'accepted' || r.status === 'completed' || r.status === 'in_progress')
       );
       const totalPaid = jobs.reduce((sum, j) => sum + (j.base_price || 0), 0);
-      return { ...pro, missionsCount: jobs.length, totalPaid };
+      const totalCommission = jobs.reduce((sum, j) => sum + (j.commission || (j.base_price || 0) * 0.10), 0);
+      const totalTva = jobs.reduce((sum, j) => {
+        const base = (j.base_price || 0) + (j.commission || (j.base_price || 0) * 0.10);
+        return sum + base * 0.21;
+      }, 0);
+      return { ...pro, missionsCount: jobs.length, totalPaid, totalCommission, totalTva };
     }).sort((a, b) => b.missionsCount - a.missionsCount);
   }, [pros, allRequests]);
 
   const totalMissions = statsPerPro.reduce((s, p) => s + p.missionsCount, 0);
   const totalRevenue = statsPerPro.reduce((s, p) => s + p.totalPaid, 0);
+  const totalCommission = statsPerPro.reduce((s, p) => s + p.totalCommission, 0);
+  const totalTva = statsPerPro.reduce((s, p) => s + p.totalTva, 0);
 
   return (
     <div className="space-y-4">
@@ -152,14 +159,30 @@ function ProStatsTable({ pros }) {
           </div>
           <p className="text-3xl font-bold tracking-tight">{totalRevenue.toFixed(0)} €</p>
         </div>
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Euro className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
+            <p className="text-xs text-muted-foreground font-medium">Commission totale (10%)</p>
+          </div>
+          <p className="text-3xl font-bold tracking-tight">{totalCommission.toFixed(0)} €</p>
+        </div>
+        <div className="bg-card rounded-xl p-4 border border-border">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Euro className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
+            <p className="text-xs text-muted-foreground font-medium">TVA totale (21%)</p>
+          </div>
+          <p className="text-3xl font-bold tracking-tight">{totalTva.toFixed(0)} €</p>
+        </div>
       </div>
 
       {/* Table */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="grid grid-cols-12 px-4 py-2.5 border-b border-border bg-muted/50">
-          <p className="col-span-5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Professionnel</p>
-          <p className="col-span-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Missions</p>
-          <p className="col-span-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Payé (HT)</p>
+          <p className="col-span-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Professionnel</p>
+          <p className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Missions</p>
+          <p className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Payé HT</p>
+          <p className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">Comm. 10%</p>
+          <p className="col-span-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right">TVA 21%</p>
         </div>
         {statsPerPro.length === 0 ? (
           <p className="text-center text-sm text-muted-foreground py-10">Aucune donnée</p>
@@ -169,7 +192,7 @@ function ProStatsTable({ pros }) {
               key={pro.id}
               className={`grid grid-cols-12 px-4 py-3 items-center ${i < statsPerPro.length - 1 ? 'border-b border-border/50' : ''}`}
             >
-              <div className="col-span-5 flex items-center gap-2 min-w-0">
+              <div className="col-span-4 flex items-center gap-2 min-w-0">
                 <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold overflow-hidden">
                   {pro.photo_url
                     ? <img src={pro.photo_url} alt="" className="w-full h-full object-cover" />
@@ -180,13 +203,19 @@ function ProStatsTable({ pros }) {
                   <p className="text-[10px] text-muted-foreground truncate">{pro.category_name || '—'}</p>
                 </div>
               </div>
-              <div className="col-span-3 text-center">
+              <div className="col-span-2 text-center">
                 <span className={`text-sm font-bold ${pro.missionsCount > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {pro.missionsCount}
                 </span>
               </div>
-              <div className="col-span-4 text-right">
-                <span className="text-sm font-semibold">{pro.totalPaid.toFixed(2)} €</span>
+              <div className="col-span-2 text-right">
+                <span className="text-sm font-semibold">{pro.totalPaid.toFixed(0)} €</span>
+              </div>
+              <div className="col-span-2 text-right">
+                <span className="text-sm text-blue-600 font-semibold">{pro.totalCommission.toFixed(0)} €</span>
+              </div>
+              <div className="col-span-2 text-right">
+                <span className="text-sm text-orange-600 font-semibold">{pro.totalTva.toFixed(0)} €</span>
               </div>
             </div>
           ))
