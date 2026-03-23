@@ -311,7 +311,6 @@ export default function ServiceRequest() {
       : paymentMethod === 'bank_transfer'
       ? 'Devis accepté ! L\'IBAN du pro sera affiché après confirmation.'
       : 'Devis accepté ! En attente de confirmation du professionnel.');
-    // eslint-disable-next-line no-unreachable
   };
 
   const handleDecline = () => navigate('/Home');
