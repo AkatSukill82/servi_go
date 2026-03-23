@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, CreditCard, Banknote, Smartphone, CalendarDays, Loader2, Zap, AlertTriangle } from 'lucide-react';
+import { Check, X, CreditCard, Banknote, CalendarDays, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
