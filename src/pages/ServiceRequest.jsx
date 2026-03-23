@@ -346,8 +346,7 @@ export default function ServiceRequest() {
     return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Service non trouvé</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
   }
 
-  const reqData = currentRequest;
-  const rawBase = reqData?.base_price || assignedPro?.base_price || category?.base_price || 80;
+  const rawBase = category?.base_price || 80;
   const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
   const commission = basePrice * 0.10;
   const tva = (basePrice + commission) * 0.21;
