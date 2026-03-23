@@ -506,13 +506,15 @@ export default function ServiceRequest() {
         {/* QUOTE */}
         {step === STEPS.QUOTE && (
           <motion.div key="quote" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-4 flex items-center gap-3">
-              <Search className="w-5 h-5 text-primary animate-pulse shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-primary">Demande envoyée à tous les {category?.name}s disponibles</p>
-                <p className="text-xs text-muted-foreground">Le premier à accepter prendra votre mission</p>
+            {!isUrgent && (
+              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mb-4 flex items-center gap-3">
+                <Search className="w-5 h-5 text-primary animate-pulse shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-primary">Demande envoyée à tous les {category?.name}s disponibles</p>
+                  <p className="text-xs text-muted-foreground">Le premier à accepter prendra votre mission</p>
+                </div>
               </div>
-            </div>
+            )}
             <PriceQuote
               basePrice={basePrice}
               commission={commission}
@@ -521,7 +523,7 @@ export default function ServiceRequest() {
               setPaymentMethod={setPaymentMethod}
               onAccept={handleAcceptQuote}
               onDecline={handleDecline}
-              isSubmitting={updateRequestMutation.isPending}
+              isSubmitting={createRequestMutation.isPending || updateRequestMutation.isPending}
               scheduledDate={scheduledDate}
               scheduledTime={scheduledTime}
               isUrgent={isUrgent}
