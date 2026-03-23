@@ -259,20 +259,52 @@ export default function ServiceRequest() {
 
   const handleAcceptQuote = async () => {
     if (!paymentMethod) { toast.error('Choisissez un moyen de paiement'); return; }
-    const id = requestId || currentRequest?.id;
-    if (!id) { toast.error('Erreur: demande introuvable'); return; }
 
-    // Recalcule le prix ici pour être sûr d'avoir la bonne valeur (avec surcharge SOS si besoin)
-    const rawBasePrice = currentRequest?.base_price || category?.base_price || 80;
+    // Recalcule le prix final (avec surcharge SOS si besoin)
+    const rawBasePrice = category?.base_price || 80;
     const finalBasePrice = isUrgent ? rawBasePrice * (1 + URGENCY_SURCHARGE) : rawBasePrice;
     const finalCommission = finalBasePrice * 0.10;
     const finalTva = (finalBasePrice + finalCommission) * 0.21;
     const finalTotalPrice = finalBasePrice + finalCommission + finalTva;
 
-    await updateRequestMutation.mutateAsync({
-      id,
-      data: { payment_method: paymentMethod },
-    });
+    // Si la demande n'existe pas encore (flux SOS sans slot), on la crée maintenant
+    let id = requestId || currentRequest?.id;
+    if (!id) {
+      const answersArray = questions.map((q, i) => ({
+        question: q.question,
+        answer: answers[i] || '',
+      }));
+      const newRequest = await createRequestMutation.mutateAsync({
+        category_id: categoryId,
+        category_name: category?.name,
+        answers: answersArray,
+        customer_name: user?.full_name || '',
+        customer_email: user?.email || '',
+        customer_address: address,
+        customer_latitude: user?.data?.latitude || user?.latitude || 50.8503,
+        customer_longitude: user?.data?.longitude || user?.longitude || 4.3517,
+        status: 'searching',
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+        tried_professionals: [],
+        base_price: finalBasePrice,
+        commission: finalCommission,
+        total_price: finalTotalPrice,
+        payment_method: paymentMethod,
+        payment_status: 'unpaid',
+        scheduled_date: null,
+        scheduled_time: null,
+        is_urgent: isUrgent,
+      });
+      id = newRequest.id;
+      setRequestId(id);
+    } else {
+      await updateRequestMutation.mutateAsync({
+        id,
+        data: { payment_method: paymentMethod },
+      });
+    }
 
     if (paymentMethod === 'stripe') {
       // Vérifier iframe
