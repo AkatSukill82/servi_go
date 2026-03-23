@@ -200,7 +200,7 @@ export default function ServiceRequest() {
   const handleAddressNext = () => {
     if (!address.trim()) return;
     if (totalQuestions > 0) setStep(STEPS.QUESTIONS);
-    else if (isUrgent) startSearch();
+    else if (isUrgent) setStep(STEPS.QUOTE);
     else setStep(STEPS.SLOT);
   };
 
