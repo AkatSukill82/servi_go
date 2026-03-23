@@ -251,8 +251,8 @@ export default function ServiceRequest() {
     if (questionIndex < totalQuestions - 1) {
       setQuestionIndex(questionIndex + 1);
     } else {
-      // SOS : pas de créneau, on lance directement la recherche
-      if (isUrgent) startSearch();
+      // SOS : pas de créneau, on va directement au devis pour choisir le paiement
+      if (isUrgent) setStep(STEPS.QUOTE);
       else setStep(STEPS.SLOT);
     }
   };
