@@ -262,6 +262,13 @@ export default function ServiceRequest() {
     const id = requestId || currentRequest?.id;
     if (!id) { toast.error('Erreur: demande introuvable'); return; }
 
+    // Recalcule le prix ici pour être sûr d'avoir la bonne valeur (avec surcharge SOS si besoin)
+    const rawBasePrice = currentRequest?.base_price || category?.base_price || 80;
+    const finalBasePrice = isUrgent ? rawBasePrice * (1 + URGENCY_SURCHARGE) : rawBasePrice;
+    const finalCommission = finalBasePrice * 0.10;
+    const finalTva = (finalBasePrice + finalCommission) * 0.21;
+    const finalTotalPrice = finalBasePrice + finalCommission + finalTva;
+
     await updateRequestMutation.mutateAsync({
       id,
       data: { payment_method: paymentMethod },
@@ -273,17 +280,10 @@ export default function ServiceRequest() {
         toast.error('Le paiement en ligne fonctionne uniquement depuis l\'application publiée.');
         return;
       }
-      // Recalcule le prix final (avec surcharge SOS si applicable)
-      const rawBasePrice = category?.base_price || 80;
-      const finalBase = isUrgent ? rawBasePrice * (1 + URGENCY_SURCHARGE) : rawBasePrice;
-      const finalCommission = finalBase * 0.10;
-      const finalTva = (finalBase + finalCommission) * 0.21;
-      const finalTotal = finalBase + finalCommission + finalTva;
-
       const res = await base44.functions.invoke('createStripeCheckout', {
         requestId: id,
-        totalPrice: finalTotal,
-        categoryName: isUrgent ? `⚡ SOS - ${category?.name}` : category?.name,
+        totalPrice: finalTotalPrice,
+        categoryName: category?.name,
         proName: currentRequest?.professional_name || '',
         successUrl: `${window.location.origin}/Invoices?payment=success`,
         cancelUrl: window.location.href,
