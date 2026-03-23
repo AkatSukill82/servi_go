@@ -273,10 +273,17 @@ export default function ServiceRequest() {
         toast.error('Le paiement en ligne fonctionne uniquement depuis l\'application publiée.');
         return;
       }
+      // Recalcule le prix final (avec surcharge SOS si applicable)
+      const rawBasePrice = category?.base_price || 80;
+      const finalBase = isUrgent ? rawBasePrice * (1 + URGENCY_SURCHARGE) : rawBasePrice;
+      const finalCommission = finalBase * 0.10;
+      const finalTva = (finalBase + finalCommission) * 0.21;
+      const finalTotal = finalBase + finalCommission + finalTva;
+
       const res = await base44.functions.invoke('createStripeCheckout', {
         requestId: id,
-        totalPrice: totalPrice,
-        categoryName: category?.name,
+        totalPrice: finalTotal,
+        categoryName: isUrgent ? `⚡ SOS - ${category?.name}` : category?.name,
         proName: currentRequest?.professional_name || '',
         successUrl: `${window.location.origin}/Invoices?payment=success`,
         cancelUrl: window.location.href,
