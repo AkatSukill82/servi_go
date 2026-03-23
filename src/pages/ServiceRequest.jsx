@@ -250,7 +250,9 @@ export default function ServiceRequest() {
     if (questionIndex < totalQuestions - 1) {
       setQuestionIndex(questionIndex + 1);
     } else {
-      setStep(STEPS.SLOT);
+      // SOS : pas de créneau, on lance directement la recherche
+      if (isUrgent) startSearch();
+      else setStep(STEPS.SLOT);
     }
   };
 
