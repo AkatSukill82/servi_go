@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Check, Clock, MapPin, Star, Bell, MessageCircle, ShieldCheck, ChevronRight, TrendingUp } from 'lucide-react';
+import { Check, Clock, MapPin, Star, Bell, MessageCircle, ShieldCheck, ChevronRight, TrendingUp, BarChart2 } from 'lucide-react';
+import ProStats from '@/components/pro/ProStats';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -13,6 +14,7 @@ export default function ProDashboard() {
   const queryClient = useQueryClient();
   const { requestPermission, notify } = useNotifications();
   const prevCountRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('missions'); // 'missions' | 'stats'
 
   useEffect(() => { requestPermission(); }, []);
 
@@ -143,7 +145,7 @@ export default function ProDashboard() {
   const revenue = acceptedJobs.reduce((sum, j) => sum + (j.base_price || 0), 0);
 
   return (
-    <div className="px-5 pt-7 pb-4 space-y-7">
+    <div className="px-5 pt-7 pb-4 space-y-5">
 
       {/* Header */}
       <div>
@@ -169,7 +171,37 @@ export default function ProDashboard() {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Tabs */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setActiveTab('missions')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+            activeTab === 'missions' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <Check className="w-3.5 h-3.5" /> Missions
+          {incomingRequests.length > 0 && (
+            <span className="text-xs font-bold bg-white/20 rounded-full px-1.5">{incomingRequests.length}</span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('stats')}
+          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+            activeTab === 'stats' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <BarChart2 className="w-3.5 h-3.5" /> Statistiques
+        </button>
+      </div>
+
+      {/* Stats tab */}
+      {activeTab === 'stats' && (
+        <ProStats userEmail={user?.email} />
+      )}
+
+      {activeTab === 'missions' && <>
+
+      {/* Stats summary */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-card rounded-xl p-4 border border-border">
           <div className="flex items-center gap-1.5 mb-2">
@@ -338,6 +370,8 @@ export default function ProDashboard() {
           </div>
         </div>
       )}
+
+      </> /* end missions tab */}
 
     </div>
   );
