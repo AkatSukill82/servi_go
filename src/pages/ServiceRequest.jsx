@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import QuestionStep from '@/components/request/QuestionStep';
 import PriceQuote from '@/components/request/PriceQuote';
 import PhotoAnalysisStep from '@/components/request/PhotoAnalysisStep';
+import ProSelectionList from '@/components/request/ProSelectionList';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Find the closest available professional using Haversine distance
@@ -78,6 +79,7 @@ const STEPS = {
   ADDRESS: 'address',
   QUESTIONS: 'questions',
   PHOTO: 'photo',
+  PRO_SELECT: 'pro_select',
   SLOT: 'slot',
   SEARCHING: 'searching',
   QUOTE: 'quote',
@@ -103,6 +105,7 @@ export default function ServiceRequest() {
   const [requestId, setRequestId] = useState(null);
   const [assignedPro, setAssignedPro] = useState(null);
   const [aiResult, setAiResult] = useState(null); // résultat analyse IA photo
+  const [allPros, setAllPros] = useState([]); // liste des pros chargée 1 seule fois
   const { requestPermission, notify } = useNotifications();
 
   const { data: user } = useQuery({
@@ -274,13 +277,26 @@ export default function ServiceRequest() {
     }
   };
 
-  const handlePhotoResult = (result) => {
+  const handlePhotoResult = async (result) => {
     setAiResult(result);
-    setStep(STEPS.SLOT);
+    await loadAndShowProSelect();
   };
 
-  const handlePhotoSkip = () => {
+  const handlePhotoSkip = async () => {
     setAiResult(null);
+    await loadAndShowProSelect();
+  };
+
+  const loadAndShowProSelect = async () => {
+    if (allPros.length === 0) {
+      const freshPros = await fetchFreshPros();
+      setAllPros(freshPros);
+    }
+    setStep(STEPS.PRO_SELECT);
+  };
+
+  const handleProSelected = (pro) => {
+    setAssignedPro(pro);
     setStep(STEPS.SLOT);
   };
 
@@ -375,7 +391,7 @@ export default function ServiceRequest() {
     return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Service non trouvé</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
   }
 
-  const rawBase = aiResult?.price_estimate || category?.base_price || 80;
+  const rawBase = assignedPro?.base_price || aiResult?.price_estimate || category?.base_price || 80;
   const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
   const commission = basePrice * 0.10;
   const tva = (basePrice + commission) * 0.21;
@@ -401,6 +417,7 @@ export default function ServiceRequest() {
             {step === STEPS.ADDRESS && 'Votre adresse'}
             {step === STEPS.QUESTIONS && `Question ${questionIndex + 1} / ${totalQuestions}`}
             {step === STEPS.PHOTO && 'Analyse IA'}
+            {step === STEPS.PRO_SELECT && 'Choisissez un professionnel'}
             {step === STEPS.SLOT && 'Date & heure'}
             {step === STEPS.SEARCHING && 'Recherche en cours...'}
             {step === STEPS.QUOTE && 'Votre devis'}
@@ -413,6 +430,9 @@ export default function ServiceRequest() {
         <Progress value={((questionIndex + 1) / totalQuestions) * 100} className="mb-6 h-1.5" />
       )}
       {step === STEPS.PHOTO && (
+        <Progress value={100} className="mb-6 h-1.5" />
+      )}
+      {step === STEPS.PRO_SELECT && (
         <Progress value={100} className="mb-6 h-1.5" />
       )}
 
@@ -488,6 +508,20 @@ export default function ServiceRequest() {
               basePrice={category?.base_price || 80}
               onResult={handlePhotoResult}
               onSkip={handlePhotoSkip}
+            />
+          </motion.div>
+        )}
+
+        {/* PRO SELECTION */}
+        {step === STEPS.PRO_SELECT && (
+          <motion.div key="pro_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <ProSelectionList
+              professionals={allPros}
+              customerLat={user?.latitude || user?.data?.latitude || 50.8503}
+              customerLon={user?.longitude || user?.data?.longitude || 4.3517}
+              categoryName={category?.name}
+              basePrice={category?.base_price || 80}
+              onSelect={handleProSelected}
             />
           </motion.div>
         )}
