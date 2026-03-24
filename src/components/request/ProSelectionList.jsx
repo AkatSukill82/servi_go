@@ -1,0 +1,160 @@
+import React, { useState } from 'react';
+import { Star, ShieldCheck, ChevronRight, MapPin, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
+
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+const RADIUS_PRIMARY_KM = 15;
+const RADIUS_FALLBACK_KM = 40;
+
+function buildProList(professionals, customerLat, customerLon, categoryName) {
+  const filtered = professionals.filter(p =>
+    p.user_type === 'professionnel' &&
+    p.available !== false &&
+    !p.account_deleted &&
+    (!categoryName || !p.category_name || p.category_name === categoryName)
+  );
+
+  const withDist = filtered.map(p => ({
+    ...p,
+    _dist: (p.latitude && p.longitude)
+      ? getDistance(customerLat, customerLon, p.latitude, p.longitude)
+      : 9999,
+  }));
+
+  // Try 15km first, then 40km
+  let nearby = withDist.filter(p => p._dist <= RADIUS_PRIMARY_KM);
+  if (nearby.length === 0) nearby = withDist.filter(p => p._dist <= RADIUS_FALLBACK_KM);
+  if (nearby.length === 0) nearby = withDist.slice(0, 5); // last resort
+
+  // Sort: verified first, then by distance
+  return nearby.sort((a, b) => {
+    if (a.verification_status === 'verified' && b.verification_status !== 'verified') return -1;
+    if (b.verification_status === 'verified' && a.verification_status !== 'verified') return 1;
+    return a._dist - b._dist;
+  });
+}
+
+export default function ProSelectionList({ professionals, customerLat, customerLon, categoryName, basePrice, onSelect }) {
+  const [selected, setSelected] = useState(null);
+
+  const pros = buildProList(professionals, customerLat, customerLon, categoryName);
+
+  if (pros.length === 0) {
+    return (
+      <div className="text-center py-12 space-y-3">
+        <p className="text-2xl">😔</p>
+        <p className="font-semibold">Aucun professionnel disponible</p>
+        <p className="text-sm text-muted-foreground">Aucun {categoryName} n'est disponible près de vous pour le moment.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">{pros.length} professionnel{pros.length > 1 ? 's' : ''} trouvé{pros.length > 1 ? 's' : ''} près de vous</p>
+
+      <div className="space-y-3">
+        {pros.map((pro, i) => {
+          const isVerified = pro.verification_status === 'verified';
+          const price = pro.base_price || basePrice || 80;
+          const dist = pro._dist < 9999 ? pro._dist.toFixed(1) : null;
+          const isSelected = selected?.id === pro.id;
+
+          return (
+            <motion.button
+              key={pro.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.06 }}
+              onClick={() => setSelected(pro)}
+              className={cn(
+                'w-full text-left rounded-2xl border p-4 transition-all',
+                isSelected
+                  ? 'border-primary bg-primary/5 shadow-sm'
+                  : 'border-border bg-card hover:border-primary/40'
+              )}
+            >
+              <div className="flex items-center gap-3">
+                {/* Avatar */}
+                <div className="relative shrink-0">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted flex items-center justify-center font-bold text-primary text-lg">
+                    {pro.photo_url
+                      ? <img src={pro.photo_url} alt={pro.full_name} className="w-full h-full object-cover" />
+                      : (pro.full_name?.[0] || '?')}
+                  </div>
+                  {isVerified && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow">
+                      <ShieldCheck className="w-3 h-3 text-white" strokeWidth={2.5} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="font-semibold text-sm truncate">{pro.full_name}</p>
+                    {isVerified && (
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-1.5 py-0.5 shrink-0">
+                        ✓ Pro Vérifié
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-1">
+                    {pro.rating > 0 && (
+                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        {pro.rating?.toFixed(1)} {pro.reviews_count > 0 && `(${pro.reviews_count})`}
+                      </span>
+                    )}
+                    {dist && (
+                      <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                        <MapPin className="w-3 h-3" />
+                        {dist} km
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div className="shrink-0 text-right">
+                  <p className="font-bold text-lg text-foreground">{price} €</p>
+                  <p className="text-[10px] text-muted-foreground">base HT</p>
+                </div>
+              </div>
+
+              {/* Selection indicator */}
+              {isSelected && (
+                <div className="mt-3 pt-3 border-t border-primary/20">
+                  <p className="text-xs text-primary font-medium flex items-center gap-1">
+                    ✓ Professionnel sélectionné
+                  </p>
+                </div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <Button
+        onClick={() => onSelect(selected)}
+        disabled={!selected}
+        className="w-full h-14 rounded-xl text-base"
+      >
+        Continuer avec {selected?.full_name || '...'}
+        <ChevronRight className="w-5 h-5 ml-2" />
+      </Button>
+    </div>
+  );
+}
