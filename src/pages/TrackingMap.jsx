@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MessageCircle, Navigation } from 'lucide-react';
+import { CheckCircle, Clock, MessageCircle, Navigation, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '@/components/ui/BackButton';
 import L from 'leaflet';
@@ -40,6 +40,7 @@ export default function TrackingMap() {
   const urlParams = new URLSearchParams(window.location.search);
   const requestId = urlParams.get('requestId');
   const [route, setRoute] = useState([]);
+  const [eta, setEta] = useState(null); // minutes
 
   const { data: request } = useQuery({
     queryKey: ['trackRequest', requestId],
@@ -52,7 +53,7 @@ export default function TrackingMap() {
     queryKey: ['proUser', request?.professional_email],
     queryFn: () => base44.entities.User.filter({ email: request.professional_email }).then(r => r[0]),
     enabled: !!request?.professional_email,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   });
 
   useEffect(() => {
@@ -62,10 +63,18 @@ export default function TrackingMap() {
     fetch(`https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`)
       .then(r => r.json())
       .then(data => {
-        const coords = data?.routes?.[0]?.geometry?.coordinates;
-        if (coords) setRoute(coords.map(([lng, lat]) => [lat, lng]));
+        const route0 = data?.routes?.[0];
+        if (route0?.geometry?.coordinates) {
+          setRoute(route0.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
+        }
+        if (route0?.duration) {
+          setEta(Math.ceil(route0.duration / 60));
+        }
       })
-      .catch(() => setRoute([[fromLat, fromLon], [toLat, toLon]]));
+      .catch(() => {
+        setRoute([[fromLat, fromLon], [toLat, toLon]]);
+        setEta(null);
+      });
   }, [proUser?.latitude, proUser?.longitude, request?.customer_latitude]);
 
   if (!request) {
@@ -150,7 +159,16 @@ export default function TrackingMap() {
                 <p className="font-semibold text-sm">{request.professional_name} est en route</p>
                 <p className="text-xs text-muted-foreground truncate">{request.customer_address}</p>
               </div>
-              <div className="w-2 h-2 rounded-full bg-foreground animate-pulse shrink-0" />
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {eta !== null ? (
+                  <div className="flex items-center gap-1 bg-foreground text-background rounded-xl px-2.5 py-1">
+                    <Timer className="w-3.5 h-3.5" />
+                    <span className="text-xs font-bold">{eta} min</span>
+                  </div>
+                ) : (
+                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" />
+                )}
+              </div>
             </div>
           ) : (
             <div className="flex items-center gap-3">
