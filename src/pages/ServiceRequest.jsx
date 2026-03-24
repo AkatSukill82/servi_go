@@ -40,6 +40,9 @@ function normalizePro(p) {
   };
 }
 
+const RADIUS_PRIMARY_KM = 15;
+const RADIUS_FALLBACK_KM = 40;
+
 function findClosestPro(professionals, customerLat, customerLon, excludeIds = []) {
   const normalized = professionals.map(normalizePro);
   const available = normalized.filter(p =>
@@ -49,12 +52,25 @@ function findClosestPro(professionals, customerLat, customerLon, excludeIds = []
     !excludeIds.includes(p.id)
   );
   if (!available.length) return null;
-  return available.sort((a, b) => {
-    if (!a.latitude || !a.longitude) return 1;
-    if (!b.latitude || !b.longitude) return -1;
-    return getDistance(customerLat, customerLon, a.latitude, a.longitude) -
-      getDistance(customerLat, customerLon, b.latitude, b.longitude);
-  })[0];
+
+  // Attache la distance à chaque pro pour pouvoir filtrer et trier
+  const withDist = available.map(p => ({
+    ...p,
+    _dist: (p.latitude && p.longitude)
+      ? getDistance(customerLat, customerLon, p.latitude, p.longitude)
+      : 9999,
+  }));
+
+  // 1ᵉʳ essai : pros dans le rayon primaire (15km)
+  const nearby = withDist.filter(p => p._dist <= RADIUS_PRIMARY_KM);
+  if (nearby.length > 0) return nearby.sort((a, b) => a._dist - b._dist)[0];
+
+  // 2ᵉʳ essai : fallback rayon étendu (40km)
+  const extended = withDist.filter(p => p._dist <= RADIUS_FALLBACK_KM);
+  if (extended.length > 0) return extended.sort((a, b) => a._dist - b._dist)[0];
+
+  // Dernier recours : le plus proche peu importe la distance
+  return withDist.sort((a, b) => a._dist - b._dist)[0];
 }
 
 const STEPS = {
