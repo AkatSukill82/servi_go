@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import QuestionStep from '@/components/request/QuestionStep';
 import PriceQuote from '@/components/request/PriceQuote';
+import PhotoAnalysisStep from '@/components/request/PhotoAnalysisStep';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Find the closest available professional using Haversine distance
@@ -76,6 +77,7 @@ function findClosestPro(professionals, customerLat, customerLon, excludeIds = []
 const STEPS = {
   ADDRESS: 'address',
   QUESTIONS: 'questions',
+  PHOTO: 'photo',
   SLOT: 'slot',
   SEARCHING: 'searching',
   QUOTE: 'quote',
@@ -100,6 +102,7 @@ export default function ServiceRequest() {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [requestId, setRequestId] = useState(null);
   const [assignedPro, setAssignedPro] = useState(null);
+  const [aiResult, setAiResult] = useState(null); // résultat analyse IA photo
   const { requestPermission, notify } = useNotifications();
 
   const { data: user } = useQuery({
@@ -265,10 +268,20 @@ export default function ServiceRequest() {
     if (questionIndex < totalQuestions - 1) {
       setQuestionIndex(questionIndex + 1);
     } else {
-      // SOS : pas de créneau, on va directement au devis pour choisir le paiement
+      // Après les questions : étape photo IA (sauf SOS)
       if (isUrgent) setStep(STEPS.QUOTE);
-      else setStep(STEPS.SLOT);
+      else setStep(STEPS.PHOTO);
     }
+  };
+
+  const handlePhotoResult = (result) => {
+    setAiResult(result);
+    setStep(STEPS.SLOT);
+  };
+
+  const handlePhotoSkip = () => {
+    setAiResult(null);
+    setStep(STEPS.SLOT);
   };
 
   const handleAcceptQuote = async () => {
@@ -362,7 +375,7 @@ export default function ServiceRequest() {
     return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Service non trouvé</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
   }
 
-  const rawBase = category?.base_price || 80;
+  const rawBase = aiResult?.price_estimate || category?.base_price || 80;
   const basePrice = isUrgent ? rawBase * (1 + URGENCY_SURCHARGE) : rawBase;
   const commission = basePrice * 0.10;
   const tva = (basePrice + commission) * 0.21;
@@ -387,6 +400,7 @@ export default function ServiceRequest() {
           <p className="text-sm text-muted-foreground">
             {step === STEPS.ADDRESS && 'Votre adresse'}
             {step === STEPS.QUESTIONS && `Question ${questionIndex + 1} / ${totalQuestions}`}
+            {step === STEPS.PHOTO && 'Analyse IA'}
             {step === STEPS.SLOT && 'Date & heure'}
             {step === STEPS.SEARCHING && 'Recherche en cours...'}
             {step === STEPS.QUOTE && 'Votre devis'}
@@ -397,6 +411,9 @@ export default function ServiceRequest() {
 
       {step === STEPS.QUESTIONS && (
         <Progress value={((questionIndex + 1) / totalQuestions) * 100} className="mb-6 h-1.5" />
+      )}
+      {step === STEPS.PHOTO && (
+        <Progress value={100} className="mb-6 h-1.5" />
       )}
 
       <AnimatePresence mode="wait">
@@ -460,6 +477,18 @@ export default function ServiceRequest() {
               {questionIndex < totalQuestions - 1 ? 'Suivant' : 'Voir le prix'}
               <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
+          </motion.div>
+        )}
+
+        {/* PHOTO ANALYSIS */}
+        {step === STEPS.PHOTO && (
+          <motion.div key="photo" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <PhotoAnalysisStep
+              categoryName={category?.name}
+              basePrice={category?.base_price || 80}
+              onResult={handlePhotoResult}
+              onSkip={handlePhotoSkip}
+            />
           </motion.div>
         )}
 
