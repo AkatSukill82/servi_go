@@ -1,11 +1,10 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, MapPin, Phone, Heart, User } from 'lucide-react';
+import { Home, MapPin, Heart, User } from 'lucide-react';
 
 const navItems = [
   { path: '/Home', icon: Home, label: 'Accueil' },
   { path: '/Map', icon: MapPin, label: 'Carte' },
-  { path: '/Emergency', icon: Phone, label: 'SOS' },
   { path: '/Favorites', icon: Heart, label: 'Favoris' },
   { path: '/Profile', icon: User, label: 'Profil' },
 ];
@@ -25,41 +24,7 @@ export default function BottomNav() {
       <div className="flex items-center justify-around h-14 px-2">
         {navItems.map(({ path, icon: Icon, label }) => {
           const isActive = activeTab === path;
-          const isEmergency = path === '/Emergency';
-
-          if (isEmergency) {
-            return (
-              <button
-                key={path}
-                onClick={() => navigate(path, { replace: true })}
-                className="flex flex-col items-center gap-0.5"
-              >
-                <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center">
-                  <Icon style={{ width: 15, height: 15 }} className="text-background" strokeWidth={2} />
-                </div>
-                <span className="text-[9px] font-semibold text-foreground">{label}</span>
-              </button>
-            );
-          }
-
           return (
-            <button
-              key={path}
-              onClick={() => navigate(path, { replace: true })}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center"
-            >
-              <Icon
-                style={{ width: 20, height: 20 }}
-                strokeWidth={isActive ? 2.2 : 1.6}
-                className={isActive ? 'text-foreground' : 'text-muted-foreground'}
-              />
-              <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
     </nav>
   );
 }
