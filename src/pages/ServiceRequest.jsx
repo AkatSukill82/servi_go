@@ -277,22 +277,21 @@ export default function ServiceRequest() {
     }
   };
 
-  const handlePhotoResult = async (result) => {
+  const handlePhotoResult = (result) => {
     setAiResult(result);
-    await loadAndShowProSelect();
+    loadAndShowProSelect();
   };
 
-  const handlePhotoSkip = async () => {
+  const handlePhotoSkip = () => {
     setAiResult(null);
-    await loadAndShowProSelect();
+    loadAndShowProSelect();
   };
 
-  const loadAndShowProSelect = async () => {
-    if (allPros.length === 0) {
-      const freshPros = await fetchFreshPros();
-      setAllPros(freshPros);
-    }
+  const loadAndShowProSelect = () => {
     setStep(STEPS.PRO_SELECT);
+    if (allPros.length === 0) {
+      fetchFreshPros().then(setAllPros);
+    }
   };
 
   const handleProSelected = (pro) => {
@@ -515,14 +514,21 @@ export default function ServiceRequest() {
         {/* PRO SELECTION */}
         {step === STEPS.PRO_SELECT && (
           <motion.div key="pro_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <ProSelectionList
-              professionals={allPros}
-              customerLat={user?.latitude || user?.data?.latitude || 50.8503}
-              customerLon={user?.longitude || user?.data?.longitude || 4.3517}
-              categoryName={category?.name}
-              basePrice={category?.base_price || 80}
-              onSelect={handleProSelected}
-            />
+            {allPros.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                <p className="text-sm text-muted-foreground">Chargement des professionnels...</p>
+              </div>
+            ) : (
+              <ProSelectionList
+                professionals={allPros}
+                customerLat={user?.latitude || user?.data?.latitude || 50.8503}
+                customerLon={user?.longitude || user?.data?.longitude || 4.3517}
+                categoryName={category?.name}
+                basePrice={category?.base_price || 80}
+                onSelect={handleProSelected}
+              />
+            )}
           </motion.div>
         )}
 
