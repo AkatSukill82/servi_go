@@ -155,6 +155,18 @@ export default function Home() {
         )}
 
       </div>
+
+      {viewingPro && (
+        <ProProfileSheet
+          pro={viewingPro}
+          onClose={() => setViewingPro(null)}
+          onSelect={(pro) => {
+            const cat = categories.find(c => c.name === pro.category_name);
+            if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${pro.id}`);
+            setViewingPro(null);
+          }}
+        />
+      )}
     </PullToRefresh>
   );
 }
