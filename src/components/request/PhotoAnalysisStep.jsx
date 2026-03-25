@@ -13,15 +13,8 @@ const COMPLEXITY_STYLES = {
 export default function PhotoAnalysisStep({ categoryName, basePrice, onResult, onSkip }) {
   const [photoUrl, setPhotoUrl] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [skipping, setSkipping] = useState(false);
   const [result, setResult] = useState(null);
   const fileRef = useRef(null);
-
-  const handleSkip = async () => {
-    setSkipping(true);
-    await onSkip();
-    setSkipping(false);
-  };
 
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -126,8 +119,8 @@ Réponds uniquement avec ce JSON :
             <ChevronRight className="w-5 h-5 ml-2" />
           </Button>
         )}
-        <button onClick={handleSkip} disabled={skipping || analyzing} className="w-full text-center text-sm text-muted-foreground underline underline-offset-2 py-2 flex items-center justify-center gap-2 disabled:opacity-50">
-          {skipping ? <><Loader2 className="w-4 h-4 animate-spin" /> Chargement...</> : (result ? 'Continuer sans l\'analyse IA' : 'Passer cette étape')}
+        <button onClick={onSkip} disabled={analyzing} className="w-full text-center text-sm text-muted-foreground underline underline-offset-2 py-2 disabled:opacity-50">
+          {result ? "Continuer sans l'analyse IA" : "Passer cette étape"}
         </button>
       </div>
     </div>
