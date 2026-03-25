@@ -43,7 +43,6 @@ export default function Home() {
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
 
   const firstName = user?.full_name?.split(' ')[0];
-  const navigate = useNavigate();
 
   const { data: verifiedPros = [] } = useQuery({
     queryKey: ['verifiedProsHome'],
@@ -65,6 +64,23 @@ export default function Home() {
             Quel service recherchez-vous ?
           </p>
         </div>
+
+        {/* Active mission banner */}
+        {activeRequest && (
+          <button
+            onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
+            className="w-full mb-3 rounded-2xl overflow-hidden"
+          >
+            <div className="bg-green-600 px-4 py-3 flex items-center gap-3">
+              <span className="w-3 h-3 rounded-full bg-green-300 animate-pulse shrink-0" />
+              <div className="flex-1 text-left">
+                <p className="text-sm font-bold text-white">Mission acceptée — {activeRequest.professional_name}</p>
+                <p className="text-xs text-white/80">Appuyez pour suivre sur la carte</p>
+              </div>
+              <span className="text-white text-lg">→</span>
+            </div>
+          </button>
+        )}
 
         {/* SOS banner */}
         <button
