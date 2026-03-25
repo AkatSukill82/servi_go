@@ -402,5 +402,6 @@ export default function AdminDashboard() {
       {tab === 'disputes' && <DisputesTab />}
       {tab === 'blacklist' && <BlacklistTab />}
     </div>
+    </div>
   );
 }
