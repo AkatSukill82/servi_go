@@ -14,6 +14,8 @@ import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
 import AdminDashboard from './pages/AdminDashboard';
+import CGU from './pages/CGU';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -59,6 +61,10 @@ const AuthenticatedApp = () => {
       <Route path="/Map" element={<AppLayout />} />
       <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Emergency" element={<AppLayout />} />
+
+      {/* Full screen pages (no layout) */}
+      <Route path="/CGU" element={<CGU />} />
+      <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
 
       {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />

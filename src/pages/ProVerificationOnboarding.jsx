@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { ShieldCheck, Upload, FileCheck, Loader2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,8 @@ export default function ProVerificationOnboarding() {
   const [uploaded, setUploaded] = useState({});
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
+  const [bceNumber, setBceNumber] = useState('');
+  const [acceptedCGU, setAcceptedCGU] = useState(false);
 
   const handleUpload = async (e, key) => {
     const file = e.target.files?.[0];
@@ -37,6 +39,8 @@ export default function ProVerificationOnboarding() {
     setSaving(true);
     await base44.auth.updateMe({
       ...uploaded,
+      bce_number: bceNumber,
+      cgu_accepted: true,
       verification_status: 'pending',
     });
     setSaving(false);
@@ -106,6 +110,33 @@ export default function ProVerificationOnboarding() {
             );
           })}
         </div>
+
+        {/* BCE Number */}
+        <div>
+          <label className="text-sm font-semibold block mb-1.5">Numéro BCE / KBO <span className="text-destructive">*</span></label>
+          <input
+            type="text"
+            value={bceNumber}
+            onChange={e => setBceNumber(e.target.value)}
+            placeholder="Ex: 0123.456.789"
+            className="w-full h-12 rounded-xl border border-border bg-card px-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Votre numéro d'entreprise belge (obligatoire pour exercer légalement)</p>
+        </div>
+
+        {/* CGU acceptance */}
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acceptedCGU}
+            onChange={e => setAcceptedCGU(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded accent-foreground"
+          />
+          <span className="text-xs text-muted-foreground leading-relaxed">
+            J'accepte les <Link to="/CGU" className="text-primary underline" target="_blank">Conditions Générales d'Utilisation</Link> et la{' '}
+            <Link to="/PrivacyPolicy" className="text-primary underline" target="_blank">Politique de confidentialité</Link> de ServiGo. Je certifie être légalement enregistré en Belgique et disposer d'une assurance RC professionnelle valide.
+          </span>
+        </label>
 
         {/* Info */}
         {allUploaded && (
