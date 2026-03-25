@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
-import { Search, ShieldCheck, Star, Zap } from 'lucide-react';
+import { Search, Zap } from 'lucide-react';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useNavigate } from 'react-router-dom';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ServiceCard from '@/components/home/ServiceCard';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Home() {
-  const [search] = useState('');
+  const [search, setSearch] = useState('');
   const [viewingPro, setViewingPro] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -44,11 +43,7 @@ export default function Home() {
 
   const firstName = user?.full_name?.split(' ')[0];
 
-  const { data: verifiedPros = [] } = useQuery({
-    queryKey: ['verifiedProsHome'],
-    queryFn: () => base44.entities.User.filter({ user_type: 'professionnel', verification_status: 'verified', available: true }, '-rating', 6),
-    staleTime: 2 * 60 * 1000
-  });
+
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -99,45 +94,18 @@ export default function Home() {
           </div>
         </button>
 
-        {/* Verified pros strip */}
-        
 
+                {/* Search */}
+        <div className="relative mb-5">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher un service..."
+            className="w-full h-11 rounded-xl border border-border bg-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+        </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-        {/* Section label */}
         {!search &&
         <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
             Nos services
