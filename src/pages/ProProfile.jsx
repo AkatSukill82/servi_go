@@ -24,7 +24,7 @@ export default function ProProfile() {
   const [form, setForm] = useState({
     phone: '', address: '', bank_iban: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
-    pro_description: '', available: true, availability_slots: [],
+    pro_description: '', available: true, availability_slots: [], bce_number: ''
   });
 
   const { data: user } = useQuery({
@@ -50,6 +50,7 @@ export default function ProProfile() {
         pro_description: user.pro_description || '',
         available: user.available !== false,
         availability_slots: user.availability_slots || [],
+        bce_number: user.bce_number || '',
       });
     }
   }, [user]);
@@ -206,6 +207,10 @@ export default function ProProfile() {
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">IBAN</Label>
             <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE68 XXXX XXXX XXXX" className="h-12 rounded-xl" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Numéro BCE/KBO</Label>
+            <Input value={form.bce_number} onChange={e => setForm(f => ({ ...f, bce_number: e.target.value }))} placeholder="BE 0xxx.xxx.xxx" className="h-12 rounded-xl" />
           </div>
         </div>
 
