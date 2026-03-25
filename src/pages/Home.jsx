@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
 import { Search, ShieldCheck, Star, Zap } from 'lucide-react';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
@@ -11,6 +12,7 @@ import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Home() {
   const [search, setSearch] = useState('');
+  const [viewingPro, setViewingPro] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -93,7 +95,7 @@ export default function Home() {
               {verifiedPros.map(pro => (
                 <button
                   key={pro.id}
-                  onClick={() => navigate(`/ServiceRequest?categoryId=${pro.category_id || ''}&priorityProId=${pro.id}`)}
+                  onClick={() => setViewingPro(pro)}
                   className="shrink-0 w-[110px] bg-card rounded-2xl border border-border p-3 text-left"
                 >
                   <div className="relative mb-2">
