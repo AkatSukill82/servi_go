@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useMutation } from '@tanstack/react-query';
@@ -74,6 +74,7 @@ export default function SelectUserType() {
   const [detectedAddress, setDetectedAddress] = useState('');
   const [coords, setCoords] = useState(null);
   const [lang, setLang] = useState('fr');
+  const [acceptedCGU, setAcceptedCGU] = useState(false);
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
@@ -147,11 +148,28 @@ export default function SelectUserType() {
               <p className="text-muted-foreground mt-2">{t.subtitle}</p>
             </div>
 
+            {/* CGU checkbox */}
+            <label className="flex items-start gap-3 cursor-pointer mb-2">
+              <input
+                type="checkbox"
+                checked={acceptedCGU}
+                onChange={e => setAcceptedCGU(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded accent-foreground"
+              />
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                J'accepte les <Link to="/CGU" className="text-primary underline" target="_blank">CGU</Link> et la{' '}
+                <Link to="/PrivacyPolicy" className="text-primary underline" target="_blank">Politique de confidentialité</Link> de ServiGo
+              </span>
+            </label>
+
             <div className="space-y-4">
               <motion.button
                 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
-                onClick={() => handleChoose('particulier')}
-                className="w-full bg-card border-2 border-border hover:border-primary/40 rounded-2xl p-6 text-left transition-all active:scale-95 shadow-sm"
+                onClick={() => acceptedCGU && handleChoose('particulier')}
+                disabled={!acceptedCGU}
+                className={`w-full bg-card border-2 rounded-2xl p-6 text-left transition-all active:scale-95 shadow-sm ${
+                  acceptedCGU ? 'border-border hover:border-primary/40' : 'border-border opacity-50 cursor-not-allowed'
+                }`}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -166,8 +184,11 @@ export default function SelectUserType() {
 
               <motion.button
                 initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
-                onClick={() => handleChoose('professionnel')}
-                className="w-full bg-card border-2 border-border hover:border-accent/40 rounded-2xl p-6 text-left transition-all active:scale-95 shadow-sm"
+                onClick={() => acceptedCGU && handleChoose('professionnel')}
+                disabled={!acceptedCGU}
+                className={`w-full bg-card border-2 rounded-2xl p-6 text-left transition-all active:scale-95 shadow-sm ${
+                  acceptedCGU ? 'border-border hover:border-accent/40' : 'border-border opacity-50 cursor-not-allowed'
+                }`}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center">
