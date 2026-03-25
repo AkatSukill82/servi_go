@@ -195,7 +195,7 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
                 Choisir ce professionnel
               </Button>
             )}
-          </div>
+          </div>{/* scrollable area */}
         </motion.div>
       </motion.div>
     </AnimatePresence>
