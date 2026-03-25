@@ -49,6 +49,8 @@ const AuthenticatedApp = () => {
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
       <Route path="/AdminDashboard" element={<AdminDashboard />} />
+      <Route path="/CGU" element={<CGU />} />
+      <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
 
       {/* App pages with shared layout (tabs persistants) */}
       <Route path="/Home" element={<AppLayout />} />

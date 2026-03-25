@@ -104,10 +104,12 @@ const STEPS = [
 ];
 
 const STORAGE_KEY = 'servigo_onboarding_done';
+const CGU_KEY = 'servigo_cgu_accepted';
 
 export default function OnboardingModal() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
+  const [cguAccepted, setCguAccepted] = useState(false);
 
   useEffect(() => {
     const done = localStorage.getItem(STORAGE_KEY);
