@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react';
 export default function CGU() {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-background px-5 py-8 max-w-2xl mx-auto">
+    <div className="h-screen overflow-y-auto bg-background px-5 py-8 max-w-2xl mx-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <ArrowLeft className="w-4 h-4" /> Retour
       </button>
