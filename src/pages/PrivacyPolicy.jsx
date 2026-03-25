@@ -5,7 +5,8 @@ import { ArrowLeft } from 'lucide-react';
 export default function PrivacyPolicy() {
   const navigate = useNavigate();
   return (
-    <div className="h-screen overflow-y-auto bg-background px-5 py-8 max-w-2xl mx-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', background: 'hsl(var(--background))' }}>
+    <div className="px-5 py-8 max-w-2xl mx-auto">
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
         <ArrowLeft className="w-4 h-4" /> Retour
       </button>
@@ -78,6 +79,7 @@ export default function PrivacyPolicy() {
           <p>Vous pouvez introduire une réclamation auprès de l'<strong>Autorité de Protection des Données (APD)</strong> belge : <a href="https://www.dataprotectionauthority.be" target="_blank" rel="noopener noreferrer" className="text-primary underline">dataprotectionauthority.be</a></p>
         </section>
       </div>
+    </div>
     </div>
   );
 }
