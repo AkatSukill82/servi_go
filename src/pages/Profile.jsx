@@ -10,7 +10,8 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt, FileText } from 'lucide-react';
+import DocumentsTab from '@/components/documents/DocumentsTab';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
@@ -98,9 +99,18 @@ export default function Profile() {
         >
           <Receipt className="w-3.5 h-3.5" /> Reçus
         </button>
+        <button
+          onClick={() => setTab('documents')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+            tab === 'documents' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" /> Documents
+        </button>
       </div>
 
       {tab === 'recus' && <CustomerReceipts user={user} />}
+      {tab === 'documents' && <DocumentsTab user={user} />}
 
       {tab !== 'recus' && (
       <>

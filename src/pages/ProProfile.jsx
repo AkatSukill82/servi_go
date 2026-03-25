@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Camera, Save, LogOut, Briefcase, Euro, MapPin, LayoutDashboard, CalendarDays } from 'lucide-react';
+import { Camera, Save, LogOut, Briefcase, Euro, MapPin, LayoutDashboard, CalendarDays, FileText } from 'lucide-react';
+import DocumentsTab from '@/components/documents/DocumentsTab';
 import BackButton from '@/components/ui/BackButton';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ import VerificationSection from '@/components/pro/VerificationSection';
 export default function ProProfile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState('profil');
   const [form, setForm] = useState({
     phone: '', address: '', bank_iban: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
@@ -73,7 +75,7 @@ export default function ProProfile() {
 
   return (
     <div className="px-4 pt-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <BackButton fallback="/ProDashboard" />
           <h1 className="text-2xl font-bold">Mon profil pro</h1>
@@ -82,6 +84,23 @@ export default function ProProfile() {
           <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
         </Button>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+        {[['profil', 'Profil'], ['documents', 'Documents']].map(([k, l]) => (
+          <button key={k} onClick={() => setActiveTab(k)}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border shrink-0 transition-colors ${
+              activeTab === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'
+            }`}>
+            {k === 'documents' && <FileText className="w-3.5 h-3.5" />}
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'documents' && <DocumentsTab user={user} />}
+
+      {activeTab !== 'documents' && <>
 
       {/* Avatar */}
       <div className="flex flex-col items-center mb-6">
@@ -213,6 +232,7 @@ export default function ProProfile() {
           <LogOut className="w-5 h-5 mr-2" /> Déconnexion
         </Button>
       </div>
+      </> }
     </div>
   );
 }
