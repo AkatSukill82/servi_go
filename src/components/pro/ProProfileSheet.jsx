@@ -42,7 +42,7 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl max-h-[88dvh] overflow-y-auto"
+          className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl max-h-[88dvh] flex flex-col"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
         >
           {/* Handle */}
