@@ -17,6 +17,7 @@ export default function ProVerificationOnboarding() {
   const [uploaded, setUploaded] = useState({});
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
+  const [bceNumber, setBceNumber] = useState('');
 
   const handleUpload = async (e, key) => {
     const file = e.target.files?.[0];

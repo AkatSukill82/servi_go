@@ -122,6 +122,7 @@ export default function OnboardingModal() {
 
   const close = () => {
     localStorage.setItem(STORAGE_KEY, '1');
+    if (cguAccepted) localStorage.setItem(CGU_KEY, '1');
     setVisible(false);
   };
 
