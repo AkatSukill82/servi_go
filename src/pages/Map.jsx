@@ -47,7 +47,7 @@ export default function MapPage() {
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ['professionals'],
     queryFn: () => base44.entities.User.filter({ user_type: 'professionnel', available: true }),
-    refetchInterval: 10000,
+    refetchInterval: 3000,
   });
 
   // Temps réel : mise à jour instantanée quand un pro bouge
