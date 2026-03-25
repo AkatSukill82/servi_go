@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Star, ChevronDown } from 'lucide-react';
@@ -42,11 +42,23 @@ function UserLocationMarker({ center }) {
 
 export default function MapPage() {
   const [selected, setSelected] = useState(null);
+  const queryClient = useQueryClient();
 
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ['professionals'],
     queryFn: () => base44.entities.User.filter({ user_type: 'professionnel', available: true }),
+    refetchInterval: 10000,
   });
+
+  // Temps réel : mise à jour instantanée quand un pro bouge
+  useEffect(() => {
+    const unsub = base44.entities.User.subscribe((event) => {
+      if (event.data?.user_type === 'professionnel') {
+        queryClient.invalidateQueries({ queryKey: ['professionals'] });
+      }
+    });
+    return () => unsub();
+  }, [queryClient]);
 
   const { data: urgentRequests = [] } = useQuery({
     queryKey: ['urgentMapRequests'],
