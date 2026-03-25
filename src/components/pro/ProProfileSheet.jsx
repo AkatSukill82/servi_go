@@ -35,20 +35,30 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 bg-black/50"
-        onClick={e => e.target === e.currentTarget && onClose()}
+        onClick={onClose}
       >
         <motion.div
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-          className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl max-h-[88dvh] flex flex-col"
-          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            maxHeight: '88dvh',
+            background: 'hsl(var(--background))',
+            borderRadius: '24px 24px 0 0',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+          }}
         >
-          <div className="overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Handle */}
-          <div className="flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 rounded-full bg-muted" />
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'hsl(var(--muted))' }} />
           </div>
 
           <div className="px-5 pt-2 space-y-5">
@@ -185,7 +195,6 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
                 Choisir ce professionnel
               </Button>
             )}
-          </div>
           </div>
         </motion.div>
       </motion.div>
