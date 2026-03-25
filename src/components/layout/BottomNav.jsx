@@ -13,7 +13,6 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // L'onglet actif = le tab courant (même si on est sur une stack page)
   const activeTab = navItems.find(n => location.pathname === n.path)?.path || '/Home';
 
   return (
@@ -25,6 +24,23 @@ export default function BottomNav() {
         {navItems.map(({ path, icon: Icon, label }) => {
           const isActive = activeTab === path;
           return (
+            <button
+              key={path}
+              onClick={() => navigate(path, { replace: true })}
+              className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center"
+            >
+              <Icon
+                style={{ width: 20, height: 20 }}
+                strokeWidth={isActive ? 2.2 : 1.6}
+                className={isActive ? 'text-foreground' : 'text-muted-foreground'}
+              />
+              <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }
