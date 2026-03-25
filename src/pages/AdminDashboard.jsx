@@ -1,0 +1,405 @@
+import React, { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+const TABS = [
+  { key: 'finance', label: 'Finances', icon: Euro },
+  { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
+  { key: 'blacklist', label: 'Blacklist', icon: Ban },
+];
+
+const DISPUTE_STATUS = {
+  open: { label: 'Ouvert', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  in_review: { label: 'En cours', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  resolved_customer: { label: 'Résolu (client)', color: 'bg-green-100 text-green-700 border-green-200' },
+  resolved_pro: { label: 'Résolu (pro)', color: 'bg-green-100 text-green-700 border-green-200' },
+  closed: { label: 'Fermé', color: 'bg-gray-100 text-gray-600 border-gray-200' },
+};
+
+// ─── Finance Tab ─────────────────────────────────────────────────────────────
+function FinanceTab() {
+  const [period, setPeriod] = useState('all');
+
+  const { data: requests = [] } = useQuery({
+    queryKey: ['adminAllRequests'],
+    queryFn: () => base44.entities.ServiceRequest.list('-created_date', 500),
+  });
+
+  const stats = useMemo(() => {
+    const now = new Date();
+    let filtered = requests.filter(r => ['accepted', 'completed', 'in_progress'].includes(r.status));
+
+    if (period === 'week') {
+      const since = new Date(now - 7 * 86400000);
+      filtered = filtered.filter(r => r.created_date && new Date(r.created_date) >= since);
+    } else if (period === 'month') {
+      const since = new Date(now.getFullYear(), now.getMonth(), 1);
+      filtered = filtered.filter(r => r.created_date && new Date(r.created_date) >= since);
+    }
+
+    const ca = filtered.reduce((s, r) => s + (r.total_price || 0), 0);
+    const commission = filtered.reduce((s, r) => s + (r.commission || (r.base_price || 0) * 0.10), 0);
+    const tva = filtered.reduce((s, r) => {
+      const base = (r.base_price || 0) + (r.commission || (r.base_price || 0) * 0.10);
+      return s + base * 0.21;
+    }, 0);
+    const proRevenue = filtered.reduce((s, r) => s + (r.base_price || 0), 0);
+
+    return { ca, commission, tva, proRevenue, count: filtered.length };
+  }, [requests, period]);
+
+  // Last 6 months breakdown
+  const monthlyData = useMemo(() => {
+    const now = new Date();
+    return Array.from({ length: 6 }, (_, i) => {
+      const m = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      const mEnd = new Date(now.getFullYear(), now.getMonth() - 4 + i, 1);
+      const jobs = requests.filter(r =>
+        ['accepted', 'completed', 'in_progress'].includes(r.status) &&
+        r.created_date && new Date(r.created_date) >= m && new Date(r.created_date) < mEnd
+      );
+      return {
+        label: format(m, 'MMM', { locale: fr }),
+        ca: jobs.reduce((s, r) => s + (r.total_price || 0), 0),
+        commission: jobs.reduce((s, r) => s + (r.commission || (r.base_price || 0) * 0.10), 0),
+        count: jobs.length,
+      };
+    });
+  }, [requests]);
+
+  const maxCa = Math.max(...monthlyData.map(m => m.ca), 1);
+
+  return (
+    <div className="space-y-4">
+      {/* Period filter */}
+      <div className="flex gap-2">
+        {[['all', 'Tout'], ['week', '7 jours'], ['month', 'Ce mois']].map(([k, l]) => (
+          <button key={k} onClick={() => setPeriod(k)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${period === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3">
+        {[
+          { label: 'CA total TTC', value: `${stats.ca.toFixed(0)} €`, icon: TrendingUp, color: 'text-foreground' },
+          { label: 'Commissions (10%)', value: `${stats.commission.toFixed(0)} €`, icon: Euro, color: 'text-blue-600' },
+          { label: 'TVA collectée (21%)', value: `${stats.tva.toFixed(0)} €`, icon: BarChart2, color: 'text-orange-600' },
+          { label: 'Missions payées', value: stats.count, icon: CheckCircle, color: 'text-green-600' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.8} />
+              <p className="text-xs text-muted-foreground font-medium">{label}</p>
+            </div>
+            <p className="text-2xl font-bold tracking-tight">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Monthly bar chart */}
+      <div className="bg-card rounded-xl p-4 border border-border">
+        <p className="text-xs font-semibold text-muted-foreground mb-4">CA mensuel (6 derniers mois)</p>
+        <div className="flex items-end gap-2 h-32">
+          {monthlyData.map((m) => (
+            <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
+              <p className="text-[10px] text-muted-foreground">{m.ca > 0 ? `${m.ca.toFixed(0)}€` : ''}</p>
+              <div className="w-full bg-muted rounded-t-md" style={{ height: `${(m.ca / maxCa) * 80}px`, minHeight: m.ca > 0 ? 4 : 0 }} />
+              <p className="text-[10px] font-medium capitalize">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Commission table */}
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <div className="grid grid-cols-4 px-4 py-2.5 border-b border-border bg-muted/50">
+          {['Mois', 'CA', 'Comm.', 'Missions'].map(h => (
+            <p key={h} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</p>
+          ))}
+        </div>
+        {monthlyData.map((m, i) => (
+          <div key={i} className={`grid grid-cols-4 px-4 py-2.5 ${i < 5 ? 'border-b border-border/50' : ''}`}>
+            <p className="text-sm font-medium capitalize">{m.label}</p>
+            <p className="text-sm text-right">{m.ca.toFixed(0)} €</p>
+            <p className="text-sm text-right text-blue-600 font-medium">{m.commission.toFixed(0)} €</p>
+            <p className="text-sm text-right">{m.count}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Disputes Tab ─────────────────────────────────────────────────────────────
+function DisputesTab() {
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState(null);
+  const [adminNote, setAdminNote] = useState({});
+
+  const { data: disputes = [], isLoading } = useQuery({
+    queryKey: ['adminDisputes'],
+    queryFn: () => base44.entities.Dispute.list('-created_date', 100),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Dispute.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminDisputes'] });
+      toast.success('Litige mis à jour');
+    },
+  });
+
+  const openCount = disputes.filter(d => d.status === 'open' || d.status === 'in_review').length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <p className="text-sm text-muted-foreground">{disputes.length} litige{disputes.length !== 1 ? 's' : ''}</p>
+        {openCount > 0 && <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200 text-xs">{openCount} ouvert{openCount !== 1 ? 's' : ''}</Badge>}
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
+      ) : disputes.length === 0 ? (
+        <div className="text-center py-14 text-muted-foreground">
+          <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Aucun litige en cours</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {disputes.map(d => {
+            const s = DISPUTE_STATUS[d.status] || DISPUTE_STATUS.open;
+            const isOpen = expanded === d.id;
+            return (
+              <motion.div key={d.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-xl border border-border overflow-hidden">
+                <button onClick={() => setExpanded(isOpen ? null : d.id)}
+                  className="w-full text-left p-4 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm truncate">{d.reason}</p>
+                      <Badge className={`${s.color} border text-xs shrink-0`}>{s.label}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{d.customer_name} vs {d.professional_name}</p>
+                    {d.amount_disputed > 0 && <p className="text-xs text-muted-foreground">{d.amount_disputed} € en litige</p>}
+                  </div>
+                  {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />}
+                </button>
+
+                {isOpen && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
+                    {d.description && <p className="text-sm text-muted-foreground">{d.description}</p>}
+
+                    {/* Note admin */}
+                    <textarea
+                      rows={2}
+                      value={adminNote[d.id] ?? d.admin_note ?? ''}
+                      onChange={e => setAdminNote(n => ({ ...n, [d.id]: e.target.value }))}
+                      placeholder="Note interne (visible admin uniquement)..."
+                      className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-muted/40 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+
+                    {/* Status actions */}
+                    <div className="flex flex-wrap gap-2">
+                      {d.status !== 'in_review' && (
+                        <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'in_review', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">
+                          Prendre en charge
+                        </button>
+                      )}
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_customer', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
+                        Résolu → Client
+                      </button>
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_pro', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
+                        Résolu → Pro
+                      </button>
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'closed', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">
+                        Fermer
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Blacklist Tab ────────────────────────────────────────────────────────────
+function BlacklistTab() {
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState('');
+  const [reason, setReason] = useState({});
+
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['adminAllUsers'],
+    queryFn: () => base44.entities.User.list('-created_date', 200),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminAllUsers'] });
+      toast.success('Utilisateur mis à jour');
+    },
+  });
+
+  const blacklisted = users.filter(u => u.is_blacklisted);
+  const filtered = users.filter(u =>
+    !u.is_blacklisted &&
+    (u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+     u.email?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <div className="space-y-5">
+      {/* Blacklisted users */}
+      {blacklisted.length > 0 && (
+        <div>
+          <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Ban className="w-4 h-4 text-destructive" /> Utilisateurs bloqués ({blacklisted.length})
+          </p>
+          <div className="space-y-2">
+            {blacklisted.map(u => (
+              <div key={u.id} className="bg-card rounded-xl border border-destructive/30 p-3 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 text-sm font-bold text-destructive">
+                  {u.full_name?.[0] || '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{u.full_name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                  {u.blacklist_reason && <p className="text-xs text-destructive mt-0.5 truncate">Motif : {u.blacklist_reason}</p>}
+                </div>
+                <button
+                  onClick={() => updateMutation.mutate({ id: u.id, data: { is_blacklisted: false, blacklist_reason: '' } })}
+                  className="text-xs px-2.5 py-1.5 rounded-lg border border-border bg-muted text-foreground font-medium shrink-0"
+                >
+                  Débloquer
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Search to add to blacklist */}
+      <div>
+        <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+          <Users className="w-4 h-4" /> Tous les utilisateurs
+        </p>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher par nom ou email..."
+          className="w-full h-10 px-3 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-ring mb-3"
+        />
+        {search.length > 1 && (
+          <div className="space-y-2">
+            {filtered.slice(0, 10).map(u => (
+              <div key={u.id} className="bg-card rounded-xl border border-border p-3 space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold">
+                    {u.full_name?.[0] || '?'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{u.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{u.email} · {u.user_type || 'user'}</p>
+                  </div>
+                </div>
+                <input
+                  value={reason[u.id] || ''}
+                  onChange={e => setReason(r => ({ ...r, [u.id]: e.target.value }))}
+                  placeholder="Motif du blocage..."
+                  className="w-full h-9 px-3 rounded-lg border border-border bg-muted/40 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <button
+                  onClick={() => {
+                    if (!reason[u.id]?.trim()) { toast.error('Indiquez un motif'); return; }
+                    updateMutation.mutate({ id: u.id, data: { is_blacklisted: true, blacklist_reason: reason[u.id] } });
+                    setReason(r => ({ ...r, [u.id]: '' }));
+                    setSearch('');
+                  }}
+                  className="w-full text-xs py-2 rounded-lg bg-destructive text-white font-semibold"
+                >
+                  <Ban className="w-3 h-3 inline mr-1" /> Blacklister cet utilisateur
+                </button>
+              </div>
+            ))}
+            {filtered.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Aucun résultat</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main ────────────────────────────────────────────────────────────────────
+export default function AdminDashboard() {
+  const [tab, setTab] = useState('finance');
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+
+  const { data: disputes = [] } = useQuery({
+    queryKey: ['adminDisputes'],
+    queryFn: () => base44.entities.Dispute.list('-created_date', 100),
+    enabled: currentUser?.role === 'admin',
+  });
+
+  if (currentUser && currentUser.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center px-6">
+        <div><p className="text-2xl mb-2">🔒</p><p className="font-semibold">Accès réservé aux administrateurs</p></div>
+      </div>
+    );
+  }
+
+  const openDisputes = disputes.filter(d => d.status === 'open' || d.status === 'in_review').length;
+
+  return (
+    <div className="min-h-screen bg-background px-4 pt-6 pb-20 max-w-lg mx-auto">
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold tracking-tight">Admin · Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Vue globale de la plateforme</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-5">
+        {TABS.map(({ key, label, icon: Icon }) => (
+          <button key={key} onClick={() => setTab(key)}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+              tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+            }`}>
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+            {key === 'disputes' && openDisputes > 0 && (
+              <span className="text-xs font-bold bg-yellow-500 text-white rounded-full px-1.5">{openDisputes}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'finance' && <FinanceTab />}
+      {tab === 'disputes' && <DisputesTab />}
+      {tab === 'blacklist' && <BlacklistTab />}
+    </div>
+  );
+}

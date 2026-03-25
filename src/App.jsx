@@ -13,6 +13,7 @@ import Chat from './pages/Chat';
 import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -45,6 +46,7 @@ const AuthenticatedApp = () => {
       <Route path="/SelectUserType" element={<SelectUserType />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
+      <Route path="/AdminDashboard" element={<AdminDashboard />} />
 
       {/* App pages with shared layout (tabs persistants) */}
       <Route path="/Home" element={<AppLayout />} />
