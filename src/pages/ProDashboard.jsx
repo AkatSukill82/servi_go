@@ -18,26 +18,6 @@ export default function ProDashboard() {
 
   useEffect(() => { requestPermission(); }, []);
 
-  // Tracking GPS live : partage la position du pro toutes les 10s quand il a une mission acceptée
-  useEffect(() => {
-    if (!user?.id) return;
-    const hasActiveJob = myJobs.some(j => j.status === 'accepted');
-    if (!hasActiveJob) return;
-    if (!navigator.geolocation) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        base44.entities.User.update(user.id, {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        }).catch(() => {});
-      },
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-    );
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [user?.id, myJobs]);
-
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
@@ -85,6 +65,26 @@ export default function ProDashboard() {
     },
     enabled: !!user?.email,
   });
+
+  // Tracking GPS live : partage la position du pro quand il a une mission acceptée
+  useEffect(() => {
+    if (!user?.id) return;
+    const hasActiveJob = myJobs.some(j => j.status === 'accepted');
+    if (!hasActiveJob) return;
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        base44.entities.User.update(user.id, {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        }).catch(() => {});
+      },
+      () => {},
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [user?.id, myJobs]);
 
   const respondMutation = useMutation({
     mutationFn: async ({ requestId, request }) => {
