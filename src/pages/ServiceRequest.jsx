@@ -238,30 +238,33 @@ export default function ServiceRequest() {
       answer: answers[i] || '',
     }));
 
-    // Broadcast : la demande est publiée à tous les pros du même métier
-    const newRequest = await createRequestMutation.mutateAsync({
-      category_id: categoryId,
-      category_name: category?.name,
-      answers: answersArray,
-      customer_name: user?.full_name || '',
-      customer_email: user?.email || '',
-      customer_address: address,
-      customer_latitude: user?.data?.latitude || user?.latitude || 50.8503,
-      customer_longitude: user?.data?.longitude || user?.longitude || 4.3517,
-      status: 'searching',
-      professional_id: null,
-      professional_name: null,
-      professional_email: null,
-      tried_professionals: [],
-      base_price: basePrice,
-      commission: commission,
-      total_price: totalPrice,
-      payment_method: paymentMethod || 'bank_transfer',
-      payment_status: 'unpaid',
-      scheduled_date: scheduledDate || null,
-      scheduled_time: scheduledTime || null,
-      is_urgent: isUrgent,
-    });
+    // Lance la création ET un timer 3s en parallèle
+    const [newRequest] = await Promise.all([
+      createRequestMutation.mutateAsync({
+        category_id: categoryId,
+        category_name: category?.name,
+        answers: answersArray,
+        customer_name: user?.full_name || '',
+        customer_email: user?.email || '',
+        customer_address: address,
+        customer_latitude: user?.data?.latitude || user?.latitude || 50.8503,
+        customer_longitude: user?.data?.longitude || user?.longitude || 4.3517,
+        status: 'searching',
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+        tried_professionals: [],
+        base_price: basePrice,
+        commission: commission,
+        total_price: totalPrice,
+        payment_method: paymentMethod || 'bank_transfer',
+        payment_status: 'unpaid',
+        scheduled_date: scheduledDate || null,
+        scheduled_time: scheduledTime || null,
+        is_urgent: isUrgent,
+      }),
+      new Promise(resolve => setTimeout(resolve, 3000)),
+    ]);
 
     setRequestId(newRequest.id);
     setStep(STEPS.QUOTE);
