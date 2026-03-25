@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, ChevronRight, ShieldCheck } from 'lucide-react';
+import { Star, ChevronRight, ShieldCheck, Info } from 'lucide-react';
+import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -8,6 +9,7 @@ import FavoriteButton from './FavoriteButton';
 
 export default function ProFavoriteCard({ pro, categories, index }) {
   const navigate = useNavigate();
+  const [showProfile, setShowProfile] = useState(false);
 
   // Find category to get categoryId for the request
   const category = categories?.find(c => c.name === pro.category_name);
@@ -72,14 +74,31 @@ export default function ProFavoriteCard({ pro, categories, index }) {
         </div>
       </div>
 
-      {/* Action */}
-      <Button
-        onClick={handleRequest}
-        disabled={pro.available === false || !category}
-        className="w-full mt-3 h-10 rounded-xl text-sm"
-      >
-        Demande prioritaire <ChevronRight className="w-4 h-4 ml-1" />
-      </Button>
+      {/* Actions */}
+      <div className="flex gap-2 mt-3">
+        <Button
+          variant="outline"
+          onClick={() => setShowProfile(true)}
+          className="flex-none h-10 w-10 rounded-xl p-0"
+        >
+          <Info className="w-4 h-4" />
+        </Button>
+        <Button
+          onClick={handleRequest}
+          disabled={pro.available === false || !category}
+          className="flex-1 h-10 rounded-xl text-sm"
+        >
+          Demande prioritaire <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </div>
+
+      {showProfile && (
+        <ProProfileSheet
+          pro={pro}
+          onClose={() => setShowProfile(false)}
+          onSelect={handleRequest}
+        />
+      )}
     </motion.div>
   );
 }
