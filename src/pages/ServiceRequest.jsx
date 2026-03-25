@@ -134,10 +134,9 @@ export default function ServiceRequest() {
     enabled: !!categoryId,
   });
 
-  // Fetch pros — list() puis filtre client-side (RLS bloque le filter sur User)
-  const fetchFreshPros = () => base44.entities.User.list('-created_date', 200).then(users =>
-    users.filter(u => u.user_type === 'professionnel')
-  );
+  // Fetch pros via backend function (bypass RLS sur User)
+  const fetchFreshPros = () => base44.functions.invoke('getProfessionals', {})
+    .then(res => res.data?.professionals || []);
 
   const questions = category?.questions || [];
   const totalQuestions = questions.length;
