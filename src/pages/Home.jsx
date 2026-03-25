@@ -98,12 +98,12 @@ export default function Home() {
                 {/* Search */}
         <div className="relative mb-5">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un service..."
-            className="w-full h-11 rounded-xl border border-border bg-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          />
+          
+
+
+
+
+          
         </div>
 
         {!search &&
