@@ -38,6 +38,7 @@ export default function ProVerificationOnboarding() {
     setSaving(true);
     await base44.auth.updateMe({
       ...uploaded,
+      ...(bceNumber ? { bce_number: bceNumber } : {}),
       verification_status: 'pending',
     });
     setSaving(false);
