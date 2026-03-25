@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { FileText, Download, ChevronRight, CheckCircle2, Clock, XCircle, Wrench, AlertCircle, Calendar, Euro } from 'lucide-react';
@@ -46,6 +47,16 @@ const STATUS_CONFIG = {
 
 export default function MissionHistoryCard({ request, invoice, isPro }) {
   const [downloading, setDownloading] = useState(false);
+  const navigate = useNavigate();
+  const isActive = ['accepted', 'in_progress'].includes(request.status);
+
+  const handleCardClick = () => {
+    if (!isPro && isActive) {
+      navigate(`/TrackingMap?requestId=${request.id}`);
+    } else {
+      navigate(`/Chat?requestId=${request.id}`);
+    }
+  };
 
   const status = STATUS_CONFIG[request.status] || STATUS_CONFIG.searching;
   const StatusIcon = status.icon;
@@ -136,7 +147,20 @@ export default function MissionHistoryCard({ request, invoice, isPro }) {
   }
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+    <div
+      className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm cursor-pointer active:scale-[0.98] transition-transform"
+      onClick={handleCardClick}
+    >
+      {/* Active mission banner for customer */}
+      {!isPro && isActive && (
+        <div className="bg-primary px-4 py-2 flex items-center justify-between">
+          <p className="text-xs font-semibold text-primary-foreground flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+            {request.status === 'accepted' ? 'Pro accepté — En route !' : 'Mission en cours'}
+          </p>
+          <span className="text-[10px] text-primary-foreground/70">Voir sur la carte →</span>
+        </div>
+      )}
       {/* Top row */}
       <div className="flex items-start justify-between px-4 pt-4 pb-3">
         <div className="flex-1 min-w-0">
