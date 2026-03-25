@@ -21,9 +21,7 @@ const RADIUS_FALLBACK_KM = 40;
 
 function buildProList(professionals, customerLat, customerLon, categoryName) {
   const filtered = professionals.filter(p =>
-    p.user_type === 'professionnel' &&
     p.available !== false &&
-    !p.account_deleted &&
     (!categoryName || !p.category_name || p.category_name === categoryName)
   );
 
@@ -47,7 +45,7 @@ export default function ProSelectionList({ professionals, customerLat, customerL
   const [viewingPro, setViewingPro] = useState(null);
   const { favorites } = useFavorites();
 
-  // Sort: favorites in radius first, then verified, then distance
+  // Sort: favorites first, then verified, then distance
   const rawPros = buildProList(professionals, customerLat, customerLon, categoryName);
   const pros = [
     ...rawPros.filter(p => favorites.includes(p.id)),
@@ -94,8 +92,8 @@ export default function ProSelectionList({ professionals, customerLat, customerL
                 <div className="relative shrink-0">
                   <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted flex items-center justify-center font-bold text-primary text-lg">
                     {pro.photo_url
-                      ? <img src={pro.photo_url} alt={pro.full_name} className="w-full h-full object-cover" />
-                      : (pro.full_name?.[0] || '?')}
+                      ? <img src={pro.photo_url} alt={pro.name} className="w-full h-full object-cover" />
+                      : (pro.name?.[0] || '?')}
                   </div>
                   {isVerified && (
                     <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center shadow">
@@ -112,7 +110,7 @@ export default function ProSelectionList({ professionals, customerLat, customerL
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="font-semibold text-sm truncate">{pro.full_name}</p>
+                    <p className="font-semibold text-sm truncate">{pro.name}</p>
                     {isVerified && (
                       <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-1.5 py-0.5 shrink-0">
                         ✓ Pro Vérifié
@@ -172,7 +170,7 @@ export default function ProSelectionList({ professionals, customerLat, customerL
         disabled={!selected}
         className="w-full h-14 rounded-xl text-base"
       >
-        Continuer avec {selected?.full_name || '...'}
+        Continuer avec {selected?.name || '...'}
         <ChevronRight className="w-5 h-5 ml-2" />
       </Button>
 
