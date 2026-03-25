@@ -2,6 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Shield, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { Link } from 'react-router-dom';
+import CookieBanner from '@/components/legal/CookieBanner';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
 const features = [
@@ -93,7 +95,15 @@ export default function Landing() {
             );
           })}
         </div>
+
+        {/* Legal links */}
+        <div className="flex justify-center gap-4 mt-6">
+          <Link to="/CGU" className="text-[10px] text-muted-foreground underline underline-offset-2">CGU</Link>
+          <Link to="/PrivacyPolicy" className="text-[10px] text-muted-foreground underline underline-offset-2">Confidentialité</Link>
+        </div>
       </motion.div>
+
+      <CookieBanner />
     </div>
   );
 }
