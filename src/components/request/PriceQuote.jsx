@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import SubsidiesPanel from '@/components/subsidies/SubsidiesPanel';
 import { Check, X, CreditCard, Banknote, CalendarDays, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -19,6 +20,7 @@ export default function PriceQuote({
   scheduledDate,
   scheduledTime,
   isUrgent,
+  categoryName,
 }) {
   return (
     <motion.div
@@ -101,6 +103,9 @@ export default function PriceQuote({
 
         </RadioGroup>
       </div>
+
+      {/* Subsidies */}
+      {categoryName && <SubsidiesPanel categoryName={categoryName} />}
 
       {/* Action Buttons */}
       <div className="flex gap-3">

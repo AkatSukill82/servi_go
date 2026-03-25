@@ -2,18 +2,21 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Shield, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import LangSwitcher from '@/components/ui/LangSwitcher';
+import { useI18n } from '@/hooks/useI18n';
 import { Link } from 'react-router-dom';
 import CookieBanner from '@/components/legal/CookieBanner';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
 const features = [
-  { icon: Zap, label: 'Rapide', text: 'Un pro disponible en quelques minutes' },
-  { icon: Shield, label: 'Sécurisé', text: 'Paiements protégés, pros vérifiés' },
-  { icon: Star, label: 'Fiable', text: 'Noté par de vrais clients' },
+  { icon: Zap, label: t('landing_fast'), text: t('landing_fast_text') },
+  { icon: Shield, label: t('landing_secure'), text: t('landing_secure_text') },
+  { icon: Star, label: t('landing_reliable'), text: t('landing_reliable_text') },
 ];
 
 export default function Landing() {
   useDarkMode();
+  const { t } = useI18n();
   const handleGetStarted = () => base44.auth.redirectToLogin('/SelectUserType');
   const handleLogin = () => base44.auth.redirectToLogin('/Home');
 
@@ -35,12 +38,15 @@ export default function Landing() {
           </div>
           <span className="text-sm font-semibold tracking-tight text-foreground">ServiGo</span>
         </div>
-        <button
-          onClick={handleLogin}
-          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Se connecter
-        </button>
+        <div className="flex items-center gap-3">
+          <LangSwitcher />
+          <button
+            onClick={handleLogin}
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {t('landing_login')}
+          </button>
+        </div>
       </div>
 
       {/* Hero */}
@@ -51,13 +57,13 @@ export default function Landing() {
           transition={{ duration: 0.4, ease: 'easeOut' }}
         >
           <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
-            La plateforme pro
+            {t('landing_tagline')}
           </p>
-          <h1 className="text-4xl font-black tracking-tight text-foreground leading-[1.1] mb-5">
-            Trouvez le bon<br />professionnel,<br />maintenant.
+          <h1 className="text-4xl font-black tracking-tight text-foreground leading-[1.1] mb-5" style={{ whiteSpace: 'pre-line' }}>
+            {t('landing_title')}
           </h1>
           <p className="text-base text-muted-foreground leading-relaxed max-w-xs mb-10">
-            Mettez en relation particuliers et artisans qualifiés près de chez vous.
+            {t('landing_subtitle')}
           </p>
 
           {/* CTA */}
@@ -68,7 +74,7 @@ export default function Landing() {
             onClick={handleGetStarted}
             className="group flex items-center gap-3 bg-foreground text-background rounded-xl px-6 py-4 text-sm font-semibold w-full justify-between active:scale-[0.98] transition-transform"
           >
-            <span>Créer un compte gratuitement</span>
+            <span>{t('landing_cta')}</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </motion.button>
         </motion.div>

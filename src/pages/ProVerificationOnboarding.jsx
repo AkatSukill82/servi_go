@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ShieldCheck, Upload, FileCheck, Loader2, ArrowRight } from 'lucide-react';
+import { ShieldCheck, FileCheck, Loader2, ArrowRight } from 'lucide-react';
+import BceValidator from '@/components/bce/BceValidator';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -67,18 +68,8 @@ export default function ProVerificationOnboarding() {
           </p>
         </div>
 
-        {/* Numéro BCE */}
-        <div className="space-y-2">
-          <label className="text-sm font-semibold">Numéro BCE/KBO <span className="text-destructive">*</span></label>
-          <input
-            type="text"
-            value={bceNumber}
-            onChange={e => setBceNumber(e.target.value)}
-            placeholder="Ex: BE 0xxx.xxx.xxx"
-            className="w-full h-12 rounded-xl border border-border bg-card px-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-          <p className="text-xs text-muted-foreground">Votre numéro d'entreprise à la Banque Carrefour des Entreprises</p>
-        </div>
+        {/* Numéro BCE — validé en live */}
+        <BceValidator value={bceNumber} onChange={setBceNumber} />
 
         {/* Documents */}
         <div className="space-y-3">

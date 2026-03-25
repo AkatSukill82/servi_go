@@ -605,6 +605,7 @@ export default function ServiceRequest() {
               scheduledDate={scheduledDate}
               scheduledTime={scheduledTime}
               isUrgent={isUrgent}
+              categoryName={category?.name}
             />
           </motion.div>
         )}
