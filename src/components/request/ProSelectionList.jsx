@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Star, ShieldCheck, ChevronRight, MapPin, Loader2 } from 'lucide-react';
+import { Star, ShieldCheck, ChevronRight, MapPin, Heart, Info } from 'lucide-react';
+import { useFavorites } from '@/hooks/useFavorites';
+import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -47,8 +49,15 @@ function buildProList(professionals, customerLat, customerLon, categoryName) {
 
 export default function ProSelectionList({ professionals, customerLat, customerLon, categoryName, basePrice, onSelect }) {
   const [selected, setSelected] = useState(null);
+  const [viewingPro, setViewingPro] = useState(null);
+  const { favorites } = useFavorites();
 
-  const pros = buildProList(professionals, customerLat, customerLon, categoryName);
+  // Sort: favorites in radius first, then verified, then distance
+  const rawPros = buildProList(professionals, customerLat, customerLon, categoryName);
+  const pros = [
+    ...rawPros.filter(p => favorites.includes(p.id)),
+    ...rawPros.filter(p => !favorites.includes(p.id)),
+  ];
 
   if (pros.length === 0) {
     return (
@@ -98,6 +107,11 @@ export default function ProSelectionList({ professionals, customerLat, customerL
                       <ShieldCheck className="w-3 h-3 text-white" strokeWidth={2.5} />
                     </div>
                   )}
+                  {favorites.includes(pro.id) && (
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center shadow border-2 border-background">
+                      <Heart className="w-2.5 h-2.5 text-white fill-white" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Info */}
@@ -107,6 +121,11 @@ export default function ProSelectionList({ professionals, customerLat, customerL
                     {isVerified && (
                       <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-1.5 py-0.5 shrink-0">
                         ✓ Pro Vérifié
+                      </span>
+                    )}
+                    {favorites.includes(pro.id) && (
+                      <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-full px-1.5 py-0.5 shrink-0">
+                        ♥ Favori
                       </span>
                     )}
                   </div>
@@ -127,10 +146,16 @@ export default function ProSelectionList({ professionals, customerLat, customerL
                   </div>
                 </div>
 
-                {/* Price */}
-                <div className="shrink-0 text-right">
+                {/* Price + info button */}
+                <div className="shrink-0 text-right flex flex-col items-end gap-1">
                   <p className="font-bold text-lg text-foreground">{price} €</p>
                   <p className="text-[10px] text-muted-foreground">base HT</p>
+                  <button
+                    onClick={e => { e.stopPropagation(); setViewingPro(pro); }}
+                    className="flex items-center gap-0.5 text-[10px] text-primary underline underline-offset-2"
+                  >
+                    <Info className="w-3 h-3" /> Voir profil
+                  </button>
                 </div>
               </div>
 
