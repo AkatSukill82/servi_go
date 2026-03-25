@@ -180,6 +180,14 @@ export default function ProSelectionList({ professionals, customerLat, customerL
         Continuer avec {selected?.full_name || '...'}
         <ChevronRight className="w-5 h-5 ml-2" />
       </Button>
+
+      {viewingPro && (
+        <ProProfileSheet
+          pro={viewingPro}
+          onClose={() => setViewingPro(null)}
+          onSelect={(pro) => { setSelected(pro); setViewingPro(null); }}
+        />
+      )}
     </div>
   );
 }
