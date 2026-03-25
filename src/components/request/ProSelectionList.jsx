@@ -34,13 +34,8 @@ function buildProList(professionals, customerLat, customerLon, categoryName) {
       : 9999,
   }));
 
-  // Try 15km first, then 40km
-  let nearby = withDist.filter(p => p._dist <= RADIUS_PRIMARY_KM);
-  if (nearby.length === 0) nearby = withDist.filter(p => p._dist <= RADIUS_FALLBACK_KM);
-  if (nearby.length === 0) nearby = withDist.slice(0, 5); // last resort
-
-  // Sort: verified first, then by distance
-  return nearby.sort((a, b) => {
+  // Vérifié en premier, puis par distance
+  return withDist.sort((a, b) => {
     if (a.verification_status === 'verified' && b.verification_status !== 'verified') return -1;
     if (b.verification_status === 'verified' && a.verification_status !== 'verified') return 1;
     return a._dist - b._dist;
