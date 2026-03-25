@@ -127,7 +127,7 @@ Réponds uniquement avec ce JSON :
           </Button>
         )}
         <button onClick={handleSkip} disabled={skipping || analyzing} className="w-full text-center text-sm text-muted-foreground underline underline-offset-2 py-2 flex items-center justify-center gap-2 disabled:opacity-50">
-          {result ? 'Continuer sans l\'analyse IA' : 'Passer cette étape'}
+          {skipping ? <><Loader2 className="w-4 h-4 animate-spin" /> Chargement...</> : (result ? 'Continuer sans l\'analyse IA' : 'Passer cette étape')}
         </button>
       </div>
     </div>
