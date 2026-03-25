@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
-import { Search, ShieldCheck, Star, Zap } from 'lucide-react';
+import { Search, ShieldCheck, Star, ChevronRight } from 'lucide-react';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,16 @@ export default function Home() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+  });
+
+  const { data: activeMissions = [] } = useQuery({
+    queryKey: ['activeMissions', user?.email],
+    queryFn: () => base44.entities.ServiceRequest.filter(
+      { customer_email: user.email },
+      '-created_date', 10
+    ).then(reqs => reqs.filter(r => ['searching','pending_pro','accepted','in_progress'].includes(r.status))),
+    enabled: !!user?.email,
+    refetchInterval: 5000,
   });
 
   const { data: categories = [], isLoading } = useQuery({
@@ -56,22 +66,39 @@ export default function Home() {
           </p>
         </div>
 
-        {/* SOS banner */}
-        <button
-          onClick={() => navigate('/Emergency')}
-          className="w-full mb-5 rounded-2xl overflow-hidden relative"
-        >
-          <div className="bg-foreground px-4 py-3.5 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-destructive flex items-center justify-center shrink-0 animate-pulse">
-              <Zap className="w-5 h-5 text-white fill-white" />
+        {/* Missions en cours */}
+        {activeMissions.length > 0 && (
+          <div className="mb-5">
+            <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-3">Mes missions en cours</p>
+            <div className="space-y-2">
+              {activeMissions.map(mission => {
+                const statusConfig = {
+                  searching: { label: 'Recherche d\'un pro...', color: 'bg-yellow-50 border-yellow-200 text-yellow-700', dot: 'bg-yellow-400 animate-pulse' },
+                  pending_pro: { label: 'En attente de confirmation', color: 'bg-orange-50 border-orange-200 text-orange-700', dot: 'bg-orange-400 animate-pulse' },
+                  accepted: { label: '✓ Pro en route !', color: 'bg-green-50 border-green-200 text-green-700', dot: 'bg-green-500' },
+                  in_progress: { label: 'Mission en cours', color: 'bg-blue-50 border-blue-200 text-blue-700', dot: 'bg-blue-500 animate-pulse' },
+                }[mission.status] || { label: mission.status, color: 'bg-muted border-border text-muted-foreground', dot: 'bg-muted-foreground' };
+                return (
+                  <button
+                    key={mission.id}
+                    onClick={() => navigate(`/TrackingMap?requestId=${mission.id}`)}
+                    className={`w-full text-left rounded-2xl border p-3.5 flex items-center gap-3 transition-all active:scale-[0.98] ${statusConfig.color}`}
+                  >
+                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${statusConfig.dot}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{mission.category_name}</p>
+                      <p className="text-xs opacity-80 mt-0.5">{statusConfig.label}</p>
+                      {mission.professional_name && mission.status === 'accepted' && (
+                        <p className="text-xs font-medium mt-0.5">{mission.professional_name}</p>
+                      )}
+                    </div>
+                    <ChevronRight className="w-4 h-4 opacity-60 shrink-0" />
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex-1 text-left">
-              <p className="text-sm font-bold text-background">Urgence ? Mode SOS</p>
-              <p className="text-xs text-background/70">Professionnel mobilisé en priorité</p>
-            </div>
-            <span className="text-xs font-bold text-destructive bg-destructive/20 rounded-full px-2.5 py-1">⚡ SOS</span>
           </div>
-        </button>
+        )}
 
         {/* Search */}
         <div className="relative mb-5">
