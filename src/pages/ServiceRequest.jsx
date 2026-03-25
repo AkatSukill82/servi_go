@@ -134,8 +134,10 @@ export default function ServiceRequest() {
     enabled: !!categoryId,
   });
 
-  // Fetch pros uniquement au moment de la recherche (pas de pre-load inutile)
-  const fetchFreshPros = () => base44.entities.User.filter({ user_type: 'professionnel' });
+  // Fetch pros — list() puis filtre client-side (RLS bloque le filter sur User)
+  const fetchFreshPros = () => base44.entities.User.list('-created_date', 200).then(users =>
+    users.filter(u => u.user_type === 'professionnel')
+  );
 
   const questions = category?.questions || [];
   const totalQuestions = questions.length;
@@ -293,7 +295,12 @@ export default function ServiceRequest() {
   const loadAndShowProSelect = () => {
     setStep(STEPS.PRO_SELECT);
     if (allPros.length === 0) {
-      fetchFreshPros().then(setAllPros);
+      fetchFreshPros()
+        .then(setAllPros)
+        .catch(() => {
+          toast.error('Impossible de charger les professionnels.');
+          setAllPros([]);
+        });
     }
   };
 
