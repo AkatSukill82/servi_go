@@ -10,12 +10,27 @@ import L from 'leaflet';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
-function makeProIcon(initial) {
+function makeProIcon(initial, isVerified = false) {
+  const bg = isVerified ? '#3b82f6' : '#0a0a0a';
+  const ring = isVerified ? '2.5px solid #93c5fd' : '2.5px solid white';
+  const badge = isVerified ? `<div style="position:absolute;top:-4px;right:-4px;width:14px;height:14px;background:#3b82f6;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;">✓</div>` : '';
   return L.divIcon({
     className: '',
-    html: `<div style="width:38px;height:38px;background:#0a0a0a;border-radius:50%;border:2.5px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.25);color:white;font-size:14px;font-weight:700;font-family:Inter,sans-serif;">${initial}</div>`,
+    html: `<div style="position:relative;width:38px;height:38px;"><div style="width:38px;height:38px;background:${bg};border-radius:50%;border:${ring};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.25);color:white;font-size:14px;font-weight:700;font-family:Inter,sans-serif;">${initial}</div>${badge}</div>`,
     iconSize: [38, 38],
     iconAnchor: [19, 19],
+  });
+}
+
+function makeSosIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div style="position:relative;">
+      <div style="width:44px;height:44px;background:#ef4444;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(239,68,68,0.5);animation:sosPulse 1s ease-in-out infinite;">⚡</div>
+      <style>@keyframes sosPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.2);}}</style>
+    </div>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
   });
 }
 
@@ -31,6 +46,12 @@ export default function MapPage() {
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ['professionals'],
     queryFn: () => base44.entities.User.filter({ user_type: 'professionnel', available: true }),
+  });
+
+  const { data: urgentRequests = [] } = useQuery({
+    queryKey: ['urgentMapRequests'],
+    queryFn: () => base44.entities.ServiceRequest.filter({ is_urgent: true, status: 'searching' }, '-created_date', 10),
+    refetchInterval: 15000,
   });
 
   const validPros = professionals.filter(p => p.latitude && p.longitude);
@@ -56,9 +77,24 @@ export default function MapPage() {
             <Marker
               key={pro.id}
               position={[pro.latitude, pro.longitude]}
-              icon={makeProIcon(pro.full_name?.[0] || '?')}
+              icon={makeProIcon(pro.full_name?.[0] || '?', pro.verification_status === 'verified')}
               eventHandlers={{ click: () => setSelected(pro) }}
             />
+          ))}
+          {urgentRequests.map(req => req.customer_latitude && req.customer_longitude && (
+            <Marker
+              key={`sos-${req.id}`}
+              position={[req.customer_latitude, req.customer_longitude]}
+              icon={makeSosIcon()}
+            >
+              <Popup>
+                <div style={{fontFamily:'Inter,sans-serif',fontSize:13}}>
+                  <strong>⚡ Urgence SOS</strong><br/>
+                  {req.category_name}<br/>
+                  <span style={{color:'#6b7280',fontSize:11}}>{req.customer_address}</span>
+                </div>
+              </Popup>
+            </Marker>
           ))}
         </MapContainer>
       )}
