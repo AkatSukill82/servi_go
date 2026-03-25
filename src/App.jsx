@@ -63,10 +63,6 @@ const AuthenticatedApp = () => {
       <Route path="/Emergency" element={<AppLayout />} />
 
       {/* Full screen pages (no layout) */}
-      <Route path="/CGU" element={<CGU />} />
-      <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
-
-      {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />
       <Route path="/TrackingMap" element={<TrackingMap />} />
 
