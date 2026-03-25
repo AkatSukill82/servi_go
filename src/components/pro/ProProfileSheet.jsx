@@ -186,6 +186,7 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
               </Button>
             )}
           </div>
+          </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
