@@ -45,6 +45,7 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
           className="absolute bottom-0 left-0 right-0 bg-background rounded-t-3xl max-h-[88dvh] flex flex-col"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
         >
+          <div className="overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
           {/* Handle */}
           <div className="flex justify-center pt-3 pb-1">
             <div className="w-10 h-1 rounded-full bg-muted" />
