@@ -48,12 +48,12 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
             bottom: 0,
             left: 0,
             right: 0,
-            maxHeight: '88dvh',
+            height: '88dvh',
             background: 'hsl(var(--background))',
             borderRadius: '24px 24px 0 0',
-            overflowY: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
           }}
         >
           {/* Handle */}
