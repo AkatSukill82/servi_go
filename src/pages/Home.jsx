@@ -11,7 +11,7 @@ import ServiceCard from '@/components/home/ServiceCard';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Home() {
-  const [search, setSearch] = useState('');
+  const [search] = useState('');
   const [viewingPro, setViewingPro] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -98,17 +98,6 @@ export default function Home() {
             <span className="text-xs font-bold text-destructive bg-destructive/20 rounded-full px-2.5 py-1">⚡ SOS</span>
           </div>
         </button>
-
-        {/* Search */}
-        <div className="relative mb-5">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Plombier, électricien, déménageur..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-10 h-11 rounded-xl bg-muted border-transparent focus-visible:border-border focus-visible:bg-card text-sm"
-          />
-        </div>
 
         {/* Verified pros strip */}
         {!search && verifiedPros.length > 0 && (
