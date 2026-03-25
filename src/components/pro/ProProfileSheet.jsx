@@ -56,12 +56,12 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
             overflow: 'hidden',
           }}
         >
-          {/* Handle */}
-          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}>
+          {/* Handle + fixed top */}
+          <div style={{ flexShrink: 0, display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4 }}>
             <div style={{ width: 40, height: 4, borderRadius: 2, background: 'hsl(var(--muted))' }} />
           </div>
 
-          <div className="px-5 pt-2 space-y-5">
+          <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }} className="px-5 pt-2 space-y-5">
             {/* Header */}
             <div className="flex items-start gap-4">
               <div className="relative shrink-0">
