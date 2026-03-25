@@ -185,7 +185,35 @@ export default function OnboardingModal() {
                   ))}
                 </div>
 
-                <Button onClick={next} className="w-full h-13 rounded-2xl text-base font-semibold flex items-center justify-center gap-2">
+                {step === STEPS.length - 1 && (
+                  <div className="mb-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cguAccepted}
+                        onChange={e => setCguAccepted(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 accent-black shrink-0"
+                      />
+                      <span className="text-xs text-muted-foreground leading-relaxed">
+                        J'accepte les{' '}
+                        <Link to="/CGU" onClick={e => e.stopPropagation()} className="text-primary underline">
+                          Conditions Générales d'Utilisation
+                        </Link>{' '}
+                        et la{' '}
+                        <Link to="/PrivacyPolicy" onClick={e => e.stopPropagation()} className="text-primary underline">
+                          Politique de confidentialité
+                        </Link>{' '}
+                        de ServiGo.
+                      </span>
+                    </label>
+                  </div>
+                )}
+
+                <Button
+                  onClick={next}
+                  disabled={step === STEPS.length - 1 && !cguAccepted}
+                  className="w-full h-13 rounded-2xl text-base font-semibold flex items-center justify-center gap-2"
+                >
                   {step < STEPS.length - 1 ? (
                     <><span>Suivant</span><ArrowRight className="w-4 h-4" /></>
                   ) : (
