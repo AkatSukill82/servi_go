@@ -375,7 +375,8 @@ export default function AdminDashboard() {
   const openDisputes = disputes.filter(d => d.status === 'open' || d.status === 'in_review').length;
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-6 pb-20 max-w-lg mx-auto">
+    <div className="fixed inset-0 overflow-y-auto bg-background">
+    <div className="px-4 pt-6 pb-20 max-w-lg mx-auto">
       <div className="mb-5">
         <h1 className="text-2xl font-bold tracking-tight">Admin · Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Vue globale de la plateforme</p>
