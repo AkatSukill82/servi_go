@@ -14,10 +14,20 @@ export default function Home() {
   const [search, setSearch] = useState('');
   const [viewingPro, setViewingPro] = useState(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+  });
+
+  const { data: activeRequest } = useQuery({
+    queryKey: ['activeRequest', user?.email],
+    queryFn: () => base44.entities.ServiceRequest.filter(
+      { customer_email: user.email, status: 'accepted' }, '-created_date', 1
+    ).then(r => r[0] || null),
+    enabled: !!user?.email && user?.user_type === 'particulier',
+    refetchInterval: 5000,
   });
 
   const { data: categories = [], isLoading } = useQuery({
