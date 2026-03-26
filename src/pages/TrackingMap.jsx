@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Clock, MessageCircle, Navigation, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '@/components/ui/BackButton';
+import { useNotifications } from '@/hooks/useNotifications';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -41,6 +42,8 @@ export default function TrackingMap() {
   const requestId = urlParams.get('requestId');
   const [route, setRoute] = useState([]);
   const [eta, setEta] = useState(null); // minutes
+  const { requestPermission, notify } = useNotifications();
+  const notified5min = useRef(false);
 
   const { data: request } = useQuery({
     queryKey: ['trackRequest', requestId],
@@ -68,7 +71,14 @@ export default function TrackingMap() {
           setRoute(route0.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
         }
         if (route0?.duration) {
-          setEta(Math.ceil(route0.duration / 60));
+          const mins = Math.ceil(route0.duration / 60);
+          setEta(mins);
+          if (mins <= 5 && !notified5min.current) {
+            notified5min.current = true;
+            requestPermission().then(() => {
+              notify('🚗 Professionnel proche !', `${request?.professional_name || 'Le professionnel'} arrive dans ${mins} min`);
+            });
+          }
         }
       })
       .catch(() => {
