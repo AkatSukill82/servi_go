@@ -91,21 +91,27 @@ export default function ProProfile() {
           <BackButton fallback="/ProDashboard" />
           <h1 className="text-2xl font-bold">Mon profil pro</h1>
         </div>
-        <div ref={langRef} className="relative flex flex-col items-end gap-1.5 mr-11">
+        <div ref={langRef} className="relative mr-11">
           <button onClick={() => setLangOpen(o => !o)}
-            className="w-10 h-8 rounded-lg bg-foreground text-background text-xs font-bold shadow hover:bg-foreground/90 transition-colors">
+            className="w-10 h-7 rounded-lg bg-foreground text-background text-xs font-bold shadow hover:bg-foreground/90 transition-colors">
             {lang.toUpperCase()}
           </button>
           <AnimatePresence>
-            {langOpen && SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
-              <motion.button key={l}
-                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                transition={{ delay: i * 0.05 }}
-                onClick={() => { setLang(l); setLangOpen(false); }}
-                className="w-10 h-8 rounded-lg bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors">
-                {l.toUpperCase()}
-              </motion.button>
-            ))}
+            {langOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                className="absolute top-full right-0 mt-1 flex flex-col gap-1 z-50">
+                {SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
+                  <motion.button key={l}
+                    initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => { setLang(l); setLangOpen(false); }}
+                    className="w-10 h-7 rounded-lg bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors">
+                    {l.toUpperCase()}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
