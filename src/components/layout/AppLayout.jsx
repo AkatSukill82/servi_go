@@ -7,6 +7,7 @@ import { Sun, Moon } from 'lucide-react';
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
+import { useAppNotifications } from '@/hooks/useAppNotifications';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home'));
@@ -51,6 +52,8 @@ export default function AppLayout() {
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
   const [dark, setDark] = useDarkMode();
+  const [currentUser, setCurrentUser] = React.useState(null);
+  useAppNotifications(currentUser);
   const queryClient = useQueryClient();
 
   // Garde en mémoire les onglets déjà visités (pour ne monter qu'au premier accès)
@@ -67,6 +70,8 @@ export default function AppLayout() {
     }
     base44.auth.me().then(user => {
       queryClient.setQueryData(['currentUser'], user);
+        setCurrentUser(user);
+        setCurrentUser(user);
       if (!user?.user_type) {
         navigate('/SelectUserType', { replace: true });
       } else {
