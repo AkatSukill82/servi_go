@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,6 @@ import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
-import LangSwitcher from '@/components/ui/LangSwitcher';
 
 export default function Profile() {
   const queryClient = useQueryClient();
@@ -44,7 +43,7 @@ export default function Profile() {
     mutationFn: (data) => base44.auth.updateMe(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      toast.success(t('profile_save') + ' ✓');
+      toast.success('Profil mis à jour !');
     },
   });
 
@@ -69,10 +68,8 @@ export default function Profile() {
 
   return (
     <div className="px-4 pt-6 pb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5">
         <h1 className="text-2xl font-bold">{t('profile_title')}</h1>
-        <LangSwitcher className="mr-11" />
       </div>
 
       {/* Tabs */}
@@ -99,7 +96,6 @@ export default function Profile() {
 
       {tab === 'profil' && (
         <>
-          {/* Avatar */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8">
             <div className="relative">
               <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
@@ -115,7 +111,6 @@ export default function Profile() {
             <p className="text-sm text-muted-foreground">{user?.email}</p>
           </motion.div>
 
-          {/* Form */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
             <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
               <h3 className="font-semibold flex items-center gap-2">

@@ -116,31 +116,6 @@ export default function Landing() {
         </div>
       </motion.div>
 
-      {/* Lang switcher — floating bottom right */}
-      <div ref={langRef} className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-2">
-        <AnimatePresence>
-          {langOpen && SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
-            <motion.button
-              key={l}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => { setLang(l); setLangOpen(false); }}
-              className="w-12 h-10 rounded-xl bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors"
-            >
-              {l.toUpperCase()}
-            </motion.button>
-          ))}
-        </AnimatePresence>
-        <button
-          onClick={() => setLangOpen(o => !o)}
-          className="w-12 h-10 rounded-xl bg-foreground text-background text-xs font-bold shadow-lg hover:bg-foreground/90 transition-colors"
-        >
-          {lang.toUpperCase()}
-        </button>
-      </div>
-
       <CookieBanner />
     </div>
   );

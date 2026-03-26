@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -10,25 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText } from 'lucide-react';
-import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import BackButton from '@/components/ui/BackButton';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 import VerificationSection from '@/components/pro/VerificationSection';
 
 export default function ProProfile() {
-  const navigate = useNavigate();
-  const { lang, setLang, SUPPORTED_LANGS } = useI18n();
-  const [langOpen, setLangOpen] = useState(false);
-  const langRef = useRef(null);
-  useEffect(() => {
-    const h = (e) => { if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('profil');
   const [form, setForm] = useState({
@@ -86,34 +73,9 @@ export default function ProProfile() {
 
   return (
     <div className="px-4 pt-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <BackButton fallback="/ProDashboard" />
-          <h1 className="text-2xl font-bold">Mon profil pro</h1>
-        </div>
-        <div ref={langRef} className="relative mr-11">
-          <button onClick={() => setLangOpen(o => !o)}
-            className="w-10 h-7 rounded-lg bg-foreground text-background text-xs font-bold shadow hover:bg-foreground/90 transition-colors">
-            {lang.toUpperCase()}
-          </button>
-          <AnimatePresence>
-            {langOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                className="absolute top-full right-0 mt-1 flex flex-col gap-1 z-50">
-                {SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
-                  <motion.button key={l}
-                    initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => { setLang(l); setLangOpen(false); }}
-                    className="w-10 h-7 rounded-lg bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors">
-                    {l.toUpperCase()}
-                  </motion.button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+      <div className="flex items-center gap-2 mb-4">
+        <BackButton fallback="/ProDashboard" />
+        <h1 className="text-2xl font-bold">Mon profil pro</h1>
       </div>
 
       {/* Tabs */}
@@ -131,143 +93,130 @@ export default function ProProfile() {
 
       {activeTab === 'documents' && <DocumentsTab user={user} />}
 
-      {activeTab !== 'documents' && <>
-
-      {/* Avatar */}
-      <div className="flex flex-col items-center mb-6">
-        <div className="relative">
-          <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
-            <AvatarImage src={form.photo_url} />
-            <AvatarFallback className="bg-accent text-accent-foreground text-2xl font-bold">{initials}</AvatarFallback>
-          </Avatar>
-          <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center cursor-pointer shadow-md">
-            <Camera className="w-4 h-4 text-white" />
-            <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-          </label>
-        </div>
-        <p className="mt-3 font-semibold text-lg">{user?.full_name}</p>
-        <p className="text-sm text-muted-foreground">{user?.email}</p>
-      </div>
-
-      <div className="space-y-4">
-        {/* Availability toggle */}
-        <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="font-medium">Disponible</p>
-            <p className="text-xs text-muted-foreground">Accepter de nouvelles missions</p>
-          </div>
-          <Switch
-            checked={form.available}
-            onCheckedChange={val => setForm(f => ({ ...f, available: val }))}
-          />
-        </div>
-
-        {/* Métier & prix */}
-        <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-accent" /> Mon métier
-          </h3>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Catégorie de service</Label>
-            <Select value={form.category_name} onValueChange={val => setForm(f => ({ ...f, category_name: val }))}>
-              <SelectTrigger className="h-12 rounded-xl">
-                <SelectValue placeholder="Choisissez votre métier" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(c => (
-                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Description de vos services</Label>
-            <Textarea
-              value={form.pro_description}
-              onChange={e => setForm(f => ({ ...f, pro_description: e.target.value }))}
-              placeholder="Décrivez vos compétences et services..."
-              className="rounded-xl resize-none"
-              rows={3}
-            />
-          </div>
-        </div>
-
-        {/* Tarifs */}
-        <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <Euro className="w-4 h-4 text-green-600" /> Mes tarifs
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Prix de base (€)</Label>
-              <Input
-                type="number"
-                value={form.base_price}
-                onChange={e => setForm(f => ({ ...f, base_price: e.target.value }))}
-                placeholder="Ex: 80"
-                className="h-12 rounded-xl"
-              />
+      {activeTab !== 'documents' && (
+        <>
+          {/* Avatar */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative">
+              <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
+                <AvatarImage src={form.photo_url} />
+                <AvatarFallback className="bg-accent text-accent-foreground text-2xl font-bold">{initials}</AvatarFallback>
+              </Avatar>
+              <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center cursor-pointer shadow-md">
+                <Camera className="w-4 h-4 text-white" />
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+              </label>
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Tarif horaire (€/h)</Label>
-              <Input
-                type="number"
-                value={form.hourly_rate}
-                onChange={e => setForm(f => ({ ...f, hourly_rate: e.target.value }))}
-                placeholder="Ex: 45"
-                className="h-12 rounded-xl"
-              />
+            <p className="mt-3 font-semibold text-lg">{user?.full_name}</p>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Disponibilité */}
+            <div className="bg-card rounded-2xl p-4 border border-border/50 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="font-medium">Disponible</p>
+                <p className="text-xs text-muted-foreground">Accepter de nouvelles missions</p>
+              </div>
+              <Switch checked={form.available} onCheckedChange={val => setForm(f => ({ ...f, available: val }))} />
             </div>
-          </div>
-        </div>
 
-        {/* Coordonnées */}
-        <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-primary" /> Coordonnées
-          </h3>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Téléphone</Label>
-            <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+32 470 12 34 56" className="h-12 rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Adresse</Label>
-            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">IBAN</Label>
-            <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE68 XXXX XXXX XXXX" className="h-12 rounded-xl" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Numéro BCE/KBO</Label>
-            <Input value={form.bce_number} onChange={e => setForm(f => ({ ...f, bce_number: e.target.value }))} placeholder="BE 0xxx.xxx.xxx" className="h-12 rounded-xl" />
-          </div>
-        </div>
+            {/* Métier */}
+            <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Briefcase className="w-4 h-4 text-accent" /> Mon métier
+              </h3>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Catégorie de service</Label>
+                <Select value={form.category_name} onValueChange={val => setForm(f => ({ ...f, category_name: val }))}>
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue placeholder="Choisissez votre métier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => (
+                      <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Description de vos services</Label>
+                <Textarea
+                  value={form.pro_description}
+                  onChange={e => setForm(f => ({ ...f, pro_description: e.target.value }))}
+                  placeholder="Décrivez vos compétences et services..."
+                  className="rounded-xl resize-none"
+                  rows={3}
+                />
+              </div>
+            </div>
 
-        {/* Vérification */}
-        <VerificationSection user={user} onUpdate={() => queryClient.invalidateQueries({ queryKey: ['currentUser'] })} />
+            {/* Tarifs */}
+            <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Euro className="w-4 h-4 text-green-600" /> Mes tarifs
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Prix de base (€)</Label>
+                  <Input type="number" value={form.base_price} onChange={e => setForm(f => ({ ...f, base_price: e.target.value }))} placeholder="Ex: 80" className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Tarif horaire (€/h)</Label>
+                  <Input type="number" value={form.hourly_rate} onChange={e => setForm(f => ({ ...f, hourly_rate: e.target.value }))} placeholder="Ex: 45" className="h-12 rounded-xl" />
+                </div>
+              </div>
+            </div>
 
-        {/* Availability */}
-        <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
-          <h3 className="font-semibold flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-primary" /> Mes disponibilités
-          </h3>
-          <AvailabilityEditor
-            slots={form.availability_slots}
-            onChange={slots => setForm(f => ({ ...f, availability_slots: slots }))}
-          />
-        </div>
+            {/* Coordonnées */}
+            <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-primary" /> Coordonnées
+              </h3>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Téléphone</Label>
+                <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+32 470 12 34 56" className="h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Adresse</Label>
+                <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">IBAN</Label>
+                <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE68 XXXX XXXX XXXX" className="h-12 rounded-xl" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Numéro BCE/KBO</Label>
+                <Input value={form.bce_number} onChange={e => setForm(f => ({ ...f, bce_number: e.target.value }))} placeholder="BE 0xxx.xxx.xxx" className="h-12 rounded-xl" />
+              </div>
+            </div>
 
-        <Button onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })} disabled={updateMutation.isPending} className="w-full h-14 rounded-xl text-base bg-accent hover:bg-accent/90">
-          <Save className="w-5 h-5 mr-2" />
-          {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
-        </Button>
+            {/* Vérification */}
+            <VerificationSection user={user} onUpdate={() => queryClient.invalidateQueries({ queryKey: ['currentUser'] })} />
 
-        <Button variant="outline" onClick={() => base44.auth.logout()} className="w-full h-14 rounded-xl text-base text-destructive hover:text-destructive">
-          <LogOut className="w-5 h-5 mr-2" /> Déconnexion
-        </Button>
-      </div>
-      </> }
+            {/* Disponibilités */}
+            <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-primary" /> Mes disponibilités
+              </h3>
+              <AvailabilityEditor slots={form.availability_slots} onChange={slots => setForm(f => ({ ...f, availability_slots: slots }))} />
+            </div>
+
+            <Button
+              onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}
+              disabled={updateMutation.isPending}
+              className="w-full h-14 rounded-xl text-base bg-accent hover:bg-accent/90"
+            >
+              <Save className="w-5 h-5 mr-2" />
+              {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
+            </Button>
+
+            <Button variant="outline" onClick={() => base44.auth.logout()} className="w-full h-14 rounded-xl text-base text-destructive hover:text-destructive">
+              <LogOut className="w-5 h-5 mr-2" /> Déconnexion
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
