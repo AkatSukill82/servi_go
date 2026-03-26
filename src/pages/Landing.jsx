@@ -8,15 +8,17 @@ import { Link } from 'react-router-dom';
 import CookieBanner from '@/components/legal/CookieBanner';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
-const features = [
-  { icon: Zap, label: t('landing_fast'), text: t('landing_fast_text') },
-  { icon: Shield, label: t('landing_secure'), text: t('landing_secure_text') },
-  { icon: Star, label: t('landing_reliable'), text: t('landing_reliable_text') },
-];
+
 
 export default function Landing() {
   useDarkMode();
   const { t } = useI18n();
+
+  const features = [
+    { icon: Zap, label: t('landing_fast'), text: t('landing_fast_text') },
+    { icon: Shield, label: t('landing_secure'), text: t('landing_secure_text') },
+    { icon: Star, label: t('landing_reliable'), text: t('landing_reliable_text') },
+  ];
   const handleGetStarted = () => base44.auth.redirectToLogin('/SelectUserType');
   const handleLogin = () => base44.auth.redirectToLogin('/Home');
 
