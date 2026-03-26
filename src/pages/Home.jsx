@@ -11,7 +11,7 @@ import ServiceCard from '@/components/home/ServiceCard';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 
 export default function Home() {
-  const [search, setSearch] = useState('');
+
   const [viewingPro, setViewingPro] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -37,9 +37,7 @@ export default function Home() {
     staleTime: 5 * 60 * 1000
   });
 
-  const filtered = categories.filter((c) =>
-    c.name?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = categories;
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
   const firstName = user?.full_name?.split(' ')[0];
@@ -91,22 +89,11 @@ export default function Home() {
           </div>
         </button>
 
-        {/* Search */}
-        <div className="relative mb-5">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('home_search_placeholder')}
-            className="w-full h-11 rounded-xl border border-border bg-card pl-9 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-        </div>
 
-        {!search && (
-          <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
-            {t('home_our_services')}
-          </p>
-        )}
+
+        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
+          {t('home_our_services')}
+        </p>
 
         {/* Grid */}
         {isLoading ? (
