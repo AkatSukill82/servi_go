@@ -1,8 +1,7 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Zap, Shield, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import LangSwitcher from '@/components/ui/LangSwitcher';
 import { useI18n } from '@/hooks/useI18n';
 import { Link } from 'react-router-dom';
 import CookieBanner from '@/components/legal/CookieBanner';
@@ -12,13 +11,22 @@ import { useDarkMode } from '@/hooks/useDarkMode';
 
 export default function Landing() {
   useDarkMode();
-  const { t } = useI18n();
+  const { t, lang, setLang, SUPPORTED_LANGS } = useI18n();
 
   const features = [
     { icon: Zap, label: t('landing_fast'), text: t('landing_fast_text') },
     { icon: Shield, label: t('landing_secure'), text: t('landing_secure_text') },
     { icon: Star, label: t('landing_reliable'), text: t('landing_reliable_text') },
   ];
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   const handleGetStarted = () => base44.auth.redirectToLogin('/SelectUserType');
   const handleLogin = () => base44.auth.redirectToLogin('/Home');
 
@@ -40,15 +48,12 @@ export default function Landing() {
           </div>
           <span className="text-sm font-semibold tracking-tight text-foreground">ServiGo</span>
         </div>
-        <div className="flex items-center gap-3">
-          <LangSwitcher />
-          <button
-            onClick={handleLogin}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('landing_login')}
-          </button>
-        </div>
+        <button
+          onClick={handleLogin}
+          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {t('landing_login')}
+        </button>
       </div>
 
       {/* Hero */}
@@ -110,6 +115,31 @@ export default function Landing() {
           <Link to="/PrivacyPolicy" className="text-[10px] text-muted-foreground underline underline-offset-2">Confidentialité</Link>
         </div>
       </motion.div>
+
+      {/* Lang switcher — floating bottom right */}
+      <div ref={langRef} className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-2">
+        <AnimatePresence>
+          {langOpen && SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
+            <motion.button
+              key={l}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ delay: i * 0.05 }}
+              onClick={() => { setLang(l); setLangOpen(false); }}
+              className="w-12 h-10 rounded-xl bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors"
+            >
+              {l.toUpperCase()}
+            </motion.button>
+          ))}
+        </AnimatePresence>
+        <button
+          onClick={() => setLangOpen(o => !o)}
+          className="w-12 h-10 rounded-xl bg-foreground text-background text-xs font-bold shadow-lg hover:bg-foreground/90 transition-colors"
+        >
+          {lang.toUpperCase()}
+        </button>
+      </div>
 
       <CookieBanner />
     </div>
