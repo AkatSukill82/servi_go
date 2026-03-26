@@ -17,7 +17,7 @@ import PhotoAnalysisStep from '@/components/request/PhotoAnalysisStep';
 import ProSelectionList from '@/components/request/ProSelectionList';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Haversine distance in km
+// Find the closest available professional using Haversine distance
 function getDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -28,24 +28,51 @@ function getDistance(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Returns all available pros of the right category within radiusKm, sorted by rating desc
-function findProsInRadius(professionals, customerLat, customerLon, categoryName, radiusKm = 15) {
-  return professionals
-    .map(normalizePro)
-    .filter(p =>
-      p.available === true &&
-      p.user_type === 'professionnel' &&
-      !p.account_deleted &&
-      (!categoryName || p.category_name === categoryName)
-    )
-    .map(p => ({
-      ...p,
-      _dist: (p.latitude && p.longitude)
-        ? getDistance(customerLat, customerLon, p.latitude, p.longitude)
-        : 9999,
-    }))
-    .filter(p => p._dist <= radiusKm)
-    .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+// Normalize a User record: fields may be at root level or inside .data
+function normalizePro(p) {
+  return {
+    ...p,
+    user_type: p.user_type || p.data?.user_type,
+    available: p.available !== undefined ? p.available : p.data?.available,
+    category_name: p.category_name || p.data?.category_name,
+    base_price: p.base_price || p.data?.base_price,
+    latitude: p.latitude || p.data?.latitude,
+    longitude: p.longitude || p.data?.longitude,
+    account_deleted: p.account_deleted || p.data?.account_deleted,
+  };
+}
+
+const RADIUS_PRIMARY_KM = 15;
+const RADIUS_FALLBACK_KM = 40;
+
+function findClosestPro(professionals, customerLat, customerLon, excludeIds = []) {
+  const normalized = professionals.map(normalizePro);
+  const available = normalized.filter(p =>
+    p.available === true &&
+    p.user_type === 'professionnel' &&
+    !p.account_deleted &&
+    !excludeIds.includes(p.id)
+  );
+  if (!available.length) return null;
+
+  // Attache la distance à chaque pro pour pouvoir filtrer et trier
+  const withDist = available.map(p => ({
+    ...p,
+    _dist: (p.latitude && p.longitude)
+      ? getDistance(customerLat, customerLon, p.latitude, p.longitude)
+      : 9999,
+  }));
+
+  // 1ᵉʳ essai : pros dans le rayon primaire (15km)
+  const nearby = withDist.filter(p => p._dist <= RADIUS_PRIMARY_KM);
+  if (nearby.length > 0) return nearby.sort((a, b) => a._dist - b._dist)[0];
+
+  // 2ᵉʳ essai : fallback rayon étendu (40km)
+  const extended = withDist.filter(p => p._dist <= RADIUS_FALLBACK_KM);
+  if (extended.length > 0) return extended.sort((a, b) => a._dist - b._dist)[0];
+
+  // Dernier recours : le plus proche peu importe la distance
+  return withDist.sort((a, b) => a._dist - b._dist)[0];
 }
 
 const STEPS = {
@@ -55,7 +82,6 @@ const STEPS = {
   PRO_SELECT: 'pro_select',
   SLOT: 'slot',
   SEARCHING: 'searching',
-  NO_PROS: 'no_pros',
   QUOTE: 'quote',
   CONFIRMED: 'confirmed',
 };
@@ -148,6 +174,50 @@ export default function ServiceRequest() {
     mutationFn: ({ id, data }) => base44.entities.ServiceRequest.update(id, data),
   });
 
+  const findAndContactNextPro = async (existingRequest) => {
+    setStep(STEPS.SEARCHING);
+    const req = existingRequest || currentRequest;
+    const freshPros2 = await fetchFreshPros();
+    const catPros = freshPros2.map(normalizePro).filter(p => {
+      if (p.account_deleted) return false;
+      if (category?.name && p.category_name && p.category_name !== category.name) return false;
+      return true;
+    });
+    const tried = req?.tried_professionals || [];
+    const customerLat = req?.customer_latitude || user?.latitude || 50.8503;
+    const customerLon = req?.customer_longitude || user?.longitude || 4.3517;
+
+    const nextPro = findClosestPro(catPros, customerLat, customerLon, tried);
+    if (!nextPro) {
+      toast.error('Aucun professionnel disponible pour ce service.');
+      setStep(STEPS.QUOTE);
+      return;
+    }
+    setAssignedPro(nextPro);
+
+    const newTried = [...tried, nextPro.id];
+    const basePrice = nextPro.base_price || category?.base_price || 80;
+    const commission = basePrice * 0.10;
+    const totalPrice = basePrice + commission;
+
+    if (req?.id) {
+      await updateRequestMutation.mutateAsync({
+        id: req.id,
+        data: {
+          status: 'pending_pro',
+          professional_id: nextPro.id,
+          professional_name: nextPro.full_name,
+          professional_email: nextPro.email,
+          tried_professionals: newTried,
+          base_price: basePrice,
+          commission: commission,
+          total_price: totalPrice,
+        },
+      });
+    }
+    setStep(STEPS.QUOTE);
+  };
+
   const handleAddressNext = () => {
     if (!address.trim()) return;
     if (totalQuestions > 0) setStep(STEPS.QUESTIONS);
@@ -169,22 +239,7 @@ export default function ServiceRequest() {
       answer: answers[i] || '',
     }));
 
-    const customerLat = user?.data?.latitude || user?.latitude || 50.8503;
-    const customerLon = user?.data?.longitude || user?.longitude || 4.3517;
-
-    // Check pros in radius BEFORE creating the request
-    const freshPros = await fetchFreshPros();
-    const prosInRadius = findProsInRadius(freshPros, customerLat, customerLon, category?.name, 15);
-
-    if (prosInRadius.length === 0) {
-      setStep(STEPS.NO_PROS);
-      return;
-    }
-
-    // Assign to top-rated pro if single, or top-rated for initial assignment (others can also accept)
-    const topPro = prosInRadius[0];
-    const allProIds = prosInRadius.map(p => p.id);
-
+    // Lance la création ET un timer 3s en parallèle
     const [newRequest] = await Promise.all([
       createRequestMutation.mutateAsync({
         category_id: categoryId,
@@ -193,13 +248,13 @@ export default function ServiceRequest() {
         customer_name: user?.full_name || '',
         customer_email: user?.email || '',
         customer_address: address,
-        customer_latitude: customerLat,
-        customer_longitude: customerLon,
-        status: 'pending_pro',
-        professional_id: topPro.id,
-        professional_name: topPro.full_name,
-        professional_email: topPro.email,
-        tried_professionals: allProIds,
+        customer_latitude: user?.data?.latitude || user?.latitude || 50.8503,
+        customer_longitude: user?.data?.longitude || user?.longitude || 4.3517,
+        status: 'searching',
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+        tried_professionals: [],
         base_price: basePrice,
         commission: commission,
         total_price: totalPrice,
@@ -209,10 +264,9 @@ export default function ServiceRequest() {
         scheduled_time: scheduledTime || null,
         is_urgent: isUrgent,
       }),
-      new Promise(resolve => setTimeout(resolve, 2000)),
+      new Promise(resolve => setTimeout(resolve, 3000)),
     ]);
 
-    setAssignedPro(topPro);
     setRequestId(newRequest.id);
     setStep(STEPS.QUOTE);
   };
@@ -355,7 +409,7 @@ export default function ServiceRequest() {
     <div className="px-4 pt-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        {step !== STEPS.SEARCHING && step !== STEPS.CONFIRMED && step !== STEPS.NO_PROS && (
+        {step !== STEPS.SEARCHING && step !== STEPS.CONFIRMED && (
           <BackButton fallback="/Home" />
         )}
         <div>
@@ -374,7 +428,6 @@ export default function ServiceRequest() {
             {step === STEPS.PRO_SELECT && 'Choisissez un professionnel'}
             {step === STEPS.SLOT && 'Date & heure'}
             {step === STEPS.SEARCHING && 'Recherche en cours...'}
-            {step === STEPS.NO_PROS && 'Zone non couverte'}
             {step === STEPS.QUOTE && 'Votre devis'}
             {step === STEPS.CONFIRMED && 'Confirmé !'}
           </p>
@@ -519,39 +572,11 @@ export default function ServiceRequest() {
               <Search className="w-10 h-10 text-primary animate-pulse" />
             </div>
             <h2 className="font-semibold text-lg">Recherche du professionnel le plus proche...</h2>
-            <p className="text-sm text-muted-foreground">Nous cherchons les professionnels disponibles dans un rayon de 15 km</p>
+            <p className="text-sm text-muted-foreground">Nous contactons les professionnels disponibles près de vous</p>
             <div className="flex justify-center gap-1 mt-4">
               {[0, 1, 2].map(i => (
                 <div key={i} className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
               ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* NO PROS IN ZONE */}
-        {step === STEPS.NO_PROS && (
-          <motion.div key="no_pros" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16 space-y-5">
-            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mx-auto">
-              <span className="text-4xl">📍</span>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold mb-2">Aucun professionnel disponible</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
-                Il n'y a actuellement aucun <strong>{category?.name}</strong> disponible dans un rayon de 15 km autour de votre adresse.
-              </p>
-            </div>
-            <div className="bg-muted/50 rounded-2xl p-4 text-left max-w-xs mx-auto space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">Que faire ?</p>
-              <p className="text-xs text-muted-foreground">• Réessayez plus tard, de nouveaux professionnels s'inscrivent régulièrement</p>
-              <p className="text-xs text-muted-foreground">• Vérifiez que votre adresse est correcte</p>
-            </div>
-            <div className="space-y-3 pt-2">
-              <Button onClick={() => setStep(STEPS.ADDRESS)} variant="outline" className="w-full h-12 rounded-xl">
-                Modifier l'adresse
-              </Button>
-              <Button variant="ghost" onClick={() => navigate('/Home')} className="w-full h-12 rounded-xl">
-                Retour à l'accueil
-              </Button>
             </div>
           </motion.div>
         )}
