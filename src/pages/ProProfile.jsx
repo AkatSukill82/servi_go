@@ -91,7 +91,7 @@ export default function ProProfile() {
           <BackButton fallback="/ProDashboard" />
           <h1 className="text-2xl font-bold">Mon profil pro</h1>
         </div>
-        <div ref={langRef} className="relative flex flex-col items-end gap-1.5">
+        <div ref={langRef} className="relative flex flex-col items-end gap-1.5 mr-11">
           <AnimatePresence>
             {langOpen && SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
               <motion.button key={l}
