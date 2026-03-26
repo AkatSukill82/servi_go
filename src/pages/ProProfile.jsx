@@ -8,7 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Camera, Save, LogOut, Briefcase, Euro, MapPin, LayoutDashboard, CalendarDays, FileText } from 'lucide-react';
+import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import BackButton from '@/components/ui/BackButton';
 import { toast } from 'sonner';
@@ -19,6 +20,7 @@ import VerificationSection from '@/components/pro/VerificationSection';
 
 export default function ProProfile() {
   const navigate = useNavigate();
+  const { lang, setLang, SUPPORTED_LANGS } = useI18n();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('profil');
   const [form, setForm] = useState({
@@ -81,9 +83,16 @@ export default function ProProfile() {
           <BackButton fallback="/ProDashboard" />
           <h1 className="text-2xl font-bold">Mon profil pro</h1>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/ProDashboard')} className="rounded-xl">
-          <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
-        </Button>
+        <div className="flex gap-1">
+          {SUPPORTED_LANGS.map(l => (
+            <button key={l} onClick={() => setLang(l)}
+              className={`w-10 h-8 rounded-lg text-xs font-bold transition-colors ${
+                lang === l ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-accent'
+              }`}>
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tabs */}

@@ -11,6 +11,7 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Camera, Save, LogOut, User, Trash2, Receipt, FileText } from 'lucide-react';
+import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -19,6 +20,7 @@ import CustomerReceipts from '@/components/profile/CustomerReceipts';
 export default function Profile() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('profil');
+  const { lang, setLang, SUPPORTED_LANGS } = useI18n();
   const [form, setForm] = useState({
     phone: '',
     address: '',
@@ -79,7 +81,19 @@ export default function Profile() {
 
   return (
     <div className="px-4 pt-6">
-      <h1 className="text-2xl font-bold mb-5">Mon profil</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-2xl font-bold">Mon profil</h1>
+        <div className="flex gap-1">
+          {SUPPORTED_LANGS.map(l => (
+            <button key={l} onClick={() => setLang(l)}
+              className={`w-10 h-8 rounded-lg text-xs font-bold transition-colors ${
+                lang === l ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-accent'
+              }`}>
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Onglets */}
       <div className="flex gap-2 mb-6">
