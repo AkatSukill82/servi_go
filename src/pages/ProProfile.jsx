@@ -92,10 +92,14 @@ export default function ProProfile() {
           <h1 className="text-2xl font-bold">Mon profil pro</h1>
         </div>
         <div ref={langRef} className="relative flex flex-col items-end gap-1.5 mr-11">
+          <button onClick={() => setLangOpen(o => !o)}
+            className="w-10 h-8 rounded-lg bg-foreground text-background text-xs font-bold shadow hover:bg-foreground/90 transition-colors">
+            {lang.toUpperCase()}
+          </button>
           <AnimatePresence>
             {langOpen && SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
               <motion.button key={l}
-                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+                initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => { setLang(l); setLangOpen(false); }}
                 className="w-10 h-8 rounded-lg bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors">
@@ -103,10 +107,6 @@ export default function ProProfile() {
               </motion.button>
             ))}
           </AnimatePresence>
-          <button onClick={() => setLangOpen(o => !o)}
-            className="w-10 h-8 rounded-lg bg-foreground text-background text-xs font-bold shadow hover:bg-foreground/90 transition-colors">
-            {lang.toUpperCase()}
-          </button>
         </div>
       </div>
 
