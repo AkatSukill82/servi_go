@@ -47,7 +47,6 @@ export const translations = {
     sr_slot: 'Date & heure',
     // Profile
     profile_title: 'Mon profil',
-    profile_saved: 'Profil mis à jour !',
     profile_tab_profile: 'Profil',
     profile_tab_receipts: 'Reçus',
     profile_tab_documents: 'Documents',
@@ -67,7 +66,6 @@ export const translations = {
     bce_label: 'Numéro BCE/KBO',
     // Profile
     profile_title: 'Mijn profiel',
-    profile_saved: 'Profiel bijgewerkt!',
     profile_tab_profile: 'Profiel',
     profile_tab_receipts: 'Ontvangsten',
     profile_tab_documents: 'Documenten',
@@ -100,7 +98,6 @@ export const translations = {
   de: {
     // Profile
     profile_title: 'Mein Profil',
-    profile_saved: 'Profil aktualisiert!',
     profile_tab_profile: 'Profil',
     profile_tab_receipts: 'Belege',
     profile_tab_documents: 'Dokumente',

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import { Camera, Save, LogOut, User, Trash2, Receipt, FileText } from 'lucide-re
 import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
 import LangSwitcher from '@/components/ui/LangSwitcher';
 
@@ -44,7 +44,7 @@ export default function Profile() {
     mutationFn: (data) => base44.auth.updateMe(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      toast.success(t('profile_saved') || 'Profil mis à jour !');
+      toast.success(t('profile_save') + ' ✓');
     },
   });
 
@@ -72,11 +72,11 @@ export default function Profile() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h1 className="text-2xl font-bold">{t('profile_title')}</h1>
-        <LangSwitcher />
+        <LangSwitcher className="mr-11" />
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div className="flex gap-2 mb-6">
         {[
           { key: 'profil', label: t('profile_tab_profile'), icon: <User className="w-3.5 h-3.5" /> },
           { key: 'recus', label: t('profile_tab_receipts'), icon: <Receipt className="w-3.5 h-3.5" /> },
@@ -85,7 +85,7 @@ export default function Profile() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border shrink-0 transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
               tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
             }`}
           >
@@ -111,7 +111,7 @@ export default function Profile() {
                 <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
               </label>
             </div>
-            <h2 className="mt-3 font-semibold text-lg">{user?.full_name || '—'}</h2>
+            <h2 className="mt-3 font-semibold text-lg">{user?.full_name || 'Utilisateur'}</h2>
             <p className="text-sm text-muted-foreground">{user?.email}</p>
           </motion.div>
 
@@ -122,27 +122,22 @@ export default function Profile() {
                 <User className="w-4 h-4 text-primary" />
                 {t('profile_personal_info')}
               </h3>
-
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_fullname')}</Label>
                 <Input value={user?.full_name || ''} disabled className="h-12 rounded-xl bg-muted/50" />
               </div>
-
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Email</Label>
                 <Input value={user?.email || ''} disabled className="h-12 rounded-xl bg-muted/50" />
               </div>
-
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_phone')}</Label>
                 <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+32 123 34 56 78" className="h-12 rounded-xl" />
               </div>
-
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_address')}</Label>
-                <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
+                <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Votre adresse complète" className="h-12 rounded-xl" />
               </div>
-
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_iban')}</Label>
                 <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE46 XXXX XXXX XXXX XXXX" className="h-12 rounded-xl" />
@@ -176,9 +171,13 @@ export default function Profile() {
                   <AlertDialogAction
                     className="bg-destructive hover:bg-destructive/90"
                     onClick={async () => {
-                      await base44.auth.updateMe({ account_deleted: true, user_type: null });
-                      toast.success('Compte supprimé.');
-                      base44.auth.logout('/Landing');
+                      try {
+                        await base44.auth.updateMe({ account_deleted: true, user_type: null });
+                        toast.success('Compte supprimé.');
+                        base44.auth.logout('/Landing');
+                      } catch {
+                        toast.error('Erreur lors de la suppression.');
+                      }
                     }}
                   >
                     {t('profile_delete_confirm_btn')}
