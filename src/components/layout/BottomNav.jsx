@@ -1,17 +1,19 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, MapPin, Heart, User } from 'lucide-react';
-
-const navItems = [
-  { path: '/Home', icon: Home, label: 'Accueil' },
-  { path: '/Map', icon: MapPin, label: 'Carte' },
-  { path: '/Favorites', icon: Heart, label: 'Favoris' },
-  { path: '/Profile', icon: User, label: 'Profil' },
-];
+import { useI18n } from '@/hooks/useI18n';
 
 export default function BottomNav() {
+  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const navItems = [
+    { path: '/Home', icon: Home, label: t('nav_home') },
+    { path: '/Map', icon: MapPin, label: t('nav_map') },
+    { path: '/Favorites', icon: Heart, label: t('nav_favorites') },
+    { path: '/Profile', icon: User, label: t('nav_profile') },
+  ];
 
   const activeTab = navItems.find(n => location.pathname === n.path)?.path || '/Home';
 

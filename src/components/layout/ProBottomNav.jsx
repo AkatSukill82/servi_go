@@ -1,18 +1,20 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, MapPin, Phone, FileText, User } from 'lucide-react';
-
-const navItems = [
-  { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/Map', icon: MapPin, label: 'Carte' },
-  { path: '/Emergency', icon: Phone, label: 'SOS' },
-  { path: '/Invoices', icon: FileText, label: 'Factures' },
-  { path: '/ProProfile', icon: User, label: 'Profil' },
-];
+import { useI18n } from '@/hooks/useI18n';
 
 export default function ProBottomNav() {
+  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const navItems = [
+    { path: '/ProDashboard', icon: LayoutDashboard, label: t('nav_dashboard') },
+    { path: '/Map', icon: MapPin, label: t('nav_map') },
+    { path: '/Emergency', icon: Phone, label: 'SOS' },
+    { path: '/Invoices', icon: FileText, label: t('nav_invoices') },
+    { path: '/ProProfile', icon: User, label: t('nav_pro_profile') },
+  ];
 
   const activeTab = navItems.find(n => location.pathname === n.path)?.path || '/ProDashboard';
 

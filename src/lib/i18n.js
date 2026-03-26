@@ -26,6 +26,7 @@ export const translations = {
     // Nav
     nav_home: 'Accueil',
     nav_map: 'Carte',
+    nav_favorites: 'Favoris',
     nav_request: 'Demande',
     nav_invoices: 'Factures',
     nav_profile: 'Profil',
@@ -84,6 +85,7 @@ export const translations = {
     // Nav
     nav_home: 'Home',
     nav_map: 'Kaart',
+    nav_favorites: 'Favorieten',
     nav_request: 'Aanvraag',
     nav_invoices: 'Facturen',
     nav_profile: 'Profiel',
@@ -142,6 +144,7 @@ export const translations = {
     // Nav
     nav_home: 'Startseite',
     nav_map: 'Karte',
+    nav_favorites: 'Favoriten',
     nav_request: 'Anfrage',
     nav_invoices: 'Rechnungen',
     nav_profile: 'Profil',
