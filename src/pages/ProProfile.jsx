@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,13 @@ import VerificationSection from '@/components/pro/VerificationSection';
 export default function ProProfile() {
   const navigate = useNavigate();
   const { lang, setLang, SUPPORTED_LANGS } = useI18n();
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('profil');
   const [form, setForm] = useState({
@@ -83,15 +91,22 @@ export default function ProProfile() {
           <BackButton fallback="/ProDashboard" />
           <h1 className="text-2xl font-bold">Mon profil pro</h1>
         </div>
-        <div className="flex gap-1">
-          {SUPPORTED_LANGS.map(l => (
-            <button key={l} onClick={() => setLang(l)}
-              className={`w-10 h-8 rounded-lg text-xs font-bold transition-colors ${
-                lang === l ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-accent'
-              }`}>
-              {l.toUpperCase()}
-            </button>
-          ))}
+        <div ref={langRef} className="relative flex flex-col items-end gap-1.5">
+          <AnimatePresence>
+            {langOpen && SUPPORTED_LANGS.filter(l => l !== lang).map((l, i) => (
+              <motion.button key={l}
+                initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() => { setLang(l); setLangOpen(false); }}
+                className="w-10 h-8 rounded-lg bg-card border border-border shadow text-xs font-bold text-foreground hover:bg-muted transition-colors">
+                {l.toUpperCase()}
+              </motion.button>
+            ))}
+          </AnimatePresence>
+          <button onClick={() => setLangOpen(o => !o)}
+            className="w-10 h-8 rounded-lg bg-foreground text-background text-xs font-bold shadow hover:bg-foreground/90 transition-colors">
+            {lang.toUpperCase()}
+          </button>
         </div>
       </div>
 
