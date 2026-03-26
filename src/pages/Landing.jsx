@@ -1,31 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Shield, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useI18n } from '@/hooks/useI18n';
 import { Link } from 'react-router-dom';
 import CookieBanner from '@/components/legal/CookieBanner';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
-
+const features = [
+  { icon: Zap, label: 'Rapide', text: 'Un pro disponible en quelques minutes' },
+  { icon: Shield, label: 'Sécurisé', text: 'Paiements protégés, pros vérifiés' },
+  { icon: Star, label: 'Fiable', text: 'Noté par de vrais clients' },
+];
 
 export default function Landing() {
   useDarkMode();
-  const { t, lang, setLang, SUPPORTED_LANGS } = useI18n();
-
-  const features = [
-    { icon: Zap, label: t('landing_fast'), text: t('landing_fast_text') },
-    { icon: Shield, label: t('landing_secure'), text: t('landing_secure_text') },
-    { icon: Star, label: t('landing_reliable'), text: t('landing_reliable_text') },
-  ];
-  const [langOpen, setLangOpen] = useState(false);
-  const langRef = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => { if (langRef.current && !langRef.current.contains(e.target)) setLangOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const handleGetStarted = () => base44.auth.redirectToLogin('/SelectUserType');
   const handleLogin = () => base44.auth.redirectToLogin('/Home');
@@ -52,7 +40,7 @@ export default function Landing() {
           onClick={handleLogin}
           className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
-          {t('landing_login')}
+          Se connecter
         </button>
       </div>
 
@@ -64,16 +52,15 @@ export default function Landing() {
           transition={{ duration: 0.4, ease: 'easeOut' }}
         >
           <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
-            {t('landing_tagline')}
+            La plateforme pro
           </p>
           <h1 className="text-4xl font-black tracking-tight text-foreground leading-[1.1] mb-5" style={{ whiteSpace: 'pre-line' }}>
-            {t('landing_title')}
+            {'Trouvez le bon\nprofessionnel,\nmaintenant.'}
           </h1>
           <p className="text-base text-muted-foreground leading-relaxed max-w-xs mb-10">
-            {t('landing_subtitle')}
+            Mettez en relation particuliers et artisans qualifiés près de chez vous.
           </p>
 
-          {/* CTA */}
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -81,7 +68,7 @@ export default function Landing() {
             onClick={handleGetStarted}
             className="group flex items-center gap-3 bg-foreground text-background rounded-xl px-6 py-4 text-sm font-semibold w-full justify-between active:scale-[0.98] transition-transform"
           >
-            <span>{t('landing_cta')}</span>
+            <span>Créer un compte gratuitement</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </motion.button>
         </motion.div>
@@ -109,7 +96,6 @@ export default function Landing() {
           })}
         </div>
 
-        {/* Legal links */}
         <div className="flex justify-center gap-4 mt-6">
           <Link to="/CGU" className="text-[10px] text-muted-foreground underline underline-offset-2">CGU</Link>
           <Link to="/PrivacyPolicy" className="text-[10px] text-muted-foreground underline underline-offset-2">Confidentialité</Link>
