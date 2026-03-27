@@ -33,7 +33,7 @@ export default function SupportModal({ user, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="fixed inset-0 z-[9999] bg-background flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-12 pb-4 border-b border-border">
         <h3 className="font-bold text-lg flex items-center gap-2">
