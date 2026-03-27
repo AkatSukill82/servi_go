@@ -12,6 +12,7 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import SupportModal from '@/components/support/SupportModal';
 import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
@@ -20,9 +21,9 @@ import CustomerReceipts from '@/components/profile/CustomerReceipts';
 
 export default function Profile() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { t } = useI18n();
   const [tab, setTab] = useState('profil');
-  const [showSupport, setShowSupport] = useState(false);
   const [form, setForm] = useState({ phone: '', address: '', bank_iban: '', photo_url: '' });
 
   const { data: user, isLoading } = useQuery({
@@ -151,7 +152,7 @@ export default function Profile() {
               {t('profile_logout')}
             </Button>
 
-            <Button variant="outline" onClick={() => setShowSupport(true)} className="w-full h-12 rounded-xl text-sm font-medium">
+            <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm font-medium">
               <Headphones className="w-4 h-4 mr-2" />
               Contacter le support
             </Button>
@@ -189,7 +190,7 @@ export default function Profile() {
             </AlertDialog>
           </motion.div>
 
-      {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} />}
+
         </>
       )}
     </div>

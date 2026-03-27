@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, Headphones } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import SupportModal from '@/components/support/SupportModal';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import BackButton from '@/components/ui/BackButton';
@@ -18,8 +19,8 @@ import VerificationSection from '@/components/pro/VerificationSection';
 
 export default function ProProfile() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profil');
-  const [showSupport, setShowSupport] = useState(false);
   const [form, setForm] = useState({
     phone: '', address: '', bank_iban: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
@@ -213,7 +214,7 @@ export default function ProProfile() {
               {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
             </Button>
 
-            <Button variant="outline" onClick={() => setShowSupport(true)} className="w-full h-14 rounded-xl text-base font-medium">
+            <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-14 rounded-xl text-base font-medium">
               <Headphones className="w-5 h-5 mr-2" /> Contacter le support
             </Button>
 
@@ -221,7 +222,7 @@ export default function ProProfile() {
               <LogOut className="w-5 h-5 mr-2" /> Déconnexion
             </Button>
 
-            {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} />}
+
           </div>
         </>
       )}
