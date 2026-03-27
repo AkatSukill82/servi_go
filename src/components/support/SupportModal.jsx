@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Send, HeadphonesIcon } from 'lucide-react';
+import { X, Send, Headphones } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,7 @@ export default function SupportModal({ user, onClose }) {
       <div className="bg-background w-full max-w-md rounded-t-3xl p-5 space-y-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}>
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-lg flex items-center gap-2">
-            <HeadphonesIcon className="w-5 h-5 text-primary" /> Contacter le support
+            <Headphones className="w-5 h-5 text-primary" /> Contacter le support
           </h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
             <X className="w-4 h-4" />

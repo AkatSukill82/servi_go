@@ -11,7 +11,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, HeadphonesIcon } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones } from 'lucide-react';
 import SupportModal from '@/components/support/SupportModal';
 import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
@@ -152,7 +152,7 @@ export default function Profile() {
             </Button>
 
             <Button variant="outline" onClick={() => setShowSupport(true)} className="w-full h-12 rounded-xl text-sm font-medium">
-              <HeadphonesIcon className="w-4 h-4 mr-2" />
+              <Headphones className="w-4 h-4 mr-2" />
               Contacter le support
             </Button>
 

@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, HeadphonesIcon } from 'lucide-react';
+import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, Headphones } from 'lucide-react';
 import SupportModal from '@/components/support/SupportModal';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import BackButton from '@/components/ui/BackButton';
@@ -214,7 +214,7 @@ export default function ProProfile() {
             </Button>
 
             <Button variant="outline" onClick={() => setShowSupport(true)} className="w-full h-14 rounded-xl text-base font-medium">
-              <HeadphonesIcon className="w-5 h-5 mr-2" /> Contacter le support
+              <Headphones className="w-5 h-5 mr-2" /> Contacter le support
             </Button>
 
             <Button variant="outline" onClick={() => base44.auth.logout()} className="w-full h-14 rounded-xl text-base text-destructive hover:text-destructive">
