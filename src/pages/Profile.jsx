@@ -11,7 +11,8 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt, FileText } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, HeadphonesIcon } from 'lucide-react';
+import SupportModal from '@/components/support/SupportModal';
 import { useI18n } from '@/hooks/useI18n';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import { toast } from 'sonner';
@@ -21,6 +22,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const [tab, setTab] = useState('profil');
+  const [showSupport, setShowSupport] = useState(false);
   const [form, setForm] = useState({ phone: '', address: '', bank_iban: '', photo_url: '' });
 
   const { data: user, isLoading } = useQuery({
@@ -149,6 +151,11 @@ export default function Profile() {
               {t('profile_logout')}
             </Button>
 
+            <Button variant="outline" onClick={() => setShowSupport(true)} className="w-full h-12 rounded-xl text-sm font-medium">
+              <HeadphonesIcon className="w-4 h-4 mr-2" />
+              Contacter le support
+            </Button>
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" className="w-full h-12 rounded-xl text-sm text-muted-foreground hover:text-destructive">
@@ -181,6 +188,8 @@ export default function Profile() {
               </AlertDialogContent>
             </AlertDialog>
           </motion.div>
+
+      {showSupport && <SupportModal user={user} onClose={() => setShowSupport(false)} />}
         </>
       )}
     </div>
