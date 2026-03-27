@@ -33,47 +33,51 @@ export default function SupportModal({ user, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-end justify-center" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="bg-background w-full max-w-md rounded-t-3xl p-5 space-y-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}>
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-lg flex items-center gap-2">
-            <Headphones className="w-5 h-5 text-primary" /> Contacter le support
-          </h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 pt-12 pb-4 border-b border-border">
+        <h3 className="font-bold text-lg flex items-center gap-2">
+          <Headphones className="w-5 h-5 text-primary" /> Contacter le support
+        </h3>
+        <button onClick={onClose} className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
 
-        <p className="text-sm text-muted-foreground">Décrivez votre problème, nous vous répondrons par email.</p>
+      {/* Body */}
+      <div className="flex-1 flex flex-col justify-between px-5 py-5 gap-4">
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">Décrivez votre problème, nous vous répondrons par email.</p>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Prénom *</Label>
-            <Input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} placeholder="Jean" className="h-11 rounded-xl" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Prénom *</Label>
+              <Input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} placeholder="Jean" className="h-12 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Nom</Label>
+              <Input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} placeholder="Dupont" className="h-12 rounded-xl" />
+            </div>
           </div>
+
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Nom</Label>
-            <Input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} placeholder="Dupont" className="h-11 rounded-xl" />
+            <Label className="text-xs text-muted-foreground">Email *</Label>
+            <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="votre@email.com" className="h-12 rounded-xl" />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Votre message *</Label>
+            <Textarea
+              value={form.message}
+              onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+              placeholder="Décrivez votre problème en détail..."
+              className="rounded-xl resize-none"
+              rows={6}
+            />
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Email *</Label>
-          <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="votre@email.com" className="h-11 rounded-xl" />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Votre message *</Label>
-          <Textarea
-            value={form.message}
-            onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-            placeholder="Décrivez votre problème en détail..."
-            className="rounded-xl resize-none"
-            rows={4}
-          />
-        </div>
-
-        <Button onClick={handleSend} disabled={sending} className="w-full h-12 rounded-xl text-sm font-semibold">
+        <Button onClick={handleSend} disabled={sending} className="w-full h-14 rounded-xl text-base font-semibold" style={{ marginBottom: 'env(safe-area-inset-bottom)' }}>
           <Send className="w-4 h-4 mr-2" />
           {sending ? 'Envoi en cours...' : 'Envoyer'}
         </Button>
