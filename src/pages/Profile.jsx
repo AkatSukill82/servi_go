@@ -12,6 +12,8 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones } from 'lucide-react';
+import PhoneVerification from '@/components/profile/PhoneVerification';
+import EmailVerification from '@/components/profile/EmailVerification';
 import { useNavigate } from 'react-router-dom';
 import SupportModal from '@/components/support/SupportModal';
 import { useI18n } from '@/hooks/useI18n';
@@ -24,7 +26,9 @@ export default function Profile() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [tab, setTab] = useState('profil');
-  const [form, setForm] = useState({ phone: '', address: '', bank_iban: '', photo_url: '' });
+  const [form, setForm] = useState({ phone: '', address: '', bank_iban: '', photo_url: '', contact_email: '' });
+  const [phoneValid, setPhoneValid] = useState(true);
+  const [verifiedEmail, setVerifiedEmail] = useState(null);
 
   const { data: user, isLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -38,7 +42,9 @@ export default function Profile() {
         address: user.address || '',
         bank_iban: user.bank_iban || '',
         photo_url: user.photo_url || '',
+        contact_email: user.contact_email || user.email || '',
       });
+      setVerifiedEmail(user.contact_email || null);
     }
   }, [user]);
 
@@ -128,10 +134,17 @@ export default function Profile() {
                 <Label className="text-xs text-muted-foreground">Email</Label>
                 <Input value={user?.email || ''} disabled className="h-12 rounded-xl bg-muted/50" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t('profile_phone')}</Label>
-                <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+32 123 34 56 78" className="h-12 rounded-xl" />
-              </div>
+              <PhoneVerification
+                value={form.phone}
+                onChange={val => setForm(f => ({ ...f, phone: val }))}
+              />
+              <EmailVerification
+                currentEmail={user?.contact_email || ''}
+                contactEmail={form.contact_email}
+                onChange={val => setForm(f => ({ ...f, contact_email: val }))}
+                onVerified={setVerifiedEmail}
+                verified={!!verifiedEmail && verifiedEmail === form.contact_email}
+              />
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_address')}</Label>
                 <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Votre adresse complète" className="h-12 rounded-xl" />
@@ -142,7 +155,15 @@ export default function Profile() {
               </div>
             </div>
 
-            <Button onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending} className="w-full h-14 rounded-xl text-base">
+            <Button
+              onClick={() => {
+                const dataToSave = { ...form };
+                if (verifiedEmail) dataToSave.contact_email = verifiedEmail;
+                updateMutation.mutate(dataToSave);
+              }}
+              disabled={updateMutation.isPending}
+              className="w-full h-14 rounded-xl text-base"
+            >
               <Save className="w-5 h-5 mr-2" />
               {updateMutation.isPending ? t('profile_saving') : t('profile_save')}
             </Button>

@@ -13,6 +13,8 @@ import { useNavigate } from 'react-router-dom';
 import SupportModal from '@/components/support/SupportModal';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import BackButton from '@/components/ui/BackButton';
+import PhoneVerification from '@/components/profile/PhoneVerification';
+import EmailVerification from '@/components/profile/EmailVerification';
 import { toast } from 'sonner';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 import VerificationSection from '@/components/pro/VerificationSection';
@@ -21,6 +23,7 @@ export default function ProProfile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profil');
+  const [verifiedEmail, setVerifiedEmail] = useState(null);
   const [form, setForm] = useState({
     phone: '', address: '', bank_iban: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
@@ -51,7 +54,9 @@ export default function ProProfile() {
         available: user.available !== false,
         availability_slots: user.availability_slots || [],
         bce_number: user.bce_number || '',
+        contact_email: user.contact_email || user.email || '',
       });
+      setVerifiedEmail(user.contact_email || null);
     }
   }, [user]);
 
@@ -176,10 +181,17 @@ export default function ProProfile() {
               <h3 className="font-semibold flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" /> Coordonnées
               </h3>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Téléphone</Label>
-                <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+32 470 12 34 56" className="h-12 rounded-xl" />
-              </div>
+              <PhoneVerification
+                value={form.phone}
+                onChange={val => setForm(f => ({ ...f, phone: val }))}
+              />
+              <EmailVerification
+                currentEmail={user?.contact_email || ''}
+                contactEmail={form.contact_email || ''}
+                onChange={val => setForm(f => ({ ...f, contact_email: val }))}
+                onVerified={setVerifiedEmail}
+                verified={!!verifiedEmail && verifiedEmail === form.contact_email}
+              />
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Adresse</Label>
                 <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
