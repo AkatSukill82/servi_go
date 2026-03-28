@@ -94,8 +94,15 @@ export default function SelectUserType() {
       return;
     }
 
+    // Safety net: si la géolocalisation ne répond pas dans 8s, on passe directement
+    const safetyTimer = setTimeout(() => {
+      toast.info(t.skipped);
+      updateMutation.mutate({ user_type: type });
+    }, 8000);
+
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        clearTimeout(safetyTimer);
         const { latitude, longitude } = pos.coords;
         setCoords({ latitude, longitude });
         const detectedLang = detectLanguage(latitude, longitude);
@@ -110,11 +117,12 @@ export default function SelectUserType() {
         }
       },
       () => {
+        clearTimeout(safetyTimer);
         const t = LANG_TEXTS[lang];
         toast.info(t.skipped);
         updateMutation.mutate({ user_type: type });
       },
-      { timeout: 10000, enableHighAccuracy: true }
+      { timeout: 6000, enableHighAccuracy: false }
     );
   };
 
@@ -213,6 +221,12 @@ export default function SelectUserType() {
             <h2 className="text-xl font-bold">{t.detecting}</h2>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">{t.detectingSub}</p>
             <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+            <button
+              onClick={() => updateMutation.mutate({ user_type: pendingType })}
+              className="text-xs text-muted-foreground underline mt-4"
+            >
+              Passer cette étape
+            </button>
           </motion.div>
         )}
 
