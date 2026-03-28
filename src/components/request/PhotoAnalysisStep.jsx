@@ -26,16 +26,20 @@ export default function PhotoAnalysisStep({ categoryName, basePrice, onResult, o
     setPhotoUrl(file_url);
 
     const analysis = await base44.integrations.Core.InvokeLLM({
-      prompt: `Tu es un expert en services à domicile. Analyse cette photo d'une intervention de type "${categoryName}".
-Évalue la complexité du travail visible et estime un prix indicatif en euros.
+      model: 'claude_sonnet_4_6',
+      prompt: `Tu es un expert en services à domicile (plomberie, électricité, déménagement, etc.).
+Un client t'envoie une photo dans le cadre d'une demande de service : "${categoryName}".
 Prix de base habituel pour ce service : ${basePrice} €.
 
-Réponds uniquement avec ce JSON :
+Même si la photo n'est pas parfaitement claire ou hors sujet, tu DOIS toujours fournir une estimation basée sur le service demandé et ce que tu perçois.
+Ne refuse jamais de répondre. Adapte l'estimation au contexte du service si l'image n'est pas explicite.
+
+Réponds UNIQUEMENT avec ce JSON, sans aucun texte autour :
 {
-  "complexity": "simple" | "standard" | "complexe",
-  "price_estimate": <number>,
-  "explanation": "<phrase courte expliquant ton estimation>",
-  "detected_issues": ["<problème 1>", "<problème 2>"]
+  "complexity": "simple" ou "standard" ou "complexe",
+  "price_estimate": <nombre entier en euros>,
+  "explanation": "<1-2 phrases expliquant ton estimation>",
+  "detected_issues": ["<problème ou observation 1>", "<problème ou observation 2>"]
 }`,
       file_urls: [file_url],
       response_json_schema: {
@@ -46,6 +50,7 @@ Réponds uniquement avec ce JSON :
           explanation: { type: 'string' },
           detected_issues: { type: 'array', items: { type: 'string' } },
         },
+        required: ['complexity', 'price_estimate', 'explanation', 'detected_issues'],
       },
     });
 
