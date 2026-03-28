@@ -11,7 +11,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones, Pencil, X } from 'lucide-react';
 import PhoneVerification from '@/components/profile/PhoneVerification';
 import EmailVerification from '@/components/profile/EmailVerification';
 import { useNavigate } from 'react-router-dom';
@@ -26,8 +26,10 @@ export default function Profile() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const [tab, setTab] = useState('profil');
+  const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ phone: '', address: '', bank_iban: '', photo_url: '', contact_email: '' });
   const [phoneValid, setPhoneValid] = useState(true);
+  const [verifiedPhone, setVerifiedPhone] = useState(null);
   const [verifiedEmail, setVerifiedEmail] = useState(null);
 
   const { data: user, isLoading } = useQuery({
@@ -45,6 +47,7 @@ export default function Profile() {
         contact_email: user.contact_email || user.email || '',
       });
       setVerifiedEmail(user.contact_email || null);
+      setVerifiedPhone(user.phone || null);
     }
   }, [user]);
 
@@ -137,6 +140,10 @@ export default function Profile() {
               <PhoneVerification
                 value={form.phone}
                 onChange={val => setForm(f => ({ ...f, phone: val }))}
+                userEmail={user?.email}
+                isEditing={isEditing}
+                verified={!!verifiedPhone && verifiedPhone === form.phone}
+                onVerified={setVerifiedPhone}
               />
               <EmailVerification
                 currentEmail={user?.contact_email || ''}
@@ -144,29 +151,53 @@ export default function Profile() {
                 onChange={val => setForm(f => ({ ...f, contact_email: val }))}
                 onVerified={setVerifiedEmail}
                 verified={!!verifiedEmail && verifiedEmail === form.contact_email}
+                isEditing={isEditing}
               />
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_address')}</Label>
-                <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Votre adresse complète" className="h-12 rounded-xl" />
+                <Input value={form.address} disabled={!isEditing} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Votre adresse complète" className="h-12 rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">{t('profile_iban')}</Label>
-                <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE46 XXXX XXXX XXXX XXXX" className="h-12 rounded-xl" />
+                <Input value={form.bank_iban} disabled={!isEditing} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE46 XXXX XXXX XXXX XXXX" className="h-12 rounded-xl" />
               </div>
             </div>
 
-            <Button
-              onClick={() => {
-                const dataToSave = { ...form };
-                if (verifiedEmail) dataToSave.contact_email = verifiedEmail;
-                updateMutation.mutate(dataToSave);
-              }}
-              disabled={updateMutation.isPending}
-              className="w-full h-14 rounded-xl text-base"
-            >
-              <Save className="w-5 h-5 mr-2" />
-              {updateMutation.isPending ? t('profile_saving') : t('profile_save')}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (isEditing) {
+                    setForm({
+                      phone: user?.phone || '',
+                      address: user?.address || '',
+                      bank_iban: user?.bank_iban || '',
+                      photo_url: user?.photo_url || '',
+                      contact_email: user?.contact_email || user?.email || '',
+                    });
+                    setVerifiedPhone(user?.phone || null);
+                    setVerifiedEmail(user?.contact_email || null);
+                  }
+                  setIsEditing(e => !e);
+                }}
+                className="flex-1 h-14 rounded-xl text-base"
+              >
+                {isEditing ? <><X className="w-5 h-5 mr-2" />Annuler</> : <><Pencil className="w-5 h-5 mr-2" />Modifier</>}
+              </Button>
+              <Button
+                onClick={() => {
+                  const dataToSave = { ...form };
+                  if (verifiedEmail) dataToSave.contact_email = verifiedEmail;
+                  updateMutation.mutate(dataToSave);
+                  setIsEditing(false);
+                }}
+                disabled={updateMutation.isPending || !isEditing}
+                className="flex-1 h-14 rounded-xl text-base"
+              >
+                <Save className="w-5 h-5 mr-2" />
+                {updateMutation.isPending ? t('profile_saving') : t('profile_save')}
+              </Button>
+            </div>
 
             <Button variant="outline" onClick={() => base44.auth.logout()} className="w-full h-14 rounded-xl text-base text-destructive hover:text-destructive">
               <LogOut className="w-5 h-5 mr-2" />

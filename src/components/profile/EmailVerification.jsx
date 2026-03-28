@@ -14,11 +14,11 @@ function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export default function EmailVerification({ currentEmail, contactEmail, onChange, onVerified, verified }) {
+export default function EmailVerification({ currentEmail, contactEmail, onChange, onVerified, verified, isEditing = true }) {
   const [code, setCode] = useState('');
   const [sentCode, setSentCode] = useState(null);
   const [sending, setSending] = useState(false);
-  const [step, setStep] = useState('input'); // 'input' | 'verify'
+  const [step, setStep] = useState('input');
   const [touched, setTouched] = useState(false);
 
   const isValid = validateEmail(contactEmail);
@@ -32,7 +32,7 @@ export default function EmailVerification({ currentEmail, contactEmail, onChange
     setSentCode(generated);
     await base44.integrations.Core.SendEmail({
       to: contactEmail,
-      subject: 'ServiGo – Code de vérification',
+      subject: 'ServiGo – Code de vérification email',
       body: `Votre code de vérification ServiGo est : ${generated}\n\nCe code expire dans 10 minutes.\n\nSi vous n'avez pas demandé ce code, ignorez cet email.`,
     });
     setSending(false);
@@ -52,51 +52,50 @@ export default function EmailVerification({ currentEmail, contactEmail, onChange
     }
   };
 
-  return (
-    <div className="space-y-3">
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <Mail className="w-3.5 h-3.5" /> Email de contact
-        </Label>
-        <div className="relative">
-          <Input
-            type="email"
-            value={contactEmail}
-            onChange={e => { onChange(e.target.value); setTouched(true); setStep('input'); onVerified(null); }}
-            placeholder="votre@email.com"
-            className={`h-12 rounded-xl pr-10 ${showError ? 'border-destructive' : verified ? 'border-green-400' : ''}`}
-          />
-          {contactEmail && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              {verified
-                ? <CheckCircle className="w-4 h-4 text-green-500" />
-                : isValid
-                  ? <AlertCircle className="w-4 h-4 text-orange-400" />
-                  : <AlertCircle className="w-4 h-4 text-destructive" />
-              }
-            </div>
-          )}
-        </div>
-        {showError && <p className="text-xs text-destructive">Format d'email invalide.</p>}
-        {verified && <p className="text-xs text-green-600">Email vérifié ✓</p>}
-      </div>
+  const handleChange = (val) => {
+    onChange(val);
+    setTouched(true);
+    setStep('input');
+    onVerified(null);
+  };
 
-      {isValid && isChanged && !verified && step === 'input' && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleSendCode}
-          disabled={sending}
-          className="w-full h-10 rounded-xl text-xs"
-        >
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+        <Mail className="w-3.5 h-3.5" /> Email de contact
+      </Label>
+      <div className="relative">
+        <Input
+          type="email"
+          value={contactEmail}
+          onChange={e => handleChange(e.target.value)}
+          placeholder="votre@email.com"
+          disabled={!isEditing}
+          className={`h-12 rounded-xl pr-10 ${showError ? 'border-destructive' : verified ? 'border-green-400' : ''}`}
+        />
+        {contactEmail && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {verified
+              ? <CheckCircle className="w-4 h-4 text-green-500" />
+              : isValid
+                ? <AlertCircle className="w-4 h-4 text-orange-400" />
+                : <AlertCircle className="w-4 h-4 text-destructive" />
+            }
+          </div>
+        )}
+      </div>
+      {showError && <p className="text-xs text-destructive">Format d'email invalide.</p>}
+      {verified && <p className="text-xs text-green-600">Email vérifié ✓</p>}
+
+      {isEditing && isValid && isChanged && !verified && step === 'input' && (
+        <Button type="button" variant="outline" size="sm" onClick={handleSendCode} disabled={sending} className="w-full h-10 rounded-xl text-xs">
           {sending ? <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Envoi...</> : '📧 Vérifier cet email'}
         </Button>
       )}
 
-      {step === 'verify' && (
+      {isEditing && step === 'verify' && (
         <div className="bg-muted/40 rounded-xl p-3 space-y-2 border border-border">
-          <p className="text-xs text-muted-foreground">Entrez le code à 6 chiffres reçu à <strong>{contactEmail}</strong></p>
+          <p className="text-xs text-muted-foreground">Entrez le code reçu à <strong>{contactEmail}</strong></p>
           <div className="flex gap-2">
             <Input
               value={code}

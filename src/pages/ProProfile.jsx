@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, Headphones } from 'lucide-react';
+import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, Headphones, Pencil, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SupportModal from '@/components/support/SupportModal';
 import DocumentsTab from '@/components/documents/DocumentsTab';
@@ -23,7 +23,9 @@ export default function ProProfile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profil');
+  const [isEditing, setIsEditing] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState(null);
+  const [verifiedPhone, setVerifiedPhone] = useState(null);
   const [form, setForm] = useState({
     phone: '', address: '', bank_iban: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
@@ -57,6 +59,7 @@ export default function ProProfile() {
         contact_email: user.contact_email || user.email || '',
       });
       setVerifiedEmail(user.contact_email || null);
+      setVerifiedPhone(user.phone || null);
     }
   }, [user]);
 
@@ -184,6 +187,10 @@ export default function ProProfile() {
               <PhoneVerification
                 value={form.phone}
                 onChange={val => setForm(f => ({ ...f, phone: val }))}
+                userEmail={user?.email}
+                isEditing={isEditing}
+                verified={!!verifiedPhone && verifiedPhone === form.phone}
+                onVerified={setVerifiedPhone}
               />
               <EmailVerification
                 currentEmail={user?.contact_email || ''}
@@ -191,14 +198,15 @@ export default function ProProfile() {
                 onChange={val => setForm(f => ({ ...f, contact_email: val }))}
                 onVerified={setVerifiedEmail}
                 verified={!!verifiedEmail && verifiedEmail === form.contact_email}
+                isEditing={isEditing}
               />
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Adresse</Label>
-                <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
+                <Input value={form.address} disabled={!isEditing} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">IBAN</Label>
-                <Input value={form.bank_iban} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE68 XXXX XXXX XXXX" className="h-12 rounded-xl" />
+                <Input value={form.bank_iban} disabled={!isEditing} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE68 XXXX XXXX XXXX" className="h-12 rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Numéro BCE/KBO</Label>
@@ -217,14 +225,36 @@ export default function ProProfile() {
               <AvailabilityEditor slots={form.availability_slots} onChange={slots => setForm(f => ({ ...f, availability_slots: slots }))} />
             </div>
 
-            <Button
-              onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}
-              disabled={updateMutation.isPending}
-              className="w-full h-14 rounded-xl text-base bg-accent hover:bg-accent/90"
-            >
-              <Save className="w-5 h-5 mr-2" />
-              {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (isEditing) {
+                    setForm(f => ({
+                      ...f,
+                      phone: user?.phone || '',
+                      address: user?.address || '',
+                      bank_iban: user?.bank_iban || '',
+                      contact_email: user?.contact_email || user?.email || '',
+                    }));
+                    setVerifiedPhone(user?.phone || null);
+                    setVerifiedEmail(user?.contact_email || null);
+                  }
+                  setIsEditing(e => !e);
+                }}
+                className="flex-1 h-14 rounded-xl text-base"
+              >
+                {isEditing ? <><X className="w-5 h-5 mr-2" />Annuler</> : <><Pencil className="w-5 h-5 mr-2" />Modifier</>}
+              </Button>
+              <Button
+                onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}
+                disabled={updateMutation.isPending || !isEditing}
+                className="flex-1 h-14 rounded-xl text-base bg-accent hover:bg-accent/90"
+              >
+                <Save className="w-5 h-5 mr-2" />
+                {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
+              </Button>
+            </div>
 
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-14 rounded-xl text-base font-medium">
               <Headphones className="w-5 h-5 mr-2" /> Contacter le support
