@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '@/hooks/useI18n';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
-import { Search, Zap } from 'lucide-react';
+import { Search, Zap, AlertCircle, X, CheckCircle } from 'lucide-react';
+import { useMutation, useQueryClient as useQC } from '@tanstack/react-query';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,6 +32,39 @@ export default function Home() {
     refetchInterval: 5000
   });
 
+  const { data: unfinishedRequest } = useQuery({
+    queryKey: ['unfinishedRequest', user?.email],
+    queryFn: () => base44.entities.ServiceRequest.filter(
+      { customer_email: user.email }, '-created_date', 10
+    ).then(r => r.find(req => ['searching', 'pending_pro'].includes(req.status)) || null),
+    enabled: !!user?.email && user?.user_type === 'particulier',
+    refetchInterval: 15000
+  });
+
+  const [dismissedId, setDismissedId] = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
+  const cancelMutation = useMutation({
+    mutationFn: (id) => base44.entities.ServiceRequest.update(id, { status: 'cancelled' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unfinishedRequest'] });
+      setConfirmCancel(false);
+    },
+  });
+
+  // Notification browser au retour sur l'app
+  useEffect(() => {
+    if (!unfinishedRequest || dismissedId === unfinishedRequest.id) return;
+    if (Notification.permission === 'granted') {
+      new Notification('ServiGo', {
+        body: `Votre demande "${unfinishedRequest.category_name}" est toujours en cours. Pensez à la clôturer si elle n'est plus nécessaire.`,
+        icon: '/icon.png',
+      });
+    } else if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, [unfinishedRequest?.id]);
+
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['serviceCategories'],
     queryFn: () => base44.entities.ServiceCategory.list(),
@@ -54,6 +88,48 @@ export default function Home() {
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('home_subtitle')}</p>
         </div>
+
+        {/* Unfinished request banner */}
+        {unfinishedRequest && dismissedId !== unfinishedRequest.id && !activeRequest && (
+          <div className="w-full mb-3 rounded-2xl overflow-hidden border border-orange-200 bg-orange-50">
+            <div className="px-4 py-3">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-orange-800">Demande en attente — {unfinishedRequest.category_name}</p>
+                  <p className="text-xs text-orange-600 mt-0.5">Vous avez une demande non clôturée. Souhaitez-vous l'annuler ?</p>
+                </div>
+                <button onClick={() => setDismissedId(unfinishedRequest.id)} className="p-1 rounded-full hover:bg-orange-100">
+                  <X className="w-4 h-4 text-orange-400" />
+                </button>
+              </div>
+              {!confirmCancel ? (
+                <button
+                  onClick={() => setConfirmCancel(true)}
+                  className="mt-3 w-full text-center text-xs font-semibold text-orange-700 border border-orange-300 bg-white rounded-xl py-2 hover:bg-orange-50 transition-colors"
+                >
+                  Annuler cette demande
+                </button>
+              ) : (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => setConfirmCancel(false)}
+                    className="flex-1 text-xs font-medium border border-orange-200 rounded-xl py-2 bg-white text-orange-600"
+                  >
+                    Non, garder
+                  </button>
+                  <button
+                    onClick={() => cancelMutation.mutate(unfinishedRequest.id)}
+                    disabled={cancelMutation.isPending}
+                    className="flex-1 text-xs font-semibold rounded-xl py-2 bg-orange-500 text-white disabled:opacity-60"
+                  >
+                    {cancelMutation.isPending ? 'Annulation...' : 'Oui, annuler'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Active mission banner */}
         {activeRequest && (
