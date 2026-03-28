@@ -85,45 +85,22 @@ export default function SelectUserType() {
   });
 
   const handleChoose = async (type) => {
-    setPendingType(type);
-    setStep('geolocating');
+    // Enregistre immédiatement, géolocalisation en arrière-plan
+    updateMutation.mutate({ user_type: type });
 
-    if (!navigator.geolocation) {
-      // No geolocation support, skip directly
-      updateMutation.mutate({ user_type: type });
-      return;
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          try {
+            const address = await reverseGeocode(latitude, longitude);
+            await base44.auth.updateMe({ address, latitude, longitude });
+          } catch {}
+        },
+        () => {},
+        { timeout: 5000, enableHighAccuracy: false }
+      );
     }
-
-    // Safety net: si la géolocalisation ne répond pas dans 8s, on passe directement
-    const safetyTimer = setTimeout(() => {
-      toast.info(t.skipped);
-      updateMutation.mutate({ user_type: type });
-    }, 8000);
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        clearTimeout(safetyTimer);
-        const { latitude, longitude } = pos.coords;
-        setCoords({ latitude, longitude });
-        const detectedLang = detectLanguage(latitude, longitude);
-        setLang(detectedLang);
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          setDetectedAddress(address);
-          setStep('confirm');
-        } catch {
-          setDetectedAddress(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-          setStep('confirm');
-        }
-      },
-      () => {
-        clearTimeout(safetyTimer);
-        const t = LANG_TEXTS[lang];
-        toast.info(t.skipped);
-        updateMutation.mutate({ user_type: type });
-      },
-      { timeout: 6000, enableHighAccuracy: false }
-    );
   };
 
   const handleConfirmAddress = () => {
