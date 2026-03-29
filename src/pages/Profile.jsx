@@ -11,7 +11,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones, Pencil, X } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones, Pencil, X, ShieldCheck } from 'lucide-react';
 import PhoneVerification from '@/components/profile/PhoneVerification';
 import EmailVerification from '@/components/profile/EmailVerification';
 import { useNavigate } from 'react-router-dom';
@@ -203,6 +203,27 @@ export default function Profile() {
               <LogOut className="w-5 h-5 mr-2" />
               {t('profile_logout')}
             </Button>
+
+            {/* eID banner */}
+            <button onClick={() => navigate('/EidVerification')} className={`w-full rounded-2xl p-4 border flex items-center gap-3 text-left transition-colors ${
+              user?.eid_status === 'verified' ? 'bg-green-50 border-green-200' :
+              user?.eid_status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+              'bg-red-50 border-red-200'
+            }`}>
+              <ShieldCheck className={`w-6 h-6 shrink-0 ${
+                user?.eid_status === 'verified' ? 'text-green-600' :
+                user?.eid_status === 'pending' ? 'text-yellow-600' : 'text-red-500'
+              }`} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">
+                  {user?.eid_status === 'verified' ? '✓ Identité vérifiée' :
+                   user?.eid_status === 'pending' ? 'Vérification eID en cours...' :
+                   'Vérifier mon identité (eID requis)'}
+                </p>
+                <p className="text-xs text-muted-foreground">{user?.eid_status === 'verified' ? 'Votre compte est validé' : 'Cliquez pour envoyer votre carte eID'}</p>
+              </div>
+              {user?.eid_status !== 'verified' && <span className="text-xs font-bold text-primary">→</span>}
+            </button>
 
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm font-medium">
               <Headphones className="w-4 h-4 mr-2" />

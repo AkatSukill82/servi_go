@@ -391,6 +391,27 @@ export default function ServiceRequest() {
     else navigate('/Home');
   };
 
+  // Bloc eID : redirige si non vérifié
+  if (user && user.eid_status !== 'verified') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center gap-5">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <span className="text-4xl">🪪</span>
+        </div>
+        <h2 className="text-xl font-bold">Vérification d'identité requise</h2>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          Pour faire une demande de service, vous devez d'abord vérifier votre identité avec votre carte eID.
+        </p>
+        <Button onClick={() => navigate('/EidVerification')} className="w-full h-14 rounded-xl text-base">
+          Vérifier mon identité
+        </Button>
+        <Button variant="ghost" onClick={() => navigate('/Home')} className="w-full h-12 rounded-xl">
+          Retour à l'accueil
+        </Button>
+      </div>
+    );
+  }
+
   if (loadingCategory) {
     return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
   }

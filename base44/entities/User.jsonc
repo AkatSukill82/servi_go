@@ -1,0 +1,99 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "particulier",
+        "professionnel"
+      ]
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "bank_iban": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "category_name": {
+      "type": "string"
+    },
+    "base_price": {
+      "type": "number"
+    },
+    "hourly_rate": {
+      "type": "number"
+    },
+    "pro_description": {
+      "type": "string"
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "availability_slots": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "bce_number": {
+      "type": "string"
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "account_deleted": {
+      "type": "boolean"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected"
+      ]
+    },
+    "id_card_url": {
+      "type": "string"
+    },
+    "insurance_url": {
+      "type": "string"
+    },
+    "onss_url": {
+      "type": "string"
+    },
+    "eid_photo_url": {
+      "type": "string",
+      "description": "Photo de la carte eID upload\u00e9e par l'utilisateur"
+    },
+    "eid_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected"
+      ],
+      "description": "Statut de v\u00e9rification de la carte eID"
+    }
+  }
+}

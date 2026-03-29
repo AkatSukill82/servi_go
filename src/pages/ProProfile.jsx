@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, Headphones, Pencil, X } from 'lucide-react';
+import { Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays, FileText, Headphones, Pencil, X, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SupportModal from '@/components/support/SupportModal';
 import DocumentsTab from '@/components/documents/DocumentsTab';
@@ -255,6 +255,27 @@ export default function ProProfile() {
                 {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
               </Button>
             </div>
+
+            {/* eID banner */}
+            <button onClick={() => navigate('/EidVerification')} className={`w-full rounded-2xl p-4 border flex items-center gap-3 text-left transition-colors ${
+              user?.eid_status === 'verified' ? 'bg-green-50 border-green-200' :
+              user?.eid_status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+              'bg-red-50 border-red-200'
+            }`}>
+              <ShieldCheck className={`w-6 h-6 shrink-0 ${
+                user?.eid_status === 'verified' ? 'text-green-600' :
+                user?.eid_status === 'pending' ? 'text-yellow-600' : 'text-red-500'
+              }`} />
+              <div className="flex-1">
+                <p className="text-sm font-semibold">
+                  {user?.eid_status === 'verified' ? '✓ Identité vérifiée' :
+                   user?.eid_status === 'pending' ? 'Vérification eID en cours...' :
+                   'Vérifier mon identité (eID requis)'}
+                </p>
+                <p className="text-xs text-muted-foreground">{user?.eid_status === 'verified' ? 'Votre compte est validé' : 'Cliquez pour envoyer votre carte eID'}</p>
+              </div>
+              {user?.eid_status !== 'verified' && <span className="text-xs font-bold text-primary">→</span>}
+            </button>
 
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-14 rounded-xl text-base font-medium">
               <Headphones className="w-5 h-5 mr-2" /> Contacter le support

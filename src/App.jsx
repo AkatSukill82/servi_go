@@ -15,6 +15,7 @@ import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
 import AdminDashboard from './pages/AdminDashboard';
 import CGU from './pages/CGU';
+import EidVerification from './pages/EidVerification';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 
@@ -51,6 +52,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminVerification" element={<AdminVerification />} />
       <Route path="/AdminDashboard" element={<AdminDashboard />} />
       <Route path="/CGU" element={<CGU />} />
+      <Route path="/EidVerification" element={<EidVerification />} />
       <Route path="/Support" element={<Support />} />
       <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
 
