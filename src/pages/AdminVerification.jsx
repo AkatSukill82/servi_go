@@ -229,24 +229,15 @@ export default function AdminVerification() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('verif');
   const [filter, setFilter] = useState('pending');
-  const [eidFilter, setEidFilter] = useState('pending');
+
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: allUsers = [], isLoading: loadingEid } = useQuery({
-    queryKey: ['allUsersEid'],
-    queryFn: () => base44.entities.User.list('-created_date', 200),
-    enabled: currentUser?.role === 'admin',
-  });
 
-  const eidUsers = allUsers.filter(u => u.eid_photo_url);
-  const eidFiltered = eidFilter === 'all' ? eidUsers : eidUsers.filter(u => u.eid_status === eidFilter || (!u.eid_status && eidFilter === 'pending'));
-  const eidPendingCount = eidUsers.filter(u => u.eid_status === 'pending' || !u.eid_status).length;
-
-  const eidMutation = useMutation({
+  const old_eidMutation = useMutation({
     mutationFn: async ({ id, status, user: u }) => {
       await base44.entities.User.update(id, { eid_status: status });
       await base44.integrations.Core.SendEmail({
@@ -257,7 +248,7 @@ export default function AdminVerification() {
           : `Bonjour ${u.full_name},\n\nVotre carte eID n'a pas pu être vérifiée (document illisible ou invalide). Veuillez en soumettre un nouveau dans votre profil.\n\nL'équipe ServiGo`,
       });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['allUsersEid'] }),
+    onSuccess: () => {},
   });
 
   const { data: pros = [], isLoading } = useQuery({
@@ -332,17 +323,6 @@ export default function AdminVerification() {
           )}
         </button>
         <button
-          onClick={() => setTab('eid')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors shrink-0 ${
-            tab === 'eid' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
-          }`}
-        >
-          🪪 eID
-          {eidPendingCount > 0 && tab !== 'eid' && (
-            <span className="text-xs font-bold bg-destructive text-white rounded-full px-1.5 ml-1">{eidPendingCount}</span>
-          )}
-        </button>
-        <button
           onClick={() => setTab('stats')}
           className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors shrink-0 ${
             tab === 'stats' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
@@ -352,59 +332,6 @@ export default function AdminVerification() {
           Statistiques
         </button>
       </div>
-
-      {tab === 'eid' && (
-        <div className="space-y-4">
-          <div className="flex gap-2 mb-4">
-            {[['pending','En attente'],['verified','Vérifiés'],['rejected','Refusés'],['all','Tous']].map(([v,l]) => (
-              <button key={v} onClick={() => setEidFilter(v)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  eidFilter === v ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'
-                }`}>{l}</button>
-            ))}
-          </div>
-          {loadingEid ? (
-            <div className="flex justify-center py-10"><div className="w-7 h-7 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
-          ) : eidFiltered.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground text-sm">Aucun document eID dans cette catégorie</div>
-          ) : (
-            eidFiltered.map(u => (
-              <div key={u.id} className="bg-card rounded-2xl border border-border p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary overflow-hidden shrink-0">
-                    {u.photo_url ? <img src={u.photo_url} alt="" className="w-full h-full object-cover" /> : (u.full_name?.[0] || '?')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{u.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{u.email} · {u.user_type}</p>
-                  </div>
-                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
-                    u.eid_status === 'verified' ? 'bg-green-50 text-green-700 border-green-200' :
-                    u.eid_status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                    'bg-yellow-50 text-yellow-700 border-yellow-200'
-                  }`}>{u.eid_status === 'verified' ? '✓ Vérifié' : u.eid_status === 'rejected' ? '✗ Refusé' : '⏳ En attente'}</span>
-                </div>
-                <a href={u.eid_photo_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-muted/50 rounded-xl p-3 text-sm text-primary underline underline-offset-2">
-                  🪪 Voir la carte eID
-                </a>
-                {u.eid_status !== 'verified' && (
-                  <div className="flex gap-2">
-                    <Button onClick={() => eidMutation.mutate({ id: u.id, status: 'verified', user: u })} disabled={eidMutation.isPending} className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-sm">
-                      <CheckCircle className="w-4 h-4 mr-1" /> Approuver
-                    </Button>
-                    {u.eid_status !== 'rejected' && (
-                      <Button onClick={() => eidMutation.mutate({ id: u.id, status: 'rejected', user: u })} disabled={eidMutation.isPending} variant="outline" className="flex-1 h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-50 text-sm">
-                        <XCircle className="w-4 h-4 mr-1" /> Refuser
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      )}
 
       {tab === 'stats' ? (
         <ProStatsTable pros={pros} />

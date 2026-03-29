@@ -84,7 +84,7 @@
     },
     "eid_photo_url": {
       "type": "string",
-      "description": "Photo de la carte eID upload\u00e9e par l'utilisateur"
+      "description": "Photo de la carte eID"
     },
     "eid_status": {
       "type": "string",
@@ -92,8 +92,15 @@
         "pending",
         "verified",
         "rejected"
-      ],
-      "description": "Statut de v\u00e9rification de la carte eID"
+      ]
+    },
+    "birth_date": {
+      "type": "string",
+      "description": "Date de naissance extraite de l'eID (YYYY-MM-DD)"
+    },
+    "national_number": {
+      "type": "string",
+      "description": "Num\u00e9ro national belge extrait de l'eID"
     }
   }
 }
