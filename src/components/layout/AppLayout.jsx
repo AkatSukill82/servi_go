@@ -57,7 +57,7 @@ export default function AppLayout() {
   const [dark, setDark] = useDarkMode();
   const [currentUser, setCurrentUser] = React.useState(null);
   useAppNotifications(currentUser);
-  const userEmail = currentUser?.email || queryClient.getQueryData(['currentUser'])?.email;
+  const userEmail = currentUser?.email;
   const queryClient = useQueryClient();
 
   // Garde en mémoire les onglets déjà visités (pour ne monter qu'au premier accès)
@@ -74,8 +74,7 @@ export default function AppLayout() {
     }
     base44.auth.me().then(user => {
       queryClient.setQueryData(['currentUser'], user);
-        setCurrentUser(user);
-        setCurrentUser(user);
+      setCurrentUser(user);
       if (!user?.user_type) {
         navigate('/SelectUserType', { replace: true });
       } else {
