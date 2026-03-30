@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Check, Zap, FileText, Star, AlertTriangle, CreditCard, MessageCircle, CheckCircle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -22,10 +23,22 @@ const NOTIF_ICONS = {
   new_review: { icon: Star, color: 'text-yellow-600 bg-yellow-50' },
 };
 
+function getNotifUrl(n) {
+  if (n.request_id) {
+    const chatTypes = ['mission_accepted', 'contract_to_sign', 'contract_signed', 'pro_en_route', 'mission_started', 'mission_completed', 'message_received', 'new_review', 'dispute_opened'];
+    if (chatTypes.includes(n.type)) return `/Chat?requestId=${n.request_id}`;
+    if (n.type === 'new_mission') return `/ProDashboard`;
+  }
+  if (n.type === 'subscription_renewal' || n.type === 'subscription_expired' || n.type === 'subscription_activated') return '/ProSubscription';
+  if (n.action_url) return n.action_url;
+  return null;
+}
+
 export default function NotificationDropdown({ userEmail }) {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifDropdown', userEmail],
@@ -105,10 +118,12 @@ export default function NotificationDropdown({ userEmail }) {
                   return (
                     <div
                       key={n.id}
-                      className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors ${!n.is_read ? 'bg-primary/3' : ''}`}
+                      className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/40 ${!n.is_read ? 'bg-primary/5' : ''}`}
                       onClick={() => {
                         if (!n.is_read) base44.entities.Notification.update(n.id, { is_read: true }).then(() => queryClient.invalidateQueries({ queryKey: ['notifDropdown', userEmail] }));
                         setOpen(false);
+                        const url = getNotifUrl(n);
+                        if (url) navigate(url);
                       }}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
