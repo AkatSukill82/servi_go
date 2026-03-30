@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Sun, Moon } from 'lucide-react';
+
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
@@ -54,7 +54,7 @@ export default function AppLayout() {
   const location = useLocation();
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dark, setDark] = useDarkMode();
+  useDarkMode(); // Applique le thème sauvegardé
   const [currentUser, setCurrentUser] = React.useState(null);
   useAppNotifications(currentUser);
   const userEmail = currentUser?.email;
@@ -122,16 +122,6 @@ export default function AppLayout() {
         style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
       >
         {userEmail && <NotificationDropdown userEmail={userEmail} />}
-        <button
-          onClick={() => setDark(d => !d)}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
-          aria-label="Changer le thème"
-        >
-          {dark
-            ? <Sun className="w-4 h-4 text-foreground" strokeWidth={1.8} />
-            : <Moon className="w-4 h-4 text-foreground" strokeWidth={1.8} />
-          }
-        </button>
       </div>
 
       <div className="flex-1 overflow-hidden relative">

@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
+import { useDarkMode } from '@/hooks/useDarkMode';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 
 const TABS = [
@@ -82,6 +83,7 @@ function ProfileCompletion({ user }) {
 export default function ProProfile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [dark, setDark] = useDarkMode();
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
@@ -342,6 +344,18 @@ export default function ProProfile() {
               {user?.eid_status !== 'verified' && <span className="text-primary font-bold">→</span>}
             </button>
 
+            <div className="flex items-center justify-between bg-white rounded-2xl border border-border/50 shadow-sm px-5 py-4">
+                <div>
+                  <p className="text-sm font-medium">Mode nuit</p>
+                  <p className="text-xs text-muted-foreground">{dark ? 'Thème sombre activé' : 'Thème clair activé'}</p>
+                </div>
+                <button
+                  onClick={() => setDark(d => !d)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-primary' : 'bg-muted'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
               <Headphones className="w-4 h-4 mr-2" /> Contacter le support
             </Button>

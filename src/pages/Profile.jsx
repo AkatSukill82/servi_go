@@ -15,6 +15,7 @@ import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Shield, ShieldCh
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
+import { useDarkMode } from '@/hooks/useDarkMode';
 
 const TABS = [
   { key: 'infos', label: 'Mes informations', icon: User },
@@ -37,6 +38,7 @@ function getInitials(user) {
 export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [dark, setDark] = useDarkMode();
   const [tab, setTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
@@ -296,12 +298,24 @@ export default function Profile() {
 
             {/* Actions */}
             <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between bg-white rounded-2xl border border-border/50 shadow-sm px-5 py-4">
+                <div>
+                  <p className="text-sm font-medium">Mode nuit</p>
+                  <p className="text-xs text-muted-foreground">{dark ? 'Thème sombre activé' : 'Thème clair activé'}</p>
+                </div>
+                <button
+                  onClick={() => setDark(d => !d)}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-primary' : 'bg-muted'}`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                </button>
+              </div>
               <Button
                 variant="outline"
                 onClick={() => base44.auth.logout()}
                 className="w-full h-12 rounded-xl text-sm text-muted-foreground"
               >
-                <LogOut className="w-4 h-4 mr-2" /> Déconnexion
+              <LogOut className="w-4 h-4 mr-2" /> Déconnexion
               </Button>
             </div>
           </motion.div>

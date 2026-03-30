@@ -47,29 +47,40 @@ export function useAppNotifications(user) {
       }
     });
 
-    // Écoute les demandes de service
-    const unsubRequest = base44.entities.ServiceRequest.subscribe((event) => {
+    // Écoute les notifications ServiGo (toutes catégories)
+    const unsubNotif = base44.entities.Notification.subscribe((event) => {
+      if (event.type !== 'create') return;
+      const notif = event.data;
+      if (!notif || notif.recipient_email !== user.email) return;
+      notify(notif.title, notif.body || '');
+    });
+
+    // Écoute les demandes de service V2
+    const unsubRequest = base44.entities.ServiceRequestV2.subscribe((event) => {
       if (event.type !== 'update') return;
       const req = event.data;
       if (!req) return;
 
       if (!isPro && req.customer_email === user.email) {
-        // Client : un pro a accepté
         if (req.status === 'accepted') {
           notify('✅ Mission acceptée !', `${req.professional_name || 'Un professionnel'} a accepté votre demande`);
+        } else if (req.status === 'pro_en_route') {
+          notify('🚗 Pro en route !', `${req.professional_name} arrive chez vous`);
+        } else if (req.status === 'completed') {
+          notify('🎉 Mission terminée', `La mission ${req.category_name} est terminée`);
         }
       }
 
       if (isPro && req.professional_email === user.email) {
-        // Pro : nouvelle mission assignée
-        if (req.status === 'accepted') {
-          notify('🚀 Nouvelle mission !', `Mission ${req.category_name} · ${req.customer_address || ''}`);
+        if (req.status === 'contract_signed') {
+          notify('✍️ Contrat signé !', `Le client a signé. Vous pouvez démarrer la mission.`);
         }
       }
     });
 
     return () => {
       unsubInvoice();
+      unsubNotif();
       unsubRequest();
     };
   }, [user?.email, user?.user_type]);
