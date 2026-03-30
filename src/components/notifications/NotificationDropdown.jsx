@@ -123,7 +123,7 @@ export default function NotificationDropdown({ userEmail }) {
                         if (!n.is_read) base44.entities.Notification.update(n.id, { is_read: true }).then(() => queryClient.invalidateQueries({ queryKey: ['notifDropdown', userEmail] }));
                         setOpen(false);
                         const url = getNotifUrl(n);
-                        if (url) navigate(url);
+                        if (url) setTimeout(() => navigate(url), 100);
                       }}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
