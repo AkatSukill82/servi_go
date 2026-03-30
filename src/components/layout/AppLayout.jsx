@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { Sun, Moon } from 'lucide-react';
+import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
@@ -56,6 +57,7 @@ export default function AppLayout() {
   const [dark, setDark] = useDarkMode();
   const [currentUser, setCurrentUser] = React.useState(null);
   useAppNotifications(currentUser);
+  const userEmail = currentUser?.email || queryClient.getQueryData(['currentUser'])?.email;
   const queryClient = useQueryClient();
 
   // Garde en mémoire les onglets déjà visités (pour ne monter qu'au premier accès)
@@ -115,18 +117,23 @@ export default function AppLayout() {
         flexDirection: 'column',
       }}
     >
-      {/* Theme toggle */}
-      <button
-        onClick={() => setDark(d => !d)}
-        className="fixed right-4 z-50 w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
+      {/* Top right controls */}
+      <div
+        className="fixed right-4 z-50 flex items-center gap-2"
         style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
-        aria-label="Changer le thème"
       >
-        {dark
-          ? <Sun className="w-4 h-4 text-foreground" strokeWidth={1.8} />
-          : <Moon className="w-4 h-4 text-foreground" strokeWidth={1.8} />
-        }
-      </button>
+        {userEmail && <NotificationDropdown userEmail={userEmail} />}
+        <button
+          onClick={() => setDark(d => !d)}
+          className="w-9 h-9 flex items-center justify-center rounded-full bg-card border border-border shadow-sm active:scale-95 transition-transform"
+          aria-label="Changer le thème"
+        >
+          {dark
+            ? <Sun className="w-4 h-4 text-foreground" strokeWidth={1.8} />
+            : <Moon className="w-4 h-4 text-foreground" strokeWidth={1.8} />
+          }
+        </button>
+      </div>
 
       <div className="flex-1 overflow-hidden relative">
 

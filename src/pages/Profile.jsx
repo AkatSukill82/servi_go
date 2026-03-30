@@ -11,26 +11,35 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Headphones, Pencil, X, ShieldCheck } from 'lucide-react';
-import PhoneVerification from '@/components/profile/PhoneVerification';
-import EmailVerification from '@/components/profile/EmailVerification';
+import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Shield, ShieldCheck, MapPin, Pencil, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import SupportModal from '@/components/support/SupportModal';
-import { useI18n } from '@/hooks/useI18n';
-import DocumentsTab from '@/components/documents/DocumentsTab';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
+
+const TABS = [
+  { key: 'infos', label: 'Mes informations', icon: User },
+  { key: 'recus', label: 'Mes reçus', icon: Receipt },
+  { key: 'securite', label: 'Sécurité', icon: Shield },
+];
+
+function getDisplayName(user) {
+  if (user?.first_name || user?.last_name) return `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  if (user?.full_name) return user.full_name;
+  if (user?.email) return user.email.split('@')[0];
+  return 'Utilisateur';
+}
+
+function getInitials(user) {
+  const name = getDisplayName(user);
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
 
 export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { t } = useI18n();
-  const [tab, setTab] = useState('profil');
+  const [tab, setTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
-  const [form, setForm] = useState({ phone: '', address: '', bank_iban: '', photo_url: '', contact_email: '' });
-  const [phoneValid, setPhoneValid] = useState(true);
-  const [verifiedPhone, setVerifiedPhone] = useState(null);
-  const [verifiedEmail, setVerifiedEmail] = useState(null);
+  const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
 
   const { data: user, isLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -40,14 +49,12 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       setForm({
+        first_name: user.first_name || (user.full_name?.split(' ')[0] || ''),
+        last_name: user.last_name || (user.full_name?.split(' ').slice(1).join(' ') || ''),
         phone: user.phone || '',
         address: user.address || '',
-        bank_iban: user.bank_iban || '',
         photo_url: user.photo_url || '',
-        contact_email: user.contact_email || user.email || '',
       });
-      setVerifiedEmail(user.contact_email || null);
-      setVerifiedPhone(user.phone || null);
     }
   }, [user]);
 
@@ -56,6 +63,7 @@ export default function Profile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       toast.success('Profil mis à jour !');
+      setIsEditing(false);
     },
   });
 
@@ -64,6 +72,23 @@ export default function Profile() {
     if (!file) return;
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setForm(f => ({ ...f, photo_url: file_url }));
+    await base44.auth.updateMe({ photo_url: file_url });
+    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    toast.success('Photo mise à jour !');
+  };
+
+  const handleGeolocate = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
+        const data = await res.json();
+        if (data.display_name) {
+          setForm(f => ({ ...f, address: data.display_name }));
+          toast.success('Adresse récupérée !');
+        }
+      } catch {}
+    });
   };
 
   if (isLoading) {
@@ -74,198 +99,275 @@ export default function Profile() {
     );
   }
 
-  const initials = user?.full_name
-    ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()
-    : '?';
+  const displayName = getDisplayName(user);
+  const initials = getInitials(user);
+  const eidVerified = user?.eid_status === 'verified';
 
   return (
-    <div className="px-4 pt-6 pb-6">
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold">{t('profile_title')}</h1>
+    <div className="min-h-full bg-[#F8F8F6]">
+      {/* Hero Card */}
+      <div className="bg-white border-b border-border/50 shadow-sm px-5 pt-8 pb-6">
+        <div className="flex items-start gap-4">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <Avatar className="w-20 h-20 border-4 border-white shadow-md">
+              <AvatarImage src={form.photo_url || user?.photo_url} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">{initials}</AvatarFallback>
+            </Avatar>
+            <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center cursor-pointer shadow-md">
+              <Camera className="w-3.5 h-3.5 text-white" />
+              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+            </label>
+          </div>
+
+          {/* Infos */}
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl font-bold truncate">{displayName}</h1>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{user?.email}</p>
+
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                Client
+              </span>
+              {eidVerified ? (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> eID vérifié
+                </span>
+              ) : (
+                <button
+                  onClick={() => navigate('/EidVerification')}
+                  className="text-xs font-medium px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-200"
+                >
+                  ⚠ Vérifier l'identité
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Checklist onboarding rapide */}
+        {(!user?.photo_url || !user?.address || !eidVerified) && (
+          <div className="mt-4 bg-primary/5 rounded-xl border border-primary/15 p-3 space-y-2">
+            <p className="text-xs font-semibold text-primary">Complétez votre profil :</p>
+            {!user?.photo_url && (
+              <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                <div className="w-4 h-4 rounded border-2 border-border flex items-center justify-center shrink-0" />
+                Ajoutez votre photo de profil
+                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+              </label>
+            )}
+            {!user?.address && (
+              <button onClick={() => { setTab('infos'); setIsEditing(true); }} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full text-left">
+                <div className="w-4 h-4 rounded border-2 border-border flex items-center justify-center shrink-0" />
+                Complétez votre adresse
+              </button>
+            )}
+            {!eidVerified && (
+              <button onClick={() => navigate('/EidVerification')} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground w-full text-left">
+                <div className="w-4 h-4 rounded border-2 border-border flex items-center justify-center shrink-0" />
+                Vérifiez votre identité (eID)
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6">
-        {[
-          { key: 'profil', label: t('profile_tab_profile'), icon: <User className="w-3.5 h-3.5" /> },
-          { key: 'recus', label: t('profile_tab_receipts'), icon: <Receipt className="w-3.5 h-3.5" /> },
-          { key: 'documents', label: t('profile_tab_documents'), icon: <FileText className="w-3.5 h-3.5" /> },
-        ].map(({ key, label, icon }) => (
+      <div className="flex gap-1 px-4 pt-4 pb-2">
+        {TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
-              tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+            className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-colors ${
+              tab === key ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-muted-foreground border-border hover:bg-gray-50'
             }`}
           >
-            {icon} {label}
+            <Icon className="w-4 h-4" />
+            <span className="truncate text-[10px]">{label.split(' ').slice(-1)[0]}</span>
           </button>
         ))}
       </div>
 
-      {tab === 'recus' && <CustomerReceipts user={user} />}
-      {tab === 'documents' && <DocumentsTab user={user} />}
+      <div className="px-4 pb-8 space-y-4 mt-1">
+        {/* ─── ONGLET INFOS ─── */}
+        {tab === 'infos' && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
+                <h3 className="font-semibold text-sm">Informations personnelles</h3>
+                <button
+                  onClick={() => setIsEditing(e => !e)}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${isEditing ? 'bg-red-50 text-red-600' : 'bg-primary/10 text-primary'}`}
+                >
+                  {isEditing ? 'Annuler' : <><Pencil className="w-3 h-3" />Modifier</>}
+                </button>
+              </div>
+              <div className="px-5 py-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Prénom</Label>
+                    <Input
+                      value={form.first_name}
+                      onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="Jean"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Nom</Label>
+                    <Input
+                      value={form.last_name}
+                      onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="Dupont"
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                </div>
 
-      {tab === 'profil' && (
-        <>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-8">
-            <div className="relative">
-              <Avatar className="w-24 h-24 border-4 border-card shadow-lg">
-                <AvatarImage src={form.photo_url} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">{initials}</AvatarFallback>
-              </Avatar>
-              <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center cursor-pointer shadow-md">
-                <Camera className="w-4 h-4 text-primary-foreground" />
-                <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-              </label>
-            </div>
-            <h2 className="mt-3 font-semibold text-lg">{user?.full_name || 'Utilisateur'}</h2>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
-          </motion.div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Email (non modifiable)</Label>
+                  <Input value={user?.email || ''} disabled className="h-11 rounded-xl bg-muted/50 text-muted-foreground" />
+                </div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4">
-            <div className="bg-card rounded-2xl p-5 border border-border/50 shadow-sm space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                {t('profile_personal_info')}
-              </h3>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t('profile_fullname')}</Label>
-                <Input value={user?.full_name || ''} disabled className="h-12 rounded-xl bg-muted/50" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Email</Label>
-                <Input value={user?.email || ''} disabled className="h-12 rounded-xl bg-muted/50" />
-              </div>
-              <PhoneVerification
-                value={form.phone}
-                onChange={val => setForm(f => ({ ...f, phone: val }))}
-                userEmail={user?.email}
-                isEditing={isEditing}
-                verified={!!verifiedPhone && verifiedPhone === form.phone}
-                onVerified={setVerifiedPhone}
-              />
-              <EmailVerification
-                currentEmail={user?.contact_email || ''}
-                contactEmail={form.contact_email}
-                onChange={val => setForm(f => ({ ...f, contact_email: val }))}
-                onVerified={setVerifiedEmail}
-                verified={!!verifiedEmail && verifiedEmail === form.contact_email}
-                isEditing={isEditing}
-              />
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t('profile_address')}</Label>
-                <Input value={form.address} disabled={!isEditing} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Votre adresse complète" className="h-12 rounded-xl" />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">{t('profile_iban')}</Label>
-                <Input value={form.bank_iban} disabled={!isEditing} onChange={e => setForm(f => ({ ...f, bank_iban: e.target.value }))} placeholder="BE46 XXXX XXXX XXXX XXXX" className="h-12 rounded-xl" />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Téléphone</Label>
+                  <Input
+                    value={form.phone}
+                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    disabled={!isEditing}
+                    placeholder="+32 470 12 34 56"
+                    className="h-11 rounded-xl"
+                  />
+                </div>
 
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (isEditing) {
-                    setForm({
-                      phone: user?.phone || '',
-                      address: user?.address || '',
-                      bank_iban: user?.bank_iban || '',
-                      photo_url: user?.photo_url || '',
-                      contact_email: user?.contact_email || user?.email || '',
-                    });
-                    setVerifiedPhone(user?.phone || null);
-                    setVerifiedEmail(user?.contact_email || null);
-                  }
-                  setIsEditing(e => !e);
-                }}
-                className="flex-1 h-14 rounded-xl text-base"
-              >
-                {isEditing ? <><X className="w-5 h-5 mr-2" />Annuler</> : <><Pencil className="w-5 h-5 mr-2" />Modifier</>}
-              </Button>
-              <Button
-                onClick={() => {
-                  const dataToSave = { ...form };
-                  if (verifiedEmail) dataToSave.contact_email = verifiedEmail;
-                  updateMutation.mutate(dataToSave);
-                  setIsEditing(false);
-                }}
-                disabled={updateMutation.isPending || !isEditing}
-                className="flex-1 h-14 rounded-xl text-base"
-              >
-                <Save className="w-5 h-5 mr-2" />
-                {updateMutation.isPending ? t('profile_saving') : t('profile_save')}
-              </Button>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Adresse complète</Label>
+                  <div className="relative">
+                    <Input
+                      value={form.address}
+                      onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="Rue de la Loi 16, 1000 Bruxelles"
+                      className="h-11 rounded-xl pr-10"
+                    />
+                    {isEditing && (
+                      <button onClick={handleGeolocate} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80">
+                        <MapPin className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <Button
+                    onClick={() => updateMutation.mutate(form)}
+                    disabled={updateMutation.isPending}
+                    className="w-full h-11 rounded-xl font-semibold bg-[#1D9E75] hover:bg-[#1D9E75]/90"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </Button>
+                )}
+              </div>
             </div>
 
-            <Button variant="outline" onClick={() => base44.auth.logout()} className="w-full h-14 rounded-xl text-base text-destructive hover:text-destructive">
-              <LogOut className="w-5 h-5 mr-2" />
-              {t('profile_logout')}
-            </Button>
-
-            {/* eID banner */}
-            <button onClick={() => navigate('/EidVerification')} className={`w-full rounded-2xl p-4 border flex items-center gap-3 text-left transition-colors ${
-              user?.eid_status === 'verified' ? 'bg-green-50 border-green-200' :
-              user?.eid_status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
-              'bg-red-50 border-red-200'
-            }`}>
-              <ShieldCheck className={`w-6 h-6 shrink-0 ${
-                user?.eid_status === 'verified' ? 'text-green-600' :
-                user?.eid_status === 'pending' ? 'text-yellow-600' : 'text-red-500'
-              }`} />
+            {/* eID Card */}
+            <button
+              onClick={() => navigate('/EidVerification')}
+              className={`w-full bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left transition-colors ${
+                eidVerified ? 'border-green-200' : 'border-red-200'
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${eidVerified ? 'bg-green-50' : 'bg-red-50'}`}>
+                <ShieldCheck className={`w-5 h-5 ${eidVerified ? 'text-green-600' : 'text-red-500'}`} />
+              </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">
-                  {user?.eid_status === 'verified' ? '✓ Identité vérifiée' :
-                   user?.eid_status === 'pending' ? 'Vérification eID en cours...' :
-                   'Vérifier mon identité (eID requis)'}
+                  {eidVerified ? '✓ Identité vérifiée' : 'Vérifier mon identité'}
                 </p>
-                <p className="text-xs text-muted-foreground">{user?.eid_status === 'verified' ? 'Votre compte est validé' : 'Cliquez pour envoyer votre carte eID'}</p>
+                <p className="text-xs text-muted-foreground">
+                  {eidVerified ? 'Votre compte est validé ServiGo' : 'Carte eID requise pour les demandes'}
+                </p>
               </div>
-              {user?.eid_status !== 'verified' && <span className="text-xs font-bold text-primary">→</span>}
+              {!eidVerified && <span className="text-primary text-sm font-bold">→</span>}
             </button>
 
-            <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm font-medium">
-              <Headphones className="w-4 h-4 mr-2" />
-              Contacter le support
-            </Button>
+            {/* Actions */}
+            <div className="space-y-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => base44.auth.logout()}
+                className="w-full h-12 rounded-xl text-sm text-muted-foreground"
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Déconnexion
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ─── ONGLET REÇUS ─── */}
+        {tab === 'recus' && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            <CustomerReceipts user={user} />
+          </motion.div>
+        )}
+
+        {/* ─── ONGLET SÉCURITÉ ─── */}
+        {tab === 'securite' && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5">
+              <h3 className="font-semibold mb-4 text-sm">Sécurité du compte</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                  <div>
+                    <p className="text-sm font-medium">Email de connexion</p>
+                    <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  </div>
+                  <Check className="w-4 h-4 text-green-500" />
+                </div>
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                  <div>
+                    <p className="text-sm font-medium">Vérification eID</p>
+                    <p className="text-xs text-muted-foreground">{eidVerified ? 'Vérifié' : 'Non vérifié'}</p>
+                  </div>
+                  <ShieldCheck className={`w-4 h-4 ${eidVerified ? 'text-green-500' : 'text-red-400'}`} />
+                </div>
+              </div>
+            </div>
 
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" className="w-full h-12 rounded-xl text-sm text-muted-foreground hover:text-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  {t('profile_delete')}
+                <Button variant="outline" className="w-full h-12 rounded-xl text-sm border-red-200 text-red-600 hover:bg-red-50">
+                  <Trash2 className="w-4 h-4 mr-2" /> Supprimer mon compte
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>{t('profile_delete_confirm_title')}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('profile_delete_confirm_desc')}</AlertDialogDescription>
+                  <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action est irréversible. Toutes vos données seront définitivement supprimées.
+                  </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>{t('btn_cancel')}</AlertDialogCancel>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive hover:bg-destructive/90"
                     onClick={async () => {
-                      try {
-                        await base44.auth.updateMe({ account_deleted: true, user_type: null });
-                        toast.success('Compte supprimé.');
-                        base44.auth.logout('/Landing');
-                      } catch {
-                        toast.error('Erreur lors de la suppression.');
-                      }
+                      await base44.auth.updateMe({ account_deleted: true, user_type: null });
+                      toast.success('Compte supprimé.');
+                      base44.auth.logout('/Landing');
                     }}
                   >
-                    {t('profile_delete_confirm_btn')}
+                    Supprimer définitivement
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </motion.div>
-
-
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }
