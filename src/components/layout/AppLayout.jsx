@@ -69,6 +69,7 @@ export default function AppLayout() {
     if (cached) {
       if (!cached?.user_type) navigate('/SelectUserType', { replace: true });
       else setUserType(cached.user_type);
+      setCurrentUser(cached);
       setLoading(false);
       return;
     }
