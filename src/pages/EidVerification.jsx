@@ -136,6 +136,9 @@ Retourne UNIQUEMENT un JSON avec ces champs (laisse vide "" si non visible):
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-5 pt-14 pb-10">
+      <button onClick={() => navigate(-1)} className="absolute top-4 left-4 p-2 rounded-xl hover:bg-muted transition-colors flex items-center gap-1 text-sm text-muted-foreground">
+        ← Retour
+      </button>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center text-center mb-10">
         <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
           <ShieldCheck className="w-10 h-10 text-primary" />

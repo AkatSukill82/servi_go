@@ -119,11 +119,14 @@ export default function NotificationDropdown({ userEmail }) {
                     <div
                       key={n.id}
                       className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 last:border-0 transition-colors cursor-pointer hover:bg-muted/40 ${!n.is_read ? 'bg-primary/5' : ''}`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         if (!n.is_read) base44.entities.Notification.update(n.id, { is_read: true }).then(() => queryClient.invalidateQueries({ queryKey: ['notifDropdown', userEmail] }));
-                        setOpen(false);
                         const url = getNotifUrl(n);
-                        if (url) setTimeout(() => navigate(url), 100);
+                        if (url) {
+                          setOpen(false);
+                          setTimeout(() => navigate(url), 50);
+                        }
                       }}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${config.color}`}>
