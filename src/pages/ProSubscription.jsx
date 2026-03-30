@@ -25,10 +25,6 @@ export default function ProSubscription() {
   });
 
   const handleSubscribe = async () => {
-    if (window.self !== window.top) {
-      toast.error('Le paiement fonctionne uniquement depuis l\'application publiée.');
-      return;
-    }
     setLoading(true);
     const res = await base44.functions.invoke('createProSubscription', {
       successUrl: `${window.location.origin}/ProSubscription?success=true`,
