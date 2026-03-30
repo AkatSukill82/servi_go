@@ -58,6 +58,7 @@ const AuthenticatedApp = () => {
 
       {/* App pages with shared layout (tabs persistants) */}
       <Route path="/Home" element={<AppLayout />} />
+      <Route path="/ProSubscription" element={<AppLayout />} />
       <Route path="/ServiceRequest" element={<AppLayout />} />
       <Route path="/Profile" element={<AppLayout />} />
       <Route path="/ProDashboard" element={<AppLayout />} />

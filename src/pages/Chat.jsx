@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useVisualViewport } from '@/hooks/useVisualViewport';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Send, Image, MapPin, CheckCheck, CheckCircle, Star, CalendarDays } from 'lucide-react';
+import { Send, Image, MapPin, CheckCheck, Star, CalendarDays } from 'lucide-react';
 import FavoriteButton from '@/components/favorites/FavoriteButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -14,12 +13,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '@/components/ui/BackButton';
 import RatingModal from '@/components/review/RatingModal';
 import { toast } from 'sonner';
-
-const STATUS_LABELS = {
-  accepted: { label: 'Acceptée', color: 'bg-green-100 text-green-700' },
-  in_progress: { label: 'En cours', color: 'bg-blue-100 text-blue-700' },
-  completed: { label: 'Terminée', color: 'bg-gray-100 text-gray-600' },
-};
+import MissionProgress from '@/components/mission/MissionProgress';
+import ContractPanel from '@/components/mission/ContractPanel';
+import ReportButton from '@/components/report/ReportButton';
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -32,18 +28,15 @@ export default function Chat() {
   const [showRating, setShowRating] = useState(false);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
-  // Fix Android : recalcule la hauteur quand le clavier virtuel s'ouvre
   const viewportHeight = useVisualViewport();
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
   const { data: request } = useQuery({
     queryKey: ['request', requestId],
     queryFn: () => base44.entities.ServiceRequest.filter({ id: requestId }).then(r => r[0]),
     enabled: !!requestId,
+    refetchInterval: 5000,
   });
 
   const { data: messages = [] } = useQuery({
@@ -53,63 +46,37 @@ export default function Chat() {
     refetchInterval: 3000,
   });
 
-  // Real-time subscription
   useEffect(() => {
     if (!requestId) return;
     const unsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.data?.request_id === requestId) {
-        queryClient.invalidateQueries({ queryKey: ['messages', requestId] });
-      }
+      if (event.data?.request_id === requestId) queryClient.invalidateQueries({ queryKey: ['messages', requestId] });
     });
     return unsubscribe;
   }, [requestId]);
 
-  // Auto scroll to bottom
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 
   const sendMutation = useMutation({
     mutationFn: (msgData) => base44.entities.Message.create(msgData),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages', requestId] }),
   });
 
-  const completeMutation = useMutation({
-    mutationFn: () => base44.entities.ServiceRequest.update(requestId, { status: 'completed' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['request', requestId] });
-      toast.success('Mission terminée !');
-    },
-  });
-
   const reviewMutation = useMutation({
     mutationFn: async ({ rating, comment }) => {
-      // Create review
       await base44.entities.Review.create({
         request_id: requestId,
         professional_email: request.professional_email,
         customer_name: user.full_name,
         customer_email: user.email,
-        rating,
-        comment,
+        rating, comment,
         category_name: request.category_name,
       });
-      // Update pro's average rating
       const allReviews = await base44.entities.Review.filter({ professional_email: request.professional_email });
       const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
       const pros = await base44.entities.User.filter({ email: request.professional_email });
-      if (pros[0]) {
-        await base44.entities.User.update(pros[0].id, {
-          rating: Math.round(avg * 10) / 10,
-          reviews_count: allReviews.length,
-        });
-      }
+      if (pros[0]) await base44.entities.User.update(pros[0].id, { rating: Math.round(avg * 10) / 10, reviews_count: allReviews.length });
     },
-    onSuccess: () => {
-      setShowRating(false);
-      queryClient.invalidateQueries({ queryKey: ['request', requestId] });
-      toast.success('Merci pour votre évaluation !');
-    },
+    onSuccess: () => { setShowRating(false); toast.success('Merci pour votre évaluation !'); },
   });
 
   const handleSend = async () => {
@@ -146,37 +113,41 @@ export default function Chat() {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
-  const otherParty = user?.user_type === 'professionnel'
-    ? { name: request?.customer_name, label: 'Client' }
-    : { name: request?.professional_name, label: 'Professionnel' };
+  const isCustomer = user?.user_type === 'particulier';
+  const isPro = user?.user_type === 'professionnel';
+  const otherParty = isPro
+    ? { name: request?.customer_name, label: 'Client', email: request?.customer_email, type: 'particulier' }
+    : { name: request?.professional_name, label: 'Professionnel', email: request?.professional_email, type: 'professionnel' };
 
+  const STATUS_LABELS = {
+    searching: { label: 'Recherche', color: 'bg-orange-100 text-orange-700' },
+    pending_pro: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
+    accepted: { label: 'Acceptée', color: 'bg-blue-100 text-blue-700' },
+    contract_pending: { label: 'Contrat envoyé', color: 'bg-purple-100 text-purple-700' },
+    contract_signed: { label: 'Contrat signé', color: 'bg-indigo-100 text-indigo-700' },
+    pro_en_route: { label: 'En route', color: 'bg-blue-100 text-blue-700' },
+    in_progress: { label: 'En cours', color: 'bg-blue-100 text-blue-700' },
+    completed: { label: 'Terminée', color: 'bg-gray-100 text-gray-600' },
+  };
   const statusInfo = STATUS_LABELS[request?.status] || STATUS_LABELS['accepted'];
+  const showContract = ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'completed'].includes(request?.status);
 
-  if (!requestId) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
-        <p className="text-muted-foreground">Aucune conversation sélectionnée.</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>Retour</Button>
-      </div>
-    );
-  }
+  if (!requestId) return (
+    <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
+      <p className="text-muted-foreground">Aucune conversation sélectionnée.</p>
+      <Button variant="outline" className="mt-4" onClick={() => navigate(-1)}>Retour</Button>
+    </div>
+  );
 
   return (
     <div className="flex flex-col bg-background" style={{ height: viewportHeight }}>
       {showRating && (
-        <RatingModal
-          request={request}
-          onSubmit={(data) => reviewMutation.mutate(data)}
-          onClose={() => setShowRating(false)}
-          isSubmitting={reviewMutation.isPending}
-        />
+        <RatingModal request={request} onSubmit={(data) => reviewMutation.mutate(data)} onClose={() => setShowRating(false)} isSubmitting={reviewMutation.isPending} />
       )}
+
       {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-card border-b border-border/50 shadow-sm"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
@@ -188,69 +159,56 @@ export default function Chat() {
           <p className="font-semibold truncate">{otherParty.name || '...'}</p>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{otherParty.label}</span>
-            {statusInfo && (
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.color}`}>
-                {statusInfo.label}
-              </span>
-            )}
+            {statusInfo && <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusInfo.color}`}>{statusInfo.label}</span>}
           </div>
         </div>
         <div className="flex gap-1 items-center">
-          {/* Client can favorite the pro */}
-          {user?.user_type === 'particulier' && request?.professional_id && (
-            <FavoriteButton proId={request.professional_id} />
-          )}
+          {isCustomer && request?.professional_id && <FavoriteButton proId={request.professional_id} />}
           {request?.status === 'accepted' && (
-            <Button variant="ghost" size="icon" aria-label="Suivre sur la carte" className="rounded-full min-w-[44px] min-h-[44px]"
-              onClick={() => navigate(`/TrackingMap?requestId=${requestId}`)}>
+            <Button variant="ghost" size="icon" className="rounded-full min-w-[44px] min-h-[44px]" onClick={() => navigate(`/TrackingMap?requestId=${requestId}`)}>
               <MapPin className="w-5 h-5 text-primary" />
             </Button>
           )}
-          {/* Pro can mark mission as completed */}
-          {request?.status === 'accepted' && user?.user_type === 'professionnel' && (
-            <Button size="sm" className="rounded-xl bg-green-600 hover:bg-green-700 text-xs px-3"
-              onClick={() => completeMutation.mutate()} disabled={completeMutation.isPending}>
-              <CheckCircle className="w-4 h-4 mr-1" /> Terminer
-            </Button>
-          )}
-          {/* Pro: cash payment reminder after completion */}
-          {request?.status === 'completed' && user?.user_type === 'professionnel' && request?.payment_method === 'cash' && request?.payment_status === 'unpaid' && (
-            <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3"
-              onClick={() => {
-                base44.entities.ServiceRequest.update(request.id, { payment_status: 'paid' });
-                toast.success('Paiement cash confirmé !');
-              }}>
-              💵 Cash reçu
-            </Button>
-          )}
-          {/* Client can rate after mission is completed */}
-          {request?.status === 'completed' && user?.user_type === 'particulier' && (
-            <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3"
-              onClick={() => setShowRating(true)}>
+          {request?.status === 'completed' && isCustomer && !request?.review_id && (
+            <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3" onClick={() => setShowRating(true)}>
               <Star className="w-4 h-4 mr-1" /> Noter
             </Button>
+          )}
+          {otherParty.email && (
+            <ReportButton
+              user={user}
+              reportedEmail={otherParty.email}
+              reportedName={otherParty.name}
+              reportedType={otherParty.type}
+              requestId={requestId}
+            />
           )}
         </div>
       </div>
 
-      {/* Mission recap bar */}
+      {/* Mission recap */}
       {request && (
         <div className="px-4 py-2 bg-primary/5 border-b border-border/30">
           <p className="text-xs text-muted-foreground">
-            Mission · <span className="font-medium text-foreground">{request.category_name}</span>
+            <span className="font-medium text-foreground">{request.category_name}</span>
             {request.customer_address && <> · <span>{request.customer_address}</span></>}
-            {request.scheduled_date && request.scheduled_time && (
-              <> · <CalendarDays className="w-3 h-3 inline mb-0.5" /> <span className="font-medium text-foreground">{format(parseISO(request.scheduled_date), 'dd MMM', { locale: fr })} à {request.scheduled_time}</span></>
+            {request.scheduled_date && (
+              <> · <CalendarDays className="w-3 h-3 inline mb-0.5" /> <span className="font-medium text-foreground">{format(parseISO(request.scheduled_date), 'dd MMM', { locale: fr })}{request.scheduled_time ? ` à ${request.scheduled_time}` : ''}</span></>
             )}
           </p>
         </div>
       )}
 
-      {/* Cash reminder banner for pro */}
-      {request?.status === 'completed' && user?.user_type === 'professionnel' && request?.payment_method === 'cash' && request?.payment_status === 'unpaid' && (
-        <div className="px-4 py-2 bg-yellow-50 border-b border-yellow-200">
-          <p className="text-xs text-yellow-800 font-medium">💵 Rappel : Mission terminée — n'oubliez pas de collecter <strong>{request.total_price?.toFixed(2)} €</strong> en espèces auprès du client.</p>
+      {/* Mission progress bar */}
+      {request && (
+        <div className="px-4 py-2 border-b border-border/30 bg-background">
+          <MissionProgress status={request.status} compact />
         </div>
+      )}
+
+      {/* Contract panel */}
+      {showContract && requestId && user && (
+        <ContractPanel requestId={requestId} userEmail={user.email} userType={user.user_type} />
       )}
 
       {/* Messages */}
@@ -264,33 +222,16 @@ export default function Chat() {
             <p className="text-xs text-muted-foreground mt-1">Échangez des détails sur la mission</p>
           </div>
         )}
-
         <AnimatePresence initial={false}>
           {messages.map((msg) => {
             const isMe = msg.sender_email === user?.email;
             return (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-[75%] space-y-1`}>
-                  {!isMe && (
-                    <p className="text-xs text-muted-foreground px-1">{msg.sender_name}</p>
-                  )}
-                  <div className={`rounded-2xl overflow-hidden ${
-                    isMe
-                      ? 'bg-primary text-primary-foreground rounded-br-sm'
-                      : 'bg-card border border-border/50 rounded-bl-sm'
-                  }`}>
+              <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div className="max-w-[75%] space-y-1">
+                  {!isMe && <p className="text-xs text-muted-foreground px-1">{msg.sender_name}</p>}
+                  <div className={`rounded-2xl overflow-hidden ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-card border border-border/50 rounded-bl-sm'}`}>
                     {msg.message_type === 'photo' && msg.photo_url ? (
-                      <img
-                        src={msg.photo_url}
-                        alt="Photo"
-                        className="w-full max-w-[220px] object-cover rounded-2xl cursor-pointer"
-                        onClick={() => window.open(msg.photo_url, '_blank')}
-                      />
+                      <img src={msg.photo_url} alt="Photo" className="w-full max-w-[220px] object-cover rounded-2xl cursor-pointer" onClick={() => window.open(msg.photo_url, '_blank')} />
                     ) : (
                       <p className="px-4 py-2.5 text-sm leading-relaxed">{msg.content}</p>
                     )}
@@ -308,38 +249,16 @@ export default function Chat() {
       </div>
 
       {/* Input bar */}
-      <div className="px-4 py-3 bg-card border-t border-border/50"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+      <div className="px-4 py-3 bg-card border-t border-border/50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={sending}
-            aria-label="Joindre une photo"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0"
-          >
+          <button onClick={() => fileInputRef.current?.click()} disabled={sending} aria-label="Photo"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0">
             <Image className="w-5 h-5 text-muted-foreground" />
           </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handlePhotoUpload}
-          />
-          <Input
-            value={text}
-            onChange={e => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Votre message..."
-            className="flex-1 h-11 rounded-2xl bg-muted border-0 focus-visible:ring-1"
-            disabled={sending}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!text.trim() || sending}
-            aria-label="Envoyer le message"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-40"
-          >
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+          <Input value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} placeholder="Votre message..." className="flex-1 h-11 rounded-2xl bg-muted border-0 focus-visible:ring-1" disabled={sending} />
+          <button onClick={handleSend} disabled={!text.trim() || sending} aria-label="Envoyer"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-40">
             <Send className="w-5 h-5 text-white" />
           </button>
         </div>

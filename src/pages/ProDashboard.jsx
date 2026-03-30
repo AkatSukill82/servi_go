@@ -3,27 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Check, Clock, MapPin, Star, Bell, MessageCircle, ShieldCheck, ChevronRight, TrendingUp, BarChart2 } from 'lucide-react';
+import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, BarChart2, CreditCard, AlertCircle, Play, StopCircle } from 'lucide-react';
 import ProStats from '@/components/pro/ProStats';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
+import MissionProgress from '@/components/mission/MissionProgress';
 
 export default function ProDashboard() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { requestPermission, notify } = useNotifications();
   const prevCountRef = useRef(null);
-  const [activeTab, setActiveTab] = useState('missions'); // 'missions' | 'stats'
+  const [activeTab, setActiveTab] = useState('missions');
 
   useEffect(() => { requestPermission(); }, []);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const proCategory = user?.category_name;
+
+  const { data: subscription } = useQuery({
+    queryKey: ['proSubscription', user?.email],
+    queryFn: () => base44.entities.ProSubscription.filter({ professional_email: user.email }, '-created_date', 1).then(r => r[0] || null),
+    enabled: !!user?.email,
   });
 
-  const proCategory = user?.data?.category_name || user?.category_name;
+  const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
 
   const { data: incomingRequests = [] } = useQuery({
     queryKey: ['incomingRequests', proCategory],
@@ -31,15 +36,13 @@ export default function ProDashboard() {
       if (!proCategory) return [];
       return base44.entities.ServiceRequest.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
     },
-    enabled: !!proCategory,
-    staleTime: 10000, // considère les données fraîches 10s
+    enabled: !!proCategory && hasActiveSubscription,
+    staleTime: 10000,
   });
 
-  // Subscription temps réel → remplace le polling toutes les 5s
   useEffect(() => {
     if (!proCategory) return;
     const unsub = base44.entities.ServiceRequest.subscribe((event) => {
-      // Nouvelle demande ou changement de statut → rafraîchit la liste
       if (event.type === 'create' || event.type === 'update' || event.type === 'delete') {
         queryClient.invalidateQueries({ queryKey: ['incomingRequests', proCategory] });
       }
@@ -48,11 +51,11 @@ export default function ProDashboard() {
   }, [proCategory]);
 
   useEffect(() => {
-    if (incomingRequests === undefined) return;
+    if (!incomingRequests?.length) return;
     const count = incomingRequests.length;
     if (prevCountRef.current !== null && count > prevCountRef.current) {
       const newReq = incomingRequests[0];
-      notify('Nouvelle demande', `${newReq?.category_name} • ${newReq?.customer_address || ''}`);
+      notify('Nouvelle demande', `${newReq?.category_name} — ${newReq?.customer_address || ''}`);
     }
     prevCountRef.current = count;
   }, [incomingRequests?.length]);
@@ -66,70 +69,80 @@ export default function ProDashboard() {
     enabled: !!user?.email,
   });
 
-  // Tracking GPS live : partage la position du pro quand il a une mission acceptée
+  // GPS tracking for active missions
   useEffect(() => {
     if (!user?.id) return;
-    const hasActiveJob = myJobs.some(j => j.status === 'accepted');
-    if (!hasActiveJob) return;
-    if (!navigator.geolocation) return;
-
+    const hasActive = myJobs.some(j => ['accepted', 'pro_en_route', 'in_progress'].includes(j.status));
+    if (!hasActive || !navigator.geolocation) return;
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        base44.entities.User.update(user.id, {
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        }).catch(() => {});
-      },
+      (pos) => { base44.entities.User.update(user.id, { latitude: pos.coords.latitude, longitude: pos.coords.longitude }).catch(() => {}); },
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [user?.id, myJobs]);
 
-  const respondMutation = useMutation({
+  const acceptMutation = useMutation({
     mutationFn: async ({ requestId, request }) => {
+      // 1. Update request to contract_pending
       await base44.entities.ServiceRequest.update(requestId, {
-        status: 'accepted',
+        status: 'contract_pending',
         professional_id: user.id,
         professional_name: user.full_name,
         professional_email: user.email,
-        payment_status: request.payment_method === 'cash' ? 'unpaid' : 'paid',
       });
-      await base44.entities.Invoice.create({
+      // 2. Create MissionContract
+      const contractNumber = `CTR-${Date.now()}`;
+      await base44.entities.MissionContract.create({
         request_id: requestId,
-        invoice_number: `INV-${Date.now()}`,
-        category_name: request.category_name,
-        professional_name: user.full_name,
-        base_price: request.base_price,
-        commission: request.commission,
-        total_price: request.total_price,
-        payment_method: request.payment_method,
-        payment_status: request.payment_method === 'cash' ? 'unpaid' : 'paid',
-        customer_name: request.customer_name,
+        contract_number: contractNumber,
         customer_email: request.customer_email,
+        customer_name: request.customer_name,
+        customer_address: request.customer_address,
+        professional_email: user.email,
+        professional_name: user.full_name,
+        professional_phone: user.phone,
+        professional_bce: user.bce_number,
+        category_name: request.category_name,
+        scheduled_date: request.scheduled_date,
+        scheduled_time: request.scheduled_time,
+        agreed_price: request.base_price || 0,
+        status: 'sent_to_customer',
       });
+      // 3. Notify customer
+      await base44.entities.Notification.create({
+        recipient_email: request.customer_email,
+        recipient_type: 'particulier',
+        type: 'contract_to_sign',
+        title: `Mission acceptée par ${user.full_name}`,
+        body: 'Un contrat de mission vous a été envoyé. Signez-le pour démarrer.',
+        request_id: requestId,
+      });
+      // 4. Update subscription missions count
+      if (subscription?.id) {
+        await base44.entities.ProSubscription.update(subscription.id, { missions_received: (subscription.missions_received || 0) + 1 });
+      }
     },
-    // Optimistic update : retire immédiatement la demande de la liste
     onMutate: async ({ requestId }) => {
       await queryClient.cancelQueries({ queryKey: ['incomingRequests', proCategory] });
       const previous = queryClient.getQueryData(['incomingRequests', proCategory]);
-      queryClient.setQueryData(['incomingRequests', proCategory], old =>
-        (old || []).filter(r => r.id !== requestId)
-      );
+      queryClient.setQueryData(['incomingRequests', proCategory], old => (old || []).filter(r => r.id !== requestId));
       return { previous };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
-      toast.success('Mission acceptée !');
+      toast.success('Mission acceptée ! Un contrat a été envoyé au client.');
     },
-    onError: (_, __, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['incomingRequests', proCategory], context.previous);
-      }
-      toast.error('Mission déjà prise par un autre professionnel.');
-      queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
+    onError: (_, __, ctx) => {
+      if (ctx?.previous) queryClient.setQueryData(['incomingRequests', proCategory], ctx.previous);
+      toast.error('Mission déjà prise. Réessayez.');
     },
+  });
+
+  const statusMutation = useMutation({
+    mutationFn: ({ id, status }) => base44.entities.ServiceRequest.update(id, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myJobs'] }),
   });
 
   const { data: myReviews = [] } = useQuery({
@@ -141,238 +154,222 @@ export default function ProDashboard() {
     enabled: !!user?.email,
   });
 
-  const acceptedJobs = myJobs.filter(j => j.status === 'accepted' || j.status === 'completed');
-  const revenue = acceptedJobs.reduce((sum, j) => sum + (j.base_price || 0), 0);
+  const completedJobs = myJobs.filter(j => j.status === 'completed');
+  const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
 
   return (
     <div className="px-5 pt-7 pb-4 space-y-5">
 
       {/* Header */}
-      <div>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {user?.category_name || 'Professionnel'} · {user?.full_name}
-            </p>
-          </div>
-          {user?.verification_status === 'verified' ? (
-            <span className="flex items-center gap-1.5 text-xs font-medium text-foreground bg-muted border border-border rounded-full px-3 py-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" /> Vérifié
-            </span>
-          ) : (
-            <button
-              onClick={() => navigate('/ProProfile')}
-              className="text-xs font-medium text-muted-foreground border border-border rounded-full px-3 py-1.5 hover:border-foreground transition-colors"
-            >
-              Vérifier mon compte →
-            </button>
-          )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard Pro</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{user?.category_name || 'Professionnel'} · {user?.full_name}</p>
         </div>
+        {user?.verification_status === 'verified'
+          ? <span className="flex items-center gap-1.5 text-xs font-semibold text-brand-green bg-green-50 border border-green-200 rounded-full px-3 py-1.5"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
+          : <button onClick={() => navigate('/ProProfile')} className="text-xs font-medium text-muted-foreground border border-border rounded-full px-3 py-1.5">Vérifier →</button>
+        }
       </div>
+
+      {/* Subscription banner */}
+      {subscription ? (
+        <button onClick={() => navigate('/ProSubscription')} className={`w-full rounded-2xl p-4 border flex items-center gap-3 text-left transition-colors ${hasActiveSubscription ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+          <CreditCard className={`w-5 h-5 shrink-0 ${hasActiveSubscription ? 'text-brand-green' : 'text-destructive'}`} />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">{hasActiveSubscription ? 'Abonnement actif' : '⚠️ Abonnement expiré'}</p>
+            <p className="text-xs text-muted-foreground">{hasActiveSubscription ? `10 €/mois · ${subscription.renewal_date ? `Renouvellement le ${subscription.renewal_date}` : ''}` : 'Renouvelez pour continuer à recevoir des missions'}</p>
+          </div>
+          <span className="text-xs font-bold text-primary">→</span>
+        </button>
+      ) : (
+        <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-primary/30 bg-primary/5 flex items-center gap-3 text-left">
+          <CreditCard className="w-5 h-5 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-primary">Activez votre abonnement</p>
+            <p className="text-xs text-muted-foreground">10 €/mois pour recevoir des missions</p>
+          </div>
+          <span className="text-xs font-bold text-primary">S'abonner →</span>
+        </button>
+      )}
+
+      {/* Subscription expired overlay */}
+      {subscription && !hasActiveSubscription && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center space-y-3">
+          <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
+          <h3 className="font-bold text-red-800">Abonnement expiré</h3>
+          <p className="text-sm text-red-700">Votre abonnement a expiré. Renouvelez-le pour accéder aux missions clients.</p>
+          <Button onClick={() => navigate('/ProSubscription')} className="w-full h-12 rounded-xl">
+            <CreditCard className="w-4 h-4 mr-2" /> Renouveler maintenant
+          </Button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2">
-        <button
-          onClick={() => setActiveTab('missions')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-            activeTab === 'missions' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
-          }`}
-        >
-          <Check className="w-3.5 h-3.5" /> Missions
-          {incomingRequests.length > 0 && (
-            <span className="text-xs font-bold bg-white/20 rounded-full px-1.5">{incomingRequests.length}</span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('stats')}
-          className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-            activeTab === 'stats' ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
-          }`}
-        >
-          <BarChart2 className="w-3.5 h-3.5" /> Statistiques
-        </button>
+        {[['missions', 'Missions', incomingRequests.length], ['stats', 'Statistiques', 0]].map(([key, label, count]) => (
+          <button key={key} onClick={() => setActiveTab(key)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${activeTab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'}`}>
+            {label}
+            {count > 0 && <span className="text-xs font-bold bg-white/20 rounded-full px-1.5">{count}</span>}
+          </button>
+        ))}
       </div>
 
-      {/* Stats tab */}
-      {activeTab === 'stats' && (
-        <ProStats userEmail={user?.email} />
-      )}
+      {activeTab === 'stats' && <ProStats userEmail={user?.email} />}
 
-      {activeTab === 'missions' && <>
+      {activeTab === 'missions' && hasActiveSubscription && <>
 
-      {/* Stats summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-1.5 mb-2">
-            <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
-            <p className="text-xs text-muted-foreground font-medium">Missions</p>
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex items-center gap-1.5 mb-2"><TrendingUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Missions terminées</p></div>
+            <p className="text-3xl font-bold tracking-tight">{completedJobs.length}</p>
           </div>
-          <p className="text-3xl font-bold tracking-tight">{acceptedJobs.length}</p>
+          <div className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex items-center gap-1.5 mb-2"><Star className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Note moyenne</p></div>
+            <p className="text-3xl font-bold tracking-tight">{user?.rating ? user.rating.toFixed(1) : '—'}</p>
+            {user?.reviews_count > 0 && <p className="text-xs text-muted-foreground mt-1">{user.reviews_count} avis</p>}
+          </div>
         </div>
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Star className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} />
-            <p className="text-xs text-muted-foreground font-medium">Note moy.</p>
-          </div>
-          <p className="text-3xl font-bold tracking-tight">
-            {user?.rating ? user.rating.toFixed(1) : '—'}
-          </p>
-          {user?.reviews_count > 0 && (
-            <p className="text-xs text-muted-foreground mt-1">{user.reviews_count} avis</p>
-          )}
-        </div>
-      </div>
 
-      {/* Incoming requests */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold tracking-tight">Demandes disponibles</h2>
-            {incomingRequests.length > 0 && (
-              <span className="text-xs font-bold bg-foreground text-background rounded-full w-5 h-5 flex items-center justify-center">
-                {incomingRequests.length}
-              </span>
-            )}
+        {/* Incoming requests */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-semibold">Demandes disponibles</h2>
+              {incomingRequests.length > 0 && <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center">{incomingRequests.length}</span>}
+            </div>
+            {incomingRequests.length > 0 && <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" /><span className="text-xs text-muted-foreground">En direct</span></div>}
           </div>
-          {incomingRequests.length > 0 && (
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse" />
-              <span className="text-xs text-muted-foreground">En direct</span>
+
+          {incomingRequests.length === 0 ? (
+            <div className="bg-muted/50 rounded-xl p-5 text-center border border-border">
+              <Clock className="w-6 h-6 text-muted-foreground mx-auto mb-2" strokeWidth={1.5} />
+              <p className="text-sm font-medium">Aucune demande pour l'instant</p>
+              <p className="text-xs text-muted-foreground mt-1">Les nouvelles missions de {proCategory || 'votre métier'} apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {incomingRequests.map((req, i) => (
+                <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border border-border">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">{req.category_name}</p>
+                        {req.is_urgent && <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5">⚡ SOS</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
+                        <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
+                      </p>
+                      {req.scheduled_date && <p className="text-xs text-muted-foreground mt-0.5">📅 {req.scheduled_date}{req.scheduled_time ? ` à ${req.scheduled_time}` : ''}</p>}
+                    </div>
+                    <div className="text-right shrink-0 ml-3">
+                      <p className="font-bold text-base text-primary">{(req.base_price || 0).toFixed(0)} €</p>
+                      <p className="text-[10px] text-muted-foreground">estimé</p>
+                    </div>
+                  </div>
+                  {req.answers?.length > 0 && (
+                    <div className="bg-muted rounded-lg p-3 mb-3 space-y-1">
+                      {req.answers.slice(0, 2).map((a, idx) => (
+                        <p key={idx} className="text-xs"><span className="text-muted-foreground">{a.question} : </span><span className="font-medium">{a.answer}</span></p>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => acceptMutation.mutate({ requestId: req.id, request: req })} disabled={acceptMutation.isPending}
+                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50">
+                    <Check className="w-4 h-4" strokeWidth={2.2} /> Accepter cette mission
+                  </button>
+                </motion.div>
+              ))}
             </div>
           )}
         </div>
 
-        {incomingRequests.length === 0 ? (
-          <div className="bg-muted/50 rounded-xl p-5 text-center border border-border">
-            <Clock className="w-6 h-6 text-muted-foreground mx-auto mb-2" strokeWidth={1.5} />
-            <p className="text-sm font-medium">Aucune demande pour l'instant</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Les nouvelles missions de {proCategory || 'votre métier'} apparaîtront ici
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {incomingRequests.map((req, i) => (
-              <motion.div
-                key={req.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="bg-card rounded-xl p-4 border border-border"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-sm">{req.category_name}</p>
-                      {req.is_urgent && (
-                        <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5 flex items-center gap-0.5">
-                          ⚡ SOS
-                        </span>
-                      )}
+        {/* Active missions */}
+        {activeJobs.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold mb-3">Missions en cours</h2>
+            <div className="space-y-3">
+              {activeJobs.map(job => (
+                <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-semibold text-sm">{job.customer_name}</p>
+                      <p className="text-xs text-muted-foreground">{job.category_name}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
-                      <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
-                    </p>
-                    {req.scheduled_date && (
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {req.scheduled_date}{req.scheduled_time ? ` · ${req.scheduled_time}` : ''}
-                      </p>
+                    <span className="text-sm font-bold text-primary">{(job.base_price || 0).toFixed(0)} €</span>
+                  </div>
+                  <MissionProgress status={job.status} compact />
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl h-9 text-xs" onClick={() => navigate(`/Chat?requestId=${job.id}`)}>
+                      <ChevronRight className="w-3.5 h-3.5 mr-1" /> Chat & Contrat
+                    </Button>
+                    {job.status === 'contract_signed' && (
+                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'pro_en_route' })}>
+                        <Play className="w-3.5 h-3.5 mr-1" /> En route
+                      </Button>
+                    )}
+                    {job.status === 'pro_en_route' && (
+                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => statusMutation.mutate({ id: job.id, status: 'in_progress' })}>
+                        <Play className="w-3.5 h-3.5 mr-1" /> Démarrer
+                      </Button>
+                    )}
+                    {job.status === 'in_progress' && (
+                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'completed' })}>
+                        <StopCircle className="w-3.5 h-3.5 mr-1" /> Terminer
+                      </Button>
                     )}
                   </div>
-                  <div className="text-right shrink-0 ml-3">
-                    <p className="font-bold text-base">{(req.base_price || 80).toFixed(0)} €</p>
-                    <p className="text-[10px] text-muted-foreground">votre part</p>
-                  </div>
                 </div>
-
-                {req.answers?.length > 0 && (
-                  <div className="bg-muted rounded-lg p-3 mb-3 space-y-1">
-                    {req.answers.map((a, idx) => (
-                      <p key={idx} className="text-xs">
-                        <span className="text-muted-foreground">{a.question} : </span>
-                        <span className="font-medium">{a.answer}</span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  onClick={() => respondMutation.mutate({ requestId: req.id, request: req })}
-                  disabled={respondMutation.isPending}
-                  className="w-full flex items-center justify-center gap-2 bg-foreground text-background rounded-lg py-2.5 text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50"
-                >
-                  <Check className="w-4 h-4" strokeWidth={2.2} />
-                  Accepter cette mission
-                </button>
-              </motion.div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Recent jobs */}
-      {acceptedJobs.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold tracking-tight mb-3">Missions récentes</h2>
-          <div className="space-y-2">
-            {acceptedJobs.slice(0, 5).map(job => (
-              <button
-                key={job.id}
-                onClick={() => navigate(`/Chat?requestId=${job.id}`)}
-                className="w-full bg-card rounded-xl px-4 py-3 border border-border flex items-center gap-3 active:scale-[0.98] transition-transform"
-              >
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">
-                  {job.customer_name?.[0] || '?'}
-                </div>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-medium truncate">{job.customer_name}</p>
-                  <p className="text-xs text-muted-foreground">{job.category_name}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-semibold">{job.base_price?.toFixed(0)} €</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {job.status === 'completed' ? 'Terminé' : 'En cours'}
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.8} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Reviews */}
-      {myReviews.length > 0 && (
-        <div>
-          <h2 className="text-sm font-semibold tracking-tight mb-3">Avis clients</h2>
-          <div className="space-y-2">
-            {myReviews.map(review => (
-              <div key={review.id} className="bg-card rounded-xl p-3.5 border border-border">
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
-                  <div className="flex gap-0.5">
-                    {[1,2,3,4,5].map(s => (
-                      <Star
-                        key={s}
-                        style={{ width: 12, height: 12 }}
-                        className={s <= review.rating ? 'text-foreground fill-foreground' : 'text-border fill-border'}
-                      />
-                    ))}
+        {/* Recent completed */}
+        {completedJobs.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold mb-3">Missions récentes</h2>
+            <div className="space-y-2">
+              {completedJobs.slice(0, 5).map(job => (
+                <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)} className="w-full bg-card rounded-xl px-4 py-3 border border-border flex items-center gap-3 active:scale-[0.98] transition-transform">
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">{job.customer_name?.[0] || '?'}</div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-medium truncate">{job.customer_name}</p>
+                    <p className="text-xs text-muted-foreground">{job.category_name}</p>
                   </div>
-                </div>
-                {review.comment && (
-                  <p className="text-xs text-muted-foreground leading-relaxed">{review.comment}</p>
-                )}
-              </div>
-            ))}
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-semibold">{(job.base_price || 0).toFixed(0)} €</p>
+                    <p className="text-[10px] text-brand-green font-medium">Terminé</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.8} />
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      </> /* end missions tab */}
-
+        {/* Reviews */}
+        {myReviews.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold mb-3">Avis clients</h2>
+            <div className="space-y-2">
+              {myReviews.map(review => (
+                <div key={review.id} className="bg-card rounded-xl p-3.5 border border-border">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(s => <Star key={s} style={{ width: 12, height: 12 }} className={s <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-border fill-border'} />)}
+                    </div>
+                  </div>
+                  {review.comment && <p className="text-xs text-muted-foreground leading-relaxed">{review.comment}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </>}
     </div>
   );
 }

@@ -20,6 +20,7 @@ const Invoices    = lazy(() => import('@/pages/Invoices'));
 const ProProfile  = lazy(() => import('@/pages/ProProfile'));
 const ServiceRequest = lazy(() => import('@/pages/ServiceRequest'));
 const MissionHistory = lazy(() => import('@/pages/MissionHistory'));
+const ProSubscription = lazy(() => import('@/pages/ProSubscription'));
 
 const CUSTOMER_TABS = ['/Home', '/Map', '/Emergency', '/Favorites', '/Profile'];
 const PRO_TABS = ['/ProDashboard', '/Map', '/Emergency', '/Invoices', '/ProProfile'];
@@ -38,6 +39,7 @@ const TAB_COMPONENTS = {
 const STACK_COMPONENTS = {
   '/ServiceRequest': ServiceRequest,
   '/MissionHistory': MissionHistory,
+  '/ProSubscription': ProSubscription,
 };
 
 const TabSpinner = () => (
