@@ -25,7 +25,7 @@ export default function Home() {
 
   const { data: activeRequest } = useQuery({
     queryKey: ['activeRequest', user?.email],
-    queryFn: () => base44.entities.ServiceRequest.filter(
+    queryFn: () => base44.entities.ServiceRequestV2.filter(
       { customer_email: user.email, status: 'accepted' }, '-created_date', 1
     ).then((r) => r[0] || null),
     enabled: !!user?.email && user?.user_type === 'particulier',
@@ -34,7 +34,7 @@ export default function Home() {
 
   const { data: unfinishedRequest } = useQuery({
     queryKey: ['unfinishedRequest', user?.email],
-    queryFn: () => base44.entities.ServiceRequest.filter(
+    queryFn: () => base44.entities.ServiceRequestV2.filter(
       { customer_email: user.email }, '-created_date', 10
     ).then(r => r.find(req => ['searching', 'pending_pro'].includes(req.status)) || null),
     enabled: !!user?.email && user?.user_type === 'particulier',
@@ -45,7 +45,7 @@ export default function Home() {
   const [confirmCancel, setConfirmCancel] = useState(false);
 
   const cancelMutation = useMutation({
-    mutationFn: (id) => base44.entities.ServiceRequest.update(id, { status: 'cancelled' }),
+    mutationFn: (id) => base44.entities.ServiceRequestV2.update(id, { status: 'cancelled', cancelled_by: 'customer' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unfinishedRequest'] });
       setConfirmCancel(false);
@@ -74,7 +74,8 @@ export default function Home() {
   const filtered = categories;
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
-  const firstName = user?.full_name?.split(' ')[0];
+  const rawFirst = user?.first_name || user?.full_name?.split(' ')?.[0] || '';
+  const firstName = rawFirst && !/^\S*\d\S*$/.test(rawFirst) ? rawFirst : user?.email?.split('@')?.[0] || '';
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

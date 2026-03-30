@@ -53,7 +53,7 @@ export default function MissionHistory() {
       const filter = isPro
         ? { professional_email: user.email }
         : { customer_email: user.email };
-      return base44.entities.ServiceRequest.filter(filter, '-created_date', 100);
+      return base44.entities.ServiceRequestV2.filter(filter, '-created_date', 100);
     },
     enabled: !!user?.email,
   });

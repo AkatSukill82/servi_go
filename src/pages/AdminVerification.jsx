@@ -80,7 +80,7 @@ function ProCard({ pro, onApprove, onReject, isPending }) {
 function ProStatsTable({ pros }) {
   const { data: allRequests = [] } = useQuery({
     queryKey: ['allRequestsAdmin'],
-    queryFn: () => base44.entities.ServiceRequest.list('-created_date', 500),
+    queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500),
   });
   const stats = useMemo(() => pros.map(pro => {
     const jobs = allRequests.filter(r => r.professional_email === pro.email && ['accepted', 'completed', 'in_progress'].includes(r.status));

@@ -84,7 +84,7 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
       });
 
       if (newStatus === 'signed_both') {
-        await base44.entities.ServiceRequest.update(requestId, { status: 'contract_signed' });
+        await base44.entities.ServiceRequestV2.update(requestId, { status: 'contract_signed' });
         await base44.entities.Notification.create({
           recipient_email: isCust ? contract.professional_email : contract.customer_email,
           recipient_type: isCust ? 'professionnel' : 'particulier',

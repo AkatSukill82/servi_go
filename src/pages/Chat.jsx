@@ -34,7 +34,7 @@ export default function Chat() {
 
   const { data: request } = useQuery({
     queryKey: ['request', requestId],
-    queryFn: () => base44.entities.ServiceRequest.filter({ id: requestId }).then(r => r[0]),
+    queryFn: () => base44.entities.ServiceRequestV2.filter({ id: requestId }).then(r => r[0]),
     enabled: !!requestId,
     refetchInterval: 5000,
   });
@@ -66,7 +66,7 @@ export default function Chat() {
       await base44.entities.Review.create({
         request_id: requestId,
         professional_email: request.professional_email,
-        customer_name: user.full_name,
+        customer_name: user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : (user.full_name || user.email?.split('@')[0] || 'Client'),
         customer_email: user.email,
         rating, comment,
         category_name: request.category_name,
@@ -118,8 +118,11 @@ export default function Chat() {
 
   const isCustomer = user?.user_type === 'particulier';
   const isPro = user?.user_type === 'professionnel';
+  const customerDisplayName = request?.customer_first_name
+    ? `${request.customer_first_name} ${request.customer_last_name?.[0] || ''}.`
+    : (request?.customer_name || 'Client');
   const otherParty = isPro
-    ? { name: request?.customer_name, label: 'Client', email: request?.customer_email, type: 'particulier' }
+    ? { name: customerDisplayName, label: 'Client', email: request?.customer_email, type: 'particulier' }
     : { name: request?.professional_name, label: 'Professionnel', email: request?.professional_email, type: 'professionnel' };
 
   const STATUS_LABELS = {
@@ -152,9 +155,13 @@ export default function Chat() {
       <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-card border-b border-border/50 shadow-sm"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
         <BackButton fallback="/Home" />
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
-          {otherParty.name?.[0] || '?'}
-        </div>
+        {request?.professional_photo_url && !isPro ? (
+          <img src={request.professional_photo_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 border border-border" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
+            {(otherParty.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="font-semibold truncate">{otherParty.name || '...'}</p>
           <div className="flex items-center gap-2">

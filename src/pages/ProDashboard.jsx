@@ -34,7 +34,7 @@ export default function ProDashboard() {
     queryKey: ['incomingRequests', proCategory],
     queryFn: async () => {
       if (!proCategory) return [];
-      return base44.entities.ServiceRequest.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
+      return base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
     },
     enabled: !!proCategory && hasActiveSubscription,
     staleTime: 10000,
@@ -42,7 +42,7 @@ export default function ProDashboard() {
 
   useEffect(() => {
     if (!proCategory) return;
-    const unsub = base44.entities.ServiceRequest.subscribe((event) => {
+    const unsub = base44.entities.ServiceRequestV2.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update' || event.type === 'delete') {
         queryClient.invalidateQueries({ queryKey: ['incomingRequests', proCategory] });
       }
@@ -64,7 +64,7 @@ export default function ProDashboard() {
     queryKey: ['myJobs', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.ServiceRequest.filter({ professional_email: user.email }, '-created_date', 20);
+      return base44.entities.ServiceRequestV2.filter({ professional_email: user.email }, '-created_date', 20);
     },
     enabled: !!user?.email,
   });
@@ -85,7 +85,7 @@ export default function ProDashboard() {
   const acceptMutation = useMutation({
     mutationFn: async ({ requestId, request }) => {
       // 1. Update request to contract_pending
-      await base44.entities.ServiceRequest.update(requestId, {
+      await base44.entities.ServiceRequestV2.update(requestId, {
         status: 'contract_pending',
         professional_id: user.id,
         professional_name: user.full_name,
@@ -141,8 +141,11 @@ export default function ProDashboard() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.ServiceRequest.update(id, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['myJobs'] }),
+    mutationFn: ({ id, status }) => base44.entities.ServiceRequestV2.update(id, { status }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myJobs'] });
+      toast.success('Statut mis \u00e0 jour !');
+    },
   });
 
   const { data: myReviews = [] } = useQuery({
@@ -164,7 +167,7 @@ export default function ProDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard Pro</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{user?.category_name || 'Professionnel'} · {user?.full_name}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{user?.category_name || 'Professionnel'} · {user?.first_name || user?.full_name?.split(' ')?.[0] || user?.email?.split('@')?.[0] || ''}</p>
         </div>
         {user?.verification_status === 'verified'
           ? <span className="flex items-center gap-1.5 text-xs font-semibold text-brand-green bg-green-50 border border-green-200 rounded-full px-3 py-1.5"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
@@ -295,7 +298,7 @@ export default function ProDashboard() {
                 <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-semibold text-sm">{job.customer_name}</p>
+                      <p className="font-semibold text-sm">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
                       <p className="text-xs text-muted-foreground">{job.category_name}</p>
                     </div>
                     <span className="text-sm font-bold text-primary">{(job.base_price || 0).toFixed(0)} €</span>
@@ -334,9 +337,9 @@ export default function ProDashboard() {
             <div className="space-y-2">
               {completedJobs.slice(0, 5).map(job => (
                 <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)} className="w-full bg-card rounded-xl px-4 py-3 border border-border flex items-center gap-3 active:scale-[0.98] transition-transform">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">{job.customer_name?.[0] || '?'}</div>
+                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">{(job.customer_first_name || job.customer_name || 'C')[0]}</div>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium truncate">{job.customer_name}</p>
+                    <p className="text-sm font-medium truncate">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
                     <p className="text-xs text-muted-foreground">{job.category_name}</p>
                   </div>
                   <div className="text-right shrink-0">

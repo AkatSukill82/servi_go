@@ -18,7 +18,7 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
 
   const { data: missions = [] } = useQuery({
     queryKey: ['proMissions', pro?.email],
-    queryFn: () => base44.entities.ServiceRequest.filter(
+    queryFn: () => base44.entities.ServiceRequestV2.filter(
       { professional_email: pro.email, status: 'completed' }, '-created_date', 100
     ),
     enabled: !!pro?.email,
@@ -66,9 +66,9 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
             <div className="flex items-start gap-4">
               <div className="relative shrink-0">
                 <div className="w-20 h-20 rounded-2xl bg-muted overflow-hidden flex items-center justify-center font-bold text-2xl text-primary">
-                  {pro.photo_url
-                    ? <img src={pro.photo_url} alt={pro.full_name} className="w-full h-full object-cover" />
-                    : pro.full_name?.[0]}
+                {pro.photo_url
+                  ? <img src={pro.photo_url} alt={pro.full_name} className="w-full h-full object-cover" />
+                  : <span className="text-2xl font-bold">{(pro.first_name || pro.full_name || 'P')[0].toUpperCase()}</span>}
                 </div>
                 {isVerified && (
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full border-2 border-background flex items-center justify-center">
@@ -80,7 +80,7 @@ export default function ProProfileSheet({ pro, onClose, onSelect }) {
               <div className="flex-1 min-w-0 pt-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="font-bold text-lg leading-tight truncate">{pro.full_name}</p>
+                    <p className="font-bold text-lg leading-tight truncate">{pro.first_name ? `${pro.first_name} ${pro.last_name || ''}`.trim() : (pro.full_name || 'Professionnel')}</p>
                     <p className="text-sm text-muted-foreground">{pro.category_name}</p>
                     {isVerified && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5 mt-1">

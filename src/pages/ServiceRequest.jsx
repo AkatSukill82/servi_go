@@ -49,7 +49,7 @@ export default function ServiceRequest() {
   const totalQuestions = questions.length;
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.ServiceRequest.create(data),
+    mutationFn: (data) => base44.entities.ServiceRequestV2.create(data),
   });
 
   // Bloc eID

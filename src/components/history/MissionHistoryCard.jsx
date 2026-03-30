@@ -166,7 +166,7 @@ export default function MissionHistoryCard({ request, invoice, isPro }) {
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground text-sm truncate">{request.category_name}</p>
           {isPro ? (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{request.customer_name || request.customer_email}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{request.customer_first_name ? `${request.customer_first_name} ${request.customer_last_name?.[0] || ''}.` : (request.customer_name || request.customer_email)}</p>
           ) : (
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{request.professional_name || 'Professionnel non assigné'}</p>
           )}
