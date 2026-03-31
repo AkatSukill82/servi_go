@@ -370,6 +370,7 @@ export default function ProProfile() {
                     setDark(next);
                     base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
+                  aria-label="Mode nuit"
                   className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-[#534AB7]' : 'bg-muted'}`}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />

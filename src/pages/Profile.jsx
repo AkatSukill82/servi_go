@@ -321,7 +321,6 @@ export default function Profile() {
                   onClick={() => {
                     const next = !dark;
                     setDark(next);
-                    // Save to DB asynchronously in background
                     base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
                   className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-[#534AB7]' : 'bg-muted'}`}

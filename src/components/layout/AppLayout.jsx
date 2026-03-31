@@ -54,9 +54,18 @@ export default function AppLayout() {
   const location = useLocation();
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
-  useDarkMode(); // Applique le thème sauvegardé
+  const [, setDark] = useDarkMode();
   const [currentUser, setCurrentUser] = React.useState(null);
   const userEmail = currentUser?.email;
+
+  // Sync préférence BDD → DOM après chargement de l'utilisateur
+  useEffect(() => {
+    if (currentUser?.dark_mode !== undefined) {
+      const localDark = localStorage.getItem('sg_dark') === '1';
+      const dbDark = currentUser.dark_mode === true;
+      if (dbDark !== localDark) setDark(dbDark);
+    }
+  }, [currentUser?.dark_mode]);
   const queryClient = useQueryClient();
 
   const { data: proSubscription } = useQuery({

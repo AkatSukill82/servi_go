@@ -1,39 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
-function applyDark(isDark) {
-  const root = document.documentElement;
+const STORAGE_KEY = 'sg_dark';
+
+function applyTheme(isDark) {
   if (isDark) {
-    root.classList.add('dark');
-    root.setAttribute('data-theme', 'dark');
-    localStorage.setItem('servigo_dark_mode', 'true');
+    document.documentElement.classList.add('dark');
+    localStorage.setItem(STORAGE_KEY, '1');
   } else {
-    root.classList.remove('dark');
-    root.setAttribute('data-theme', 'light');
-    localStorage.setItem('servigo_dark_mode', 'false');
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem(STORAGE_KEY, '0');
   }
 }
 
+/**
+ * Hook unifié de gestion du thème.
+ * - Initialise depuis le DOM (déjà appliqué par le script head) → pas de flash, pas de désync.
+ * - Chaque appel partage le même état DOM (classList) — pas de contexte global nécessaire.
+ * - Compatible avec l'ancien useDarkMode [dark, setDark].
+ */
 export function useDarkMode() {
-  const [dark, setDark] = useState(() => {
-    const saved = localStorage.getItem('servigo_dark_mode');
-    if (saved !== null) return saved === 'true';
-    // fallback to old key
-    const oldSaved = localStorage.getItem('servigo-theme');
-    if (oldSaved) return oldSaved === 'dark';
-    return false;
-  });
+  // Initialiser depuis le DOM, pas depuis localStorage, pour être en sync avec le script head
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.classList.contains('dark')
+  );
 
-  useEffect(() => {
-    applyDark(dark);
-  }, [dark]);
+  const setDark = useCallback((value) => {
+    setIsDark(value);
+    applyTheme(value);
+  }, []);
 
-  return [dark, setDark];
+  return [isDark, setDark];
 }
 
-// Call this once at app startup to apply saved preference before React mounts
-export function initDarkMode() {
-  const saved = localStorage.getItem('servigo_dark_mode');
-  const oldSaved = localStorage.getItem('servigo-theme');
-  const isDark = saved === 'true' || (saved === null && oldSaved === 'dark');
-  applyDark(isDark);
-}
+export default useDarkMode;
