@@ -9,16 +9,6 @@ function SignaturePad({ onSign, onClose }) {
   const canvasRef = useRef(null);
   const drawing = useRef(false);
   const last = useRef(null);
-  const dpr = window.devicePixelRatio || 1;
-
-  const initCanvas = (canvas) => {
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-  };
 
   const pos = (e, canvas) => {
     const r = canvas.getBoundingClientRect();
@@ -26,7 +16,7 @@ function SignaturePad({ onSign, onClose }) {
     return { x: s.clientX - r.left, y: s.clientY - r.top };
   };
 
-  const start = (e) => { e.preventDefault(); drawing.current = true; last.current = pos(e, canvasRef.current); };
+  const start = (e) => { drawing.current = true; last.current = pos(e, canvasRef.current); };
   const draw = (e) => {
     if (!drawing.current) return;
     e.preventDefault();
@@ -38,14 +28,10 @@ function SignaturePad({ onSign, onClose }) {
     last.current = p;
   };
   const end = () => { drawing.current = false; };
-  const clear = () => {
-    const canvas = canvasRef.current;
-    canvas.getContext('2d').clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-  };
+  const clear = () => canvasRef.current.getContext('2d').clearRect(0, 0, 360, 150);
   const confirm = () => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const data = canvas.getContext('2d').getImageData(0, 0, 360, 150).data;
     if (!data.some((v, i) => i % 4 === 3 && v > 0)) { toast.error('Veuillez signer avant de confirmer'); return; }
     onSign(canvas.toDataURL('image/png'));
   };
@@ -58,14 +44,10 @@ function SignaturePad({ onSign, onClose }) {
           <button onClick={onClose}><X className="w-5 h-5" /></button>
         </div>
         <p className="text-xs text-muted-foreground">Signez dans le cadre avec votre doigt ou la souris</p>
-        <div className="border-2 border-dashed border-border rounded-xl overflow-hidden" style={{ height: 160 }}>
-          <canvas
-            ref={el => { canvasRef.current = el; if (el) initCanvas(el); }}
-            className="w-full h-full"
-            style={{ touchAction: 'none' }}
+        <div className="border-2 border-dashed border-border rounded-xl overflow-hidden">
+          <canvas ref={canvasRef} width={360} height={150} className="w-full" style={{ touchAction: 'none' }}
             onMouseDown={start} onMouseMove={draw} onMouseUp={end} onMouseLeave={end}
-            onTouchStart={start} onTouchMove={draw} onTouchEnd={end}
-          />
+            onTouchStart={start} onTouchMove={draw} onTouchEnd={end} />
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={clear} className="flex-1 rounded-xl h-10 text-sm"><Trash2 className="w-4 h-4 mr-1.5" />Effacer</Button>
@@ -118,7 +100,7 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
             recipient_email: isCust ? contract.customer_email : contract.professional_email,
             recipient_type: isCust ? 'particulier' : 'professionnel',
             type: 'contract_signed',
-            title: 'Contrat signé par les deux parties !',
+            title: 'Contrat signé ✔️',
             body: 'La mission peut maintenant commencer.',
             request_id: requestId,
             action_url: `/Chat?requestId=${requestId}`,
@@ -140,9 +122,6 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
   const otherSigned = !!(userType === 'particulier' ? contract.signature_pro : contract.signature_customer);
   const bothSigned = mySigned && otherSigned;
 
-  const custSigDate = contract.signature_customer_date ? new Date(contract.signature_customer_date).toLocaleDateString('fr-BE') : null;
-  const proSigDate = contract.signature_pro_date ? new Date(contract.signature_pro_date).toLocaleDateString('fr-BE') : null;
-
   return (
     <>
       <div className={`mx-4 my-2 rounded-2xl border p-4 ${bothSigned ? 'bg-green-50 border-green-200' : 'bg-primary/5 border-primary/20'}`}>
@@ -157,41 +136,19 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
           }
         </div>
 
-        {/* Signatures display */}
-        <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="bg-white/70 rounded-xl p-2 border border-border/50">
-            <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              {contract.signature_customer ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
-              Client
-            </p>
-            {contract.signature_customer ? (
-              <>
-                <img src={contract.signature_customer} alt="Signature client" className="w-full h-10 object-contain" />
-                {custSigDate && <p className="text-[9px] text-muted-foreground text-center mt-0.5">{custSigDate}</p>}
-              </>
-            ) : (
-              <p className="text-[10px] text-muted-foreground italic text-center py-2">En attente...</p>
-            )}
+        <div className="flex items-center gap-4 text-xs mb-3">
+          <div className="flex items-center gap-1">
+            {contract.signature_customer ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
+            <span className="text-muted-foreground">Client</span>
           </div>
-          <div className="bg-white/70 rounded-xl p-2 border border-border/50">
-            <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-              {contract.signature_pro ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
-              Pro
-            </p>
-            {contract.signature_pro ? (
-              <>
-                <img src={contract.signature_pro} alt="Signature pro" className="w-full h-10 object-contain" />
-                {proSigDate && <p className="text-[9px] text-muted-foreground text-center mt-0.5">{proSigDate}</p>}
-              </>
-            ) : (
-              <p className="text-[10px] text-muted-foreground italic text-center py-2">En attente...</p>
-            )}
+          <div className="flex items-center gap-1">
+            {contract.signature_pro ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
+            <span className="text-muted-foreground">Pro</span>
           </div>
+          {contract.agreed_price > 0 && (
+            <span className="ml-auto font-bold text-foreground text-sm">{contract.agreed_price} €</span>
+          )}
         </div>
-
-        {contract.agreed_price > 0 && (
-          <p className="text-sm font-bold text-center mb-3">{contract.agreed_price} €</p>
-        )}
 
         {!mySigned && (
           <Button onClick={() => setShowSign(true)} size="sm" className="w-full rounded-xl h-9 text-xs">

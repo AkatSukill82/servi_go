@@ -142,7 +142,21 @@ export default function ProDashboard() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.ServiceRequestV2.update(id, { status }),
+    mutationFn: async ({ id, status, job }) => {
+      await base44.entities.ServiceRequestV2.update(id, { status });
+      if (status === 'completed' && job && !job.review_requested) {
+        await base44.entities.ServiceRequestV2.update(id, { review_requested: true });
+        await base44.entities.Notification.create({
+          recipient_email: job.customer_email,
+          recipient_type: 'particulier',
+          type: 'review_request',
+          title: 'Comment s\'est passée votre mission ?',
+          body: `Évaluez ${user?.full_name || 'votre artisan'} pour sa prestation ${job.category_name}. Votre avis aide d'autres clients.`,
+          request_id: id,
+          action_url: `/Chat?requestId=${id}`,
+        });
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
       toast.success('Statut mis \u00e0 jour !');
@@ -340,17 +354,17 @@ export default function ProDashboard() {
                       <ChevronRight className="w-3.5 h-3.5 mr-1" /> Chat & Contrat
                     </Button>
                     {job.status === 'contract_signed' && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'pro_en_route' })}>
+                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'pro_en_route', job })}>
                         <Play className="w-3.5 h-3.5 mr-1" /> En route
                       </Button>
                     )}
                     {job.status === 'pro_en_route' && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => statusMutation.mutate({ id: job.id, status: 'in_progress' })}>
+                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => statusMutation.mutate({ id: job.id, status: 'in_progress', job })}>
                         <Play className="w-3.5 h-3.5 mr-1" /> Démarrer
                       </Button>
                     )}
                     {job.status === 'in_progress' && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'completed' })}>
+                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'completed', job })}>
                         <StopCircle className="w-3.5 h-3.5 mr-1" /> Terminer
                       </Button>
                     )}

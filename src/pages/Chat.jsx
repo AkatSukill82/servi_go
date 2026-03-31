@@ -64,18 +64,35 @@ export default function Chat() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ rating, comment }) => {
+      const customerName = user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : (user.full_name || user.email?.split('@')[0] || 'Client');
       await base44.entities.Review.create({
         request_id: requestId,
         professional_email: request.professional_email,
-        customer_name: user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : (user.full_name || user.email?.split('@')[0] || 'Client'),
+        customer_name: customerName,
         customer_email: user.email,
         rating, comment,
         category_name: request.category_name,
       });
+      // Update request
+      await base44.entities.ServiceRequestV2.update(requestId, { review_id: requestId });
       const allReviews = await base44.entities.Review.filter({ professional_email: request.professional_email });
       const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+      const rounded = Math.round(avg * 10) / 10;
+      // Update pro User
       const pros = await base44.entities.User.filter({ email: request.professional_email });
-      if (pros[0]) await base44.entities.User.update(pros[0].id, { rating: Math.round(avg * 10) / 10, reviews_count: allReviews.length });
+      if (pros[0]) await base44.entities.User.update(pros[0].id, { rating: rounded, reviews_count: allReviews.length });
+      // Notify pro
+      if (request.professional_email) {
+        await base44.entities.Notification.create({
+          recipient_email: request.professional_email,
+          recipient_type: 'professionnel',
+          type: 'new_review',
+          title: `Nouvel avis de ${customerName}`,
+          body: `${rating}/5 — ${comment || ''}`,
+          request_id: requestId,
+          action_url: `/Chat?requestId=${requestId}`,
+        });
+      }
     },
     onSuccess: () => { setShowRating(false); toast.success('Merci pour votre évaluation !'); },
   });

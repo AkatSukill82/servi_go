@@ -20,6 +20,7 @@ import EidVerification from './pages/EidVerification';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Register from './pages/Register';
+import ProPublicProfile from './pages/ProPublicProfile';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -73,6 +74,7 @@ const AuthenticatedApp = () => {
 
       {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />
+      <Route path="/ProPublicProfile" element={<ProPublicProfile />} />
       <Route path="/TrackingMap" element={<TrackingMap />} />
 
       <Route path="*" element={<PageNotFound />} />

@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity } from 'lucide-react';
+import { formatPrice, formatDateFr } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -10,10 +11,85 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const TABS = [
+  { key: 'overview', label: 'Vue d\'ensemble', icon: Activity },
   { key: 'finance', label: 'Finances', icon: Euro },
   { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
   { key: 'blacklist', label: 'Blacklist', icon: Ban },
 ];
+
+// ─── Overview Tab ─────────────────────────────────────────────────────────────
+function OverviewTab() {
+  const { data: allUsers = [] } = useQuery({ queryKey: ['adminUsers'], queryFn: () => base44.entities.User.list('-created_date', 500) });
+  const { data: allSubs = [] } = useQuery({ queryKey: ['adminSubs'], queryFn: () => base44.entities.ProSubscription.list('-created_date', 200) });
+  const { data: allRequests = [] } = useQuery({ queryKey: ['adminAllRequestsOv'], queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500) });
+  const { data: allDisputes = [] } = useQuery({ queryKey: ['adminDisputesOv'], queryFn: () => base44.entities.Dispute.list('-created_date', 100) });
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const activeSubs = allSubs.filter(s => s.status === 'active' || s.status === 'trial');
+  const ongoingMissions = allRequests.filter(r => !['completed', 'cancelled'].includes(r.status));
+  const completedThisMonth = allRequests.filter(r => r.status === 'completed' && r.updated_date && new Date(r.updated_date) >= monthStart);
+  const monthRevenue = activeSubs.length * 10;
+  const openDisputes = allDisputes.filter(d => ['open', 'in_review'].includes(d.status));
+  const lastUsers = allUsers.slice(0, 5);
+  const lastRequests = allRequests.slice(0, 5);
+
+  const kpis = [
+    { label: 'Utilisateurs inscrits', value: allUsers.length, icon: Users, color: 'text-blue-600' },
+    { label: 'Abonnements actifs', value: activeSubs.length, icon: CheckCircle, color: 'text-green-600' },
+    { label: 'Missions en cours', value: ongoingMissions.length, icon: Activity, color: 'text-orange-600' },
+    { label: 'Terminées ce mois', value: completedThisMonth.length, icon: TrendingUp, color: 'text-purple-600' },
+    { label: 'Revenus abonnements', value: `${monthRevenue} €`, icon: Euro, color: 'text-green-700' },
+    { label: 'Litiges ouverts', value: openDisputes.length, icon: AlertTriangle, color: 'text-red-600' },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {kpis.map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-card rounded-xl p-4 border border-border">
+            <div className="flex items-center gap-1.5 mb-1">
+              <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.8} />
+              <p className="text-xs text-muted-foreground font-medium">{label}</p>
+            </div>
+            <p className="text-2xl font-bold tracking-tight">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border">Dernières inscriptions</p>
+        {lastUsers.map((u, i) => (
+          <div key={u.id} className={`flex items-center gap-3 px-4 py-3 ${i < lastUsers.length - 1 ? 'border-b border-border/50' : ''}`}>
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold shrink-0">{(u.full_name || u.email || '?')[0].toUpperCase()}</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : (u.full_name || u.email)}</p>
+              <p className="text-xs text-muted-foreground">{u.user_type || 'user'} · {formatDateFr(u.created_date)}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
+        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border">Dernières missions</p>
+        {lastRequests.map((r, i) => (
+          <div key={r.id} className={`flex items-center gap-3 px-4 py-3 ${i < lastRequests.length - 1 ? 'border-b border-border/50' : ''}`}>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{r.category_name}</p>
+              <p className="text-xs text-muted-foreground truncate">{r.customer_name || r.customer_email} · {formatDateFr(r.created_date)}</p>
+            </div>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+              r.status === 'completed' ? 'bg-green-100 text-green-700' :
+              r.status === 'cancelled' ? 'bg-gray-100 text-gray-500' :
+              'bg-blue-100 text-blue-700'
+            }`}>{r.status}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const DISPUTE_STATUS = {
   open: { label: 'Ouvert', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
@@ -152,7 +228,26 @@ function DisputesTab() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Dispute.update(id, data),
+    mutationFn: async ({ id, data, dispute }) => {
+      await base44.entities.Dispute.update(id, data);
+      const isResolved = data.status?.startsWith('resolved');
+      if (isResolved && dispute) {
+        const inFavorOf = data.status === 'resolved_customer' ? 'client' : 'professionnel';
+        const msg = `Votre litige a été résolu en faveur du ${inFavorOf}. ${data.admin_note ? 'Note : ' + data.admin_note : ''}`;
+        await Promise.all([
+          dispute.customer_email && base44.entities.Notification.create({
+            recipient_email: dispute.customer_email, recipient_type: 'particulier',
+            type: 'dispute_resolved', title: 'Litige résolu', body: msg,
+            request_id: dispute.request_id, action_url: `/Chat?requestId=${dispute.request_id}`,
+          }),
+          dispute.professional_email && base44.entities.Notification.create({
+            recipient_email: dispute.professional_email, recipient_type: 'professionnel',
+            type: 'dispute_resolved', title: 'Litige résolu', body: msg,
+            request_id: dispute.request_id, action_url: `/Chat?requestId=${dispute.request_id}`,
+          }),
+        ].filter(Boolean));
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminDisputes'] });
       toast.success('Litige mis à jour');
@@ -212,20 +307,20 @@ function DisputesTab() {
                     {/* Status actions */}
                     <div className="flex flex-wrap gap-2">
                       {d.status !== 'in_review' && (
-                        <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'in_review', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                        <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'in_review', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
                           className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">
                           Prendre en charge
                         </button>
                       )}
-                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_customer', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_customer', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
                         className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
                         Résolu → Client
                       </button>
-                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_pro', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_pro', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
                         className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
                         Résolu → Pro
                       </button>
-                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'closed', admin_note: adminNote[d.id] ?? d.admin_note } })}
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'closed', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
                         className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">
                         Fermer
                       </button>
@@ -351,7 +446,7 @@ function BlacklistTab() {
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
-  const [tab, setTab] = useState('finance');
+  const [tab, setTab] = useState('overview');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -366,7 +461,7 @@ export default function AdminDashboard() {
 
   if (currentUser && currentUser.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center text-center px-6">
+      <div className="fixed inset-0 flex items-center justify-center text-center px-6">
         <div><p className="text-2xl mb-2">🔒</p><p className="font-semibold">Accès réservé aux administrateurs</p></div>
       </div>
     );
@@ -398,6 +493,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {tab === 'overview' && <OverviewTab />}
       {tab === 'finance' && <FinanceTab />}
       {tab === 'disputes' && <DisputesTab />}
       {tab === 'blacklist' && <BlacklistTab />}

@@ -588,6 +588,7 @@ export default function Register() {
   const [step, setStep] = useState(0);
   const [userType, setUserType] = useState(null);
   const [personalData, setPersonalData] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],

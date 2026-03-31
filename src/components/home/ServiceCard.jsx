@@ -11,7 +11,8 @@ const iconMap = {
   Zap, Thermometer, Lock, TreePine, Hammer
 };
 
-export default function ServiceCard({ category, index, hasAvailablePros = true }) {
+export default function ServiceCard({ category, index, unavailable = false }) {
+  const hasAvailablePros = !unavailable;
   const IconComponent = iconMap[category.icon] || Wrench;
 
   if (!hasAvailablePros) {
