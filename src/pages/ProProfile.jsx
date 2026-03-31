@@ -134,11 +134,17 @@ export default function ProProfile() {
   }, [user]);
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.auth.updateMe(data),
+    mutationFn: (data) => {
+      const fullName = [data.first_name, data.last_name].filter(Boolean).join(' ');
+      return base44.auth.updateMe({ ...data, ...(fullName ? { full_name: fullName } : {}) });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      toast.success('Profil mis à jour !');
+      toast.success('Profil mis à jour ✓');
       setIsEditing(false);
+    },
+    onError: (err) => {
+      toast.error('Erreur lors de la sauvegarde : ' + (err?.message || 'réessayez'));
     },
   });
 
@@ -351,13 +357,20 @@ export default function ProProfile() {
             </button>
 
             <div className="flex items-center justify-between bg-white rounded-2xl border border-border/50 shadow-sm px-5 py-4">
-                <div>
-                  <p className="text-sm font-medium">Mode nuit</p>
-                  <p className="text-xs text-muted-foreground">{dark ? 'Thème sombre activé' : 'Thème clair activé'}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
+                  <div>
+                    <p className="text-sm font-medium">Mode nuit</p>
+                    <p className="text-xs text-muted-foreground">Thème sombre pour les yeux</p>
+                  </div>
                 </div>
                 <button
-                  onClick={() => setDark(d => !d)}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-primary' : 'bg-muted'}`}
+                  onClick={() => {
+                    const next = !dark;
+                    setDark(next);
+                    base44.auth.updateMe({ dark_mode: next }).catch(() => {});
+                  }}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-[#534AB7]' : 'bg-muted'}`}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />
                 </button>

@@ -7,33 +7,45 @@
 
 @layer base {
   :root {
-    --font-inter: 'Inter', sans-serif;
-    /* Lumineux, propre, pro */
-    --background: 0 0% 99%;
-    --foreground: 0 0% 7%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
-    --primary: 245 43% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 15%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 48%;
-    --accent: 0 0% 94%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 92%;
-    --input: 0 0% 96%;
-    --ring: 245 43% 50%;
-    --brand-green: 161 69% 37%;
-    --chart-1: 0 0% 15%;
-    --chart-2: 0 0% 35%;
-    --chart-3: 0 0% 55%;
-    --chart-4: 0 0% 70%;
-    --chart-5: 0 0% 85%;
+    /* ServiGo Design Tokens */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F7F6F3;
+    --bg-tertiary: #F0EEE9;
+    --bg-card: #FFFFFF;
+    --bg-input: #FFFFFF;
+    --bg-hover: #F3F4F6;
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --text-tertiary: #9CA3AF;
+    --text-on-accent: #FFFFFF;
+    --border-light: #E5E7EB;
+    --border-medium: #D1D5DB;
+    --accent-purple: #534AB7;
+    --accent-purple-light: #EEEDFE;
+    --accent-purple-hover: #4338A0;
+    --accent-green: #1D9E75;
+    --accent-green-light: #E1F5EE;
+    --accent-green-hover: #178F69;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+    --nav-bg: #FFFFFF;
+    --nav-border: #E5E7EB;
+    --modal-bg: #FFFFFF;
+    --modal-overlay: rgba(0,0,0,0.5);
+    --chat-bubble-own: #534AB7;
+    --chat-bubble-own-text: #FFFFFF;
+    --chat-bubble-other: #F3F4F6;
+    --chat-bubble-other-text: #111827;
+    --progress-bg: #E5E7EB;
+    --progress-fill: #534AB7;
+    --star-color: #F59E0B;
+    --divider: #F3F4F6;
+    --badge-verified-bg: #E1F5EE;
+    --badge-verified-text: #085041;
+    --badge-warning-bg: #FAEEDA;
+    --badge-warning-text: #854F0B;
+    --badge-danger-bg: #FCEBEB;
+    --badge-danger-text: #A32D2D;
     --radius: 0.75rem;
     --sidebar-background: 0 0% 99%;
     --sidebar-foreground: 0 0% 15%;
@@ -45,7 +57,46 @@
     --sidebar-ring: 0 0% 9%;
   }
 
-  .dark {
+  [data-theme="dark"], .dark {
+    /* ServiGo Dark Design Tokens */
+    --bg-primary: #0F0F0F;
+    --bg-secondary: #1A1A1A;
+    --bg-tertiary: #141414;
+    --bg-card: #1E1E1E;
+    --bg-input: #252525;
+    --bg-hover: #2A2A2A;
+    --text-primary: #F9FAFB;
+    --text-secondary: #9CA3AF;
+    --text-tertiary: #6B7280;
+    --text-on-accent: #FFFFFF;
+    --border-light: #2E2E2E;
+    --border-medium: #3A3A3A;
+    --accent-purple: #7B74E8;
+    --accent-purple-light: #1E1B3A;
+    --accent-purple-hover: #8F89EE;
+    --accent-green: #2DB887;
+    --accent-green-light: #0D2620;
+    --accent-green-hover: #38C894;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+    --nav-bg: #1A1A1A;
+    --nav-border: #2E2E2E;
+    --modal-bg: #1E1E1E;
+    --modal-overlay: rgba(0,0,0,0.75);
+    --chat-bubble-own: #4E46A8;
+    --chat-bubble-own-text: #F9FAFB;
+    --chat-bubble-other: #252525;
+    --chat-bubble-other-text: #F9FAFB;
+    --progress-bg: #2E2E2E;
+    --progress-fill: #7B74E8;
+    --star-color: #FCD34D;
+    --divider: #2E2E2E;
+    --badge-verified-bg: #0D2620;
+    --badge-verified-text: #6EE7B7;
+    --badge-warning-bg: #271E0A;
+    --badge-warning-text: #FCD34D;
+    --badge-danger-bg: #2D0A0A;
+    --badge-danger-text: #FCA5A5;
     --background: 0 0% 5%;
     --foreground: 0 0% 96%;
     --card: 0 0% 9%;
@@ -65,12 +116,6 @@
     --border: 0 0% 17%;
     --input: 0 0% 13%;
     --ring: 245 50% 65%;
-    --brand-green: 161 69% 37%;
-    --chart-1: 0 0% 82%;
-    --chart-2: 0 0% 62%;
-    --chart-3: 0 0% 42%;
-    --chart-4: 0 0% 28%;
-    --chart-5: 0 0% 18%;
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 82%;
     --sidebar-primary: 0 0% 96%;
@@ -95,6 +140,7 @@
     /* Hauteur plein écran cross-platform (fallback pour vieux Android) */
     height: 100%;
     width: 100%;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   #root {

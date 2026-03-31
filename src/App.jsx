@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import { useEffect } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -79,6 +80,20 @@ const AuthenticatedApp = () => {
 };
 
 function App() {
+  useEffect(() => {
+    // Apply saved dark mode preference immediately on mount
+    const saved = localStorage.getItem('servigo_dark_mode');
+    const oldSaved = localStorage.getItem('servigo-theme');
+    const isDark = saved === 'true' || (saved === null && oldSaved === 'dark');
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>

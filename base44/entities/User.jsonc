@@ -17,6 +17,19 @@
         "professionnel"
       ]
     },
+    "first_name": {
+      "type": "string",
+      "description": "Pr\u00e9nom de l'utilisateur"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Nom de famille de l'utilisateur"
+    },
+    "dark_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pr\u00e9f\u00e9rence th\u00e8me sombre"
+    },
     "phone": {
       "type": "string"
     },
@@ -101,6 +114,21 @@
     "national_number": {
       "type": "string",
       "description": "Num\u00e9ro national belge extrait de l'eID"
+    },
+    "rating": {
+      "type": "number"
+    },
+    "reviews_count": {
+      "type": "number"
+    },
+    "favorite_professionals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
-  }
+  },
+  "required": [
+    "user_type"
+  ]
 }
