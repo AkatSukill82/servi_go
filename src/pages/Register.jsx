@@ -246,7 +246,7 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
               <Label className="text-xs text-[#6B7280] mb-1 block">Catégorie de service *</Label>
               <Select value={form.category_name} onValueChange={val => setForm(f => ({ ...f, category_name: val }))}>
                 <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Choisissez votre métier" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom" className="bg-white border border-[#E5E7EB] shadow-lg z-[9999]">
                   {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
