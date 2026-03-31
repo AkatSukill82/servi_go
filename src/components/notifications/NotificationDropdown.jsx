@@ -24,13 +24,15 @@ const NOTIF_ICONS = {
 };
 
 function getNotifUrl(n) {
+  // Priority: stored action_url first
+  if (n.action_url) return n.action_url;
+  // Then compute from type + request_id
   if (n.request_id) {
     const chatTypes = ['mission_accepted', 'contract_to_sign', 'contract_signed', 'pro_en_route', 'mission_started', 'mission_completed', 'message_received', 'new_review', 'dispute_opened'];
     if (chatTypes.includes(n.type)) return `/Chat?requestId=${n.request_id}`;
     if (n.type === 'new_mission') return `/ProDashboard`;
   }
-  if (n.type === 'subscription_renewal' || n.type === 'subscription_expired' || n.type === 'subscription_activated') return '/ProSubscription';
-  if (n.action_url) return n.action_url;
+  if (['subscription_renewal', 'subscription_expired', 'subscription_activated', 'payment_received', 'payment_failed'].includes(n.type)) return '/ProSubscription';
   return null;
 }
 

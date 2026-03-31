@@ -117,6 +117,7 @@ export default function ProDashboard() {
         title: `Mission acceptée par ${user.full_name}`,
         body: 'Un contrat de mission vous a été envoyé. Signez-le pour démarrer.',
         request_id: requestId,
+        action_url: `/Chat?requestId=${requestId}`,
       });
       // 4. Update subscription missions count
       if (subscription?.id) {

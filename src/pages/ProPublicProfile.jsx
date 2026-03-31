@@ -1,0 +1,186 @@
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { Star, ShieldCheck, MapPin, Euro, Clock, ArrowLeft, Briefcase, MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import BackButton from '@/components/ui/BackButton';
+
+function StarRating({ rating, size = 'md' }) {
+  const sz = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
+  return (
+    <div className="flex gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <Star key={i} className={`${sz} ${i <= Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-border fill-border'}`} />
+      ))}
+    </div>
+  );
+}
+
+export default function ProPublicProfile() {
+  const navigate = useNavigate();
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get('userId');
+
+  const { data: pro } = useQuery({
+    queryKey: ['proPublic', userId],
+    queryFn: () => base44.entities.User.filter({ id: userId }).then(r => r[0] || null),
+    enabled: !!userId,
+  });
+
+  const { data: reviews = [] } = useQuery({
+    queryKey: ['proReviews', pro?.email],
+    queryFn: () => base44.entities.Review.filter({ professional_email: pro.email }, '-created_date', 10),
+    enabled: !!pro?.email,
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['serviceCategories'],
+    queryFn: () => base44.entities.ServiceCategory.list(),
+  });
+
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
+
+  const displayName = pro
+    ? (pro.first_name || pro.last_name
+        ? `${pro.first_name || ''} ${pro.last_name || ''}`.trim()
+        : pro.full_name || pro.email?.split('@')[0] || 'Professionnel')
+    : '...';
+
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const handleRequest = () => {
+    const cat = categories.find(c => c.name === pro?.category_name);
+    if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${userId}`);
+    else navigate('/ServiceRequest');
+  };
+
+  if (!pro) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+
+  const isVerified = pro.verification_status === 'verified';
+
+  return (
+    <div className="min-h-screen bg-background pb-24">
+      {/* Header */}
+      <div className="bg-gradient-to-br from-primary to-primary/80 text-white px-5 pt-14 pb-8 relative">
+        <div className="absolute top-4 left-4">
+          <BackButton fallback="/Home" />
+        </div>
+        <div className="flex items-start gap-4">
+          <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/30 shrink-0 bg-primary-foreground/20 flex items-center justify-center">
+            {pro.photo_url
+              ? <img src={pro.photo_url} alt={displayName} className="w-full h-full object-cover" />
+              : <span className="text-2xl font-bold text-white">{initials}</span>
+            }
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold">{displayName}</h1>
+              {isVerified && (
+                <span className="flex items-center gap-1 text-[10px] font-bold bg-white/20 text-white rounded-full px-2 py-0.5">
+                  <ShieldCheck className="w-3 h-3" /> Vérifié
+                </span>
+              )}
+            </div>
+            <p className="text-sm text-white/80 mt-0.5">{pro.category_name || 'Artisan ServiGo'}</p>
+            {avgRating && (
+              <div className="flex items-center gap-2 mt-2">
+                <StarRating rating={Number(avgRating)} />
+                <span className="text-sm font-bold">{avgRating}</span>
+                <span className="text-xs text-white/70">({reviews.length} avis)</span>
+              </div>
+            )}
+            {pro.address && (
+              <p className="flex items-center gap-1 text-xs text-white/70 mt-1">
+                <MapPin className="w-3 h-3 shrink-0" />
+                {pro.address.split(',').slice(0, 2).join(',')}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 space-y-4 mt-4">
+        {/* Tarifs */}
+        {(pro.base_price || pro.hourly_rate) && (
+          <div className="bg-card rounded-2xl border border-border p-4 flex items-center gap-4">
+            {pro.base_price && (
+              <div className="flex-1 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Prix de base</p>
+                <p className="text-lg font-bold">{Number(pro.base_price).toFixed(2).replace('.', ',')} €</p>
+              </div>
+            )}
+            {pro.base_price && pro.hourly_rate && <div className="w-px h-10 bg-border" />}
+            {pro.hourly_rate && (
+              <div className="flex-1 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Taux horaire</p>
+                <p className="text-lg font-bold">{Number(pro.hourly_rate).toFixed(2).replace('.', ',')} €/h</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Description */}
+        {pro.pro_description && (
+          <div className="bg-card rounded-2xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Briefcase className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-sm">À propos</h3>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">{pro.pro_description}</p>
+          </div>
+        )}
+
+        {/* Avis */}
+        {reviews.length > 0 && (
+          <div className="bg-card rounded-2xl border border-border p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                <h3 className="font-semibold text-sm">Avis clients</h3>
+              </div>
+              <span className="text-xs text-muted-foreground">{reviews.length} avis</span>
+            </div>
+            <div className="space-y-3">
+              {reviews.map(review => (
+                <div key={review.id} className="border-b border-border/50 last:border-0 pb-3 last:pb-0">
+                  <div className="flex items-start justify-between mb-1">
+                    <div>
+                      <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
+                      <p className="text-[10px] text-muted-foreground">{review.created_date ? format(new Date(review.created_date), 'd MMMM yyyy', { locale: fr }) : ''}</p>
+                    </div>
+                    <StarRating rating={review.rating} size="sm" />
+                  </div>
+                  {review.comment && <p className="text-xs text-muted-foreground leading-relaxed">{review.comment}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {reviews.length === 0 && (
+          <div className="bg-muted/40 rounded-2xl border border-border p-5 text-center">
+            <MessageCircle className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Pas encore d'avis pour ce professionnel</p>
+          </div>
+        )}
+      </div>
+
+      {/* CTA fixe */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-5 py-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}>
+        <Button onClick={handleRequest} className="w-full h-12 rounded-xl text-base font-semibold">
+          Demander {displayName.split(' ')[0]} →
+        </Button>
+      </div>
+    </div>
+  );
+}
