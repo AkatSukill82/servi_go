@@ -185,7 +185,7 @@ export default function Landing() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <button
-              onClick={() => navigate('/Register', { state: { preselectedType: 'particulier' } })}
+              onClick={() => base44.auth.redirectToLogin()}
               className="flex items-center justify-center gap-2 bg-white text-[#1A365D] font-bold px-8 py-4 rounded-2xl hover:bg-[#EBF8FF] transition-all duration-200 shadow-lg text-base group"
             >
               <Home className="w-5 h-5" />
@@ -193,7 +193,7 @@ export default function Landing() {
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button
-              onClick={() => navigate('/Register', { state: { preselectedType: 'professionnel' } })}
+              onClick={() => base44.auth.redirectToLogin()}
               className="flex items-center justify-center gap-2 bg-transparent border-2 border-white text-white font-bold px-8 py-4 rounded-2xl hover:bg-white/10 transition-all duration-200 text-base group"
             >
               <Wrench className="w-5 h-5" />
@@ -270,7 +270,7 @@ export default function Landing() {
           )}
           <div className="text-center mt-8">
             <button
-              onClick={() => navigate('/Register', { state: { preselectedType: 'particulier' } })}
+              onClick={() => base44.auth.redirectToLogin()}
               className="inline-flex items-center gap-2 bg-[#1A365D] text-white font-bold px-8 py-3.5 rounded-2xl hover:bg-[#2D4A7A] transition-colors shadow-md"
             >
               Faire une demande <ArrowRight className="w-4 h-4" />
@@ -370,16 +370,16 @@ export default function Landing() {
           <p className="text-white/80 mb-8 text-lg">Rejoignez des milliers de clients satisfaits et trouvez votre artisan dès aujourd'hui.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => navigate('/Register', { state: { preselectedType: 'particulier' } })}
+              onClick={() => base44.auth.redirectToLogin()}
               className="bg-white text-[#1A365D] font-bold px-8 py-4 rounded-2xl hover:bg-[#EBF8FF] transition-colors shadow-lg text-base"
             >
-              Je cherche un artisan
+              Se connecter
             </button>
             <button
-              onClick={() => navigate('/Register', { state: { preselectedType: 'professionnel' } })}
+              onClick={() => navigate('/Register')}
               className="border-2 border-white text-white font-bold px-8 py-4 rounded-2xl hover:bg-white/10 transition-colors text-base"
             >
-              Je suis artisan
+              Créer un compte
             </button>
           </div>
         </div>
@@ -401,7 +401,7 @@ export default function Landing() {
             <div>
               <p className="font-bold mb-3 text-sm uppercase tracking-wide text-white/50">Services</p>
               <div className="space-y-2 text-sm text-white/70">
-                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/Register')}>Trouver un artisan</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => base44.auth.redirectToLogin()}>Trouver un artisan</p>
                 <p className="hover:text-white cursor-pointer" onClick={() => navigate('/Register', { state: { preselectedType: 'professionnel' } })}>Devenir artisan</p>
                 <p className="hover:text-white cursor-pointer">Comment ça marche</p>
               </div>
@@ -423,7 +423,7 @@ export default function Landing() {
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/40">
             <p>© 2026 ServiGo. Tous droits réservés.</p>
-            <button onClick={() => navigate('/Login')} className="text-white/60 hover:text-white transition-colors font-medium">
+            <button onClick={() => base44.auth.redirectToLogin()} className="text-white/60 hover:text-white transition-colors font-medium">
               Se connecter / Se connecter →
             </button>
           </div>
