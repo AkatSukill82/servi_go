@@ -27,7 +27,7 @@ export default function ProBottomNav() {
   const navItems = [
     { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
     { path: '/ProAgenda', icon: CalendarDays, label: 'Agenda', badge: 0 },
-    { path: '/MissionHistory', icon: MessageCircle, label: 'Messages', badge: unreadMsgs },
+    { path: '/Invoices', icon: MessageCircle, label: 'Missions', badge: unreadMsgs },
     { path: '/ProProfile', icon: User, label: 'Profil', badge: 0 },
   ];
 
