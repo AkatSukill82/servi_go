@@ -461,6 +461,12 @@ export default function AdminVerification() {
     enabled: currentUser?.role === 'admin',
   });
 
+  const { data: pendingIdentityCount = 0 } = useQuery({
+    queryKey: ['pendingIdentityCount'],
+    queryFn: () => base44.entities.IdentityVerification.filter({ status: 'pending_review' }, '-created_date', 50).then(r => r.length),
+    enabled: currentUser?.role === 'admin',
+  });
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, status, pro }) => {
       await base44.entities.User.update(id, { verification_status: status });
@@ -478,20 +484,14 @@ export default function AdminVerification() {
     },
   });
 
-  if (currentUser && currentUser.role !== 'admin') {
-    return <div className="min-h-screen flex items-center justify-center text-center px-6"><div><p className="text-2xl mb-2">🔒</p><p className="font-semibold">Accès administrateurs uniquement</p></div></div>;
-  }
-
   const filtered = filter === 'all' ? pros
     : filter === 'pending' ? pros.filter(p => p.verification_status === 'pending' || (p.id_card_url && !p.verification_status))
     : pros.filter(p => p.verification_status === filter);
   const pendingCount = pros.filter(p => p.verification_status === 'pending' || (p.id_card_url && !p.verification_status)).length;
 
-  const { data: pendingIdentityCount = 0 } = useQuery({
-    queryKey: ['pendingIdentityCount'],
-    queryFn: () => base44.entities.IdentityVerification.filter({ status: 'pending_review' }, '-created_date', 50).then(r => r.length),
-    enabled: currentUser?.role === 'admin',
-  });
+  if (currentUser && currentUser.role !== 'admin') {
+    return <div className="min-h-screen flex items-center justify-center text-center px-6"><div><p className="text-2xl mb-2">🔒</p><p className="font-semibold">Accès administrateurs uniquement</p></div></div>;
+  }
 
   const tabs = [
     { key: 'identity', label: 'Identités', icon: <ShieldCheck className="w-3.5 h-3.5" />, badge: pendingIdentityCount },

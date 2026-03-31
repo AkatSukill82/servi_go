@@ -141,12 +141,10 @@ export default function ProAgenda() {
     queryKey: ['proAgenda', user?.email],
     queryFn: () => base44.entities.ServiceRequestV2.filter(
       { professional_email: user.email },
-      'scheduled_date',
+      '-created_date',
       200
     ).then(reqs => reqs.filter(r =>
-      ['pending_pro', 'accepted', 'contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'completed', 'cancelled'].includes(r.status) &&
-      r.scheduled_date &&
-      r.scheduled_date >= thirtyDaysAgo
+      ['pending_pro', 'accepted', 'contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'completed', 'cancelled'].includes(r.status)
     )),
     enabled: !!user?.email,
     refetchInterval: 30000,

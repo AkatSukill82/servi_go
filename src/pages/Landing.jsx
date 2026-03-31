@@ -34,6 +34,65 @@ const REVIEWS = [
   { name: 'Sophie L.', rating: 5, comment: 'Réservation simple, communication fluide via le chat. Le contrat numérique est une excellente idée. Très satisfaite !', category: 'Peinture' },
 ];
 
+function StepItem({ step, i }) {
+  const Icon = step.icon;
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 24 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.12 }}
+      className="relative text-center"
+    >
+      {i < STEPS.length - 1 && (
+        <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-[#E2E8F0] to-[#CBD5E0] z-0" />
+      )}
+      <div className="relative z-10 flex flex-col items-center">
+        <div style={{ background: step.color }} className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+          <Icon style={{ color: step.iconColor }} className="w-8 h-8" />
+        </div>
+        <div className="w-6 h-6 rounded-full bg-[#1A365D] text-white text-xs font-black flex items-center justify-center mb-3">
+          {i + 1}
+        </div>
+        <h3 className="font-bold text-[#1A365D] mb-2">{step.title}</h3>
+        <p className="text-sm text-[#718096] leading-relaxed">{step.desc}</p>
+      </div>
+    </motion.div>
+  );
+}
+
+function ReviewItem({ r, i }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay: i * 0.1 }}
+      className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm"
+    >
+      <div className="flex gap-0.5 mb-3">
+        {Array(r.rating).fill(0).map((_, s) => (
+          <Star key={s} className="w-4 h-4 fill-[#F6AD55] text-[#F6AD55]" />
+        ))}
+      </div>
+      <p className="text-[#4A5568] text-sm leading-relaxed mb-4">"{r.comment}"</p>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-[#1A365D] flex items-center justify-center text-white font-bold text-sm">
+          {r.name[0]}
+        </div>
+        <div>
+          <p className="font-bold text-[#1A365D] text-sm">{r.name}</p>
+          <p className="text-xs text-[#718096]">{r.category}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function StatCard({ value, label, delay }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true });
@@ -288,40 +347,12 @@ export default function Landing() {
             <p className="text-[#718096] mt-3">4 étapes suffisent pour que votre mission soit réalisée</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {STEPS.map((step, i) => {
-              const Icon = step.icon;
-              const ref = useRef(null);
-              const inView = useInView(ref, { once: true });
-              return (
-                <motion.div
-                  key={i}
-                  ref={ref}
-                  initial={{ opacity: 0, y: 24 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: i * 0.12 }}
-                  className="relative text-center"
-                >
-                  {i < STEPS.length - 1 && (
-                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-[#E2E8F0] to-[#CBD5E0] z-0" />
-                  )}
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div style={{ background: step.color }} className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-                      <Icon style={{ color: step.iconColor }} className="w-8 h-8" />
-                    </div>
-                    <div className="w-6 h-6 rounded-full bg-[#1A365D] text-white text-xs font-black flex items-center justify-center mb-3">
-                      {i + 1}
-                    </div>
-                    <h3 className="font-bold text-[#1A365D] mb-2">{step.title}</h3>
-                    <p className="text-sm text-[#718096] leading-relaxed">{step.desc}</p>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {STEPS.map((step, i) => <StepItem key={i} step={step} i={i} />)}
           </div>
         </div>
       </section>
 
-      {/* ─── REVIEWS ─── */}
+      {/* ─── REVIEWS ─── */
       <section id="reviews" className="py-16 bg-[#F7FAFC] border-t border-[#E2E8F0]">
         <div className="max-w-5xl mx-auto px-5">
           <div className="text-center mb-10">
@@ -329,36 +360,7 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-black text-[#1A365D] mt-2">Ils nous font confiance</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {REVIEWS.map((r, i) => {
-              const ref = useRef(null);
-              const inView = useInView(ref, { once: true });
-              return (
-                <motion.div
-                  key={i}
-                  ref={ref}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-white rounded-2xl p-6 border border-[#E2E8F0] shadow-sm"
-                >
-                  <div className="flex gap-0.5 mb-3">
-                    {Array(r.rating).fill(0).map((_, s) => (
-                      <Star key={s} className="w-4 h-4 fill-[#F6AD55] text-[#F6AD55]" />
-                    ))}
-                  </div>
-                  <p className="text-[#4A5568] text-sm leading-relaxed mb-4">"{r.comment}"</p>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#1A365D] flex items-center justify-center text-white font-bold text-sm">
-                      {r.name[0]}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#1A365D] text-sm">{r.name}</p>
-                      <p className="text-xs text-[#718096]">{r.category}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+            {REVIEWS.map((r, i) => <ReviewItem key={i} r={r} i={i} />)}
           </div>
         </div>
       </section>
