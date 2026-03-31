@@ -173,13 +173,18 @@ function StepTypeChoice({ onSelect }) {
         ))}
       </div>
 
+      {!selected && (
+        <p className="text-center text-xs text-red-500 mb-2">Veuillez sélectionner un type de compte</p>
+      )}
       <button
-        onClick={() => selected && onSelect(selected)}
-        disabled={!selected}
+        onClick={() => {
+          if (!selected) return;
+          onSelect(selected);
+        }}
         className={`w-full h-12 rounded-xl text-base font-semibold transition-colors ${
           selected
-            ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer'
-            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+            ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white'
+            : 'bg-[#E5E7EB] text-[#9CA3AF]'
         }`}
       >
         Continuer <ChevronRight className="inline w-5 h-5 ml-1" />
@@ -189,7 +194,7 @@ function StepTypeChoice({ onSelect }) {
 }
 
 // ─── STEP 1: Informations personnelles ────────────────────────────────────────
-function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
+function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = false }) {
   const [form, setForm] = useState({
     first_name: initialData.first_name || '',
     last_name: initialData.last_name || '',
@@ -382,9 +387,10 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
         )}
         <button
           onClick={handleSubmit}
-          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer"
+          disabled={isSaving}
+          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer disabled:opacity-60"
         >
-          Continuer <ChevronRight className="inline w-5 h-5 ml-1" />
+          {isSaving ? <><Loader2 className="inline w-4 h-4 mr-2 animate-spin" />Enregistrement...</> : <>Continuer <ChevronRight className="inline w-5 h-5 ml-1" /></>}
         </button>
       </div>
     </div>
@@ -607,23 +613,30 @@ export default function Register() {
   };
 
   const handlePersonalNext = async (data) => {
+    setSaving(true);
     setPersonalData(data);
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(' ');
-    await saveMutation.mutateAsync({
-      user_type: userType,
-      first_name: data.first_name,
-      last_name: data.last_name,
-      full_name: fullName,
-      birth_date: data.birth_date,
-      address: data.address,
-      phone: data.phone,
-      ...(userType === 'professionnel' ? {
-        category_name: data.category_name,
-        bce_number: data.bce_number,
-        pro_description: data.pro_description,
-      } : {}),
-    });
-    setStep(2);
+    try {
+      await saveMutation.mutateAsync({
+        user_type: userType,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        full_name: fullName,
+        birth_date: data.birth_date,
+        address: data.address,
+        phone: data.phone,
+        ...(userType === 'professionnel' ? {
+          category_name: data.category_name,
+          bce_number: data.bce_number,
+          pro_description: data.pro_description,
+        } : {}),
+      });
+      setStep(2);
+    } catch (err) {
+      toast.error('Erreur lors de la sauvegarde. Vérifiez votre connexion.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -643,6 +656,7 @@ export default function Register() {
               initialData={{ ...personalData, ...user }}
               onNext={handlePersonalNext}
               onBack={() => setStep(0)}
+              isSaving={saving}
             />
           </motion.div>
         )}
