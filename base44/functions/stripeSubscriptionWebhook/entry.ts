@@ -22,13 +22,19 @@ Deno.serve(async (req) => {
     const proEmail = session.metadata?.professional_email;
     if (!proEmail) return Response.json({ received: true });
 
+    const plan = session.metadata?.plan || 'monthly';
+    const isAnnual = plan === 'annual';
+    const planPrice = isAnnual ? 100 : 10;
     const subs = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: proEmail }, '-created_date', 1);
     const startDate = new Date().toISOString().split('T')[0];
-    const renewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const msOffset = isAnnual ? 365 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
+    const renewalDate = new Date(Date.now() + msOffset).toISOString().split('T')[0];
 
     if (subs.length > 0) {
       await base44.asServiceRole.entities.ProSubscription.update(subs[0].id, {
         status: 'active',
+        plan,
+        price: planPrice,
         started_date: startDate,
         renewal_date: renewalDate,
         stripe_subscription_id: session.subscription || session.id,
@@ -39,8 +45,8 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.ProSubscription.create({
         professional_email: proEmail,
         professional_name: session.metadata?.professional_name || '',
-        plan: 'monthly',
-        price: 10,
+        plan,
+        price: planPrice,
         status: 'active',
         started_date: startDate,
         renewal_date: renewalDate,

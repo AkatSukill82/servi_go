@@ -90,6 +90,17 @@ export default function Home() {
     staleTime: 5 * 60 * 1000
   });
 
+  const { data: allPros = [] } = useQuery({
+    queryKey: ['allAvailablePros'],
+    queryFn: () => base44.entities.User.filter({ user_type: 'professionnel', available: true }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const prosByCategory = allPros.reduce((acc, pro) => {
+    if (pro.category_name) acc[pro.category_name] = (acc[pro.category_name] || 0) + 1;
+    return acc;
+  }, {});
+
   const filtered = categories;
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
@@ -235,7 +246,12 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {filtered.map((category, index) => (
-              <ServiceCard key={category.id} category={category} index={index} />
+              <ServiceCard
+                key={category.id}
+                category={category}
+                index={index}
+                unavailable={!prosByCategory[category.name]}
+              />
             ))}
           </div>
         )}

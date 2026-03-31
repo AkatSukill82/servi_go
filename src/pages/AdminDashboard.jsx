@@ -29,7 +29,7 @@ function FinanceTab() {
 
   const { data: requests = [] } = useQuery({
     queryKey: ['adminAllRequests'],
-    queryFn: () => base44.entities.ServiceRequest.list('-created_date', 500),
+    queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500),
   });
 
   const stats = useMemo(() => {

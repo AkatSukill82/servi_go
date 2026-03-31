@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 
@@ -59,6 +59,14 @@ export default function AppLayout() {
   useAppNotifications(currentUser);
   const userEmail = currentUser?.email;
   const queryClient = useQueryClient();
+
+  const { data: proSubscription } = useQuery({
+    queryKey: ['proSubscription', userEmail],
+    queryFn: () => base44.entities.ProSubscription.filter({ professional_email: userEmail }, '-created_date', 1).then(r => r[0] || null),
+    enabled: !!userEmail && userType === 'professionnel',
+    staleTime: 60000,
+  });
+  const proSubExpired = userType === 'professionnel' && proSubscription && !['active', 'trial'].includes(proSubscription?.status);
 
   // Garde en mémoire les onglets déjà visités (pour ne monter qu'au premier accès)
   const visitedTabs = useRef(new Set());
@@ -124,6 +132,16 @@ export default function AppLayout() {
       >
         {userEmail && <NotificationDropdown userEmail={userEmail} />}
       </div>
+
+      {/* Expired subscription banner (pro only) */}
+      {proSubExpired && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-red-600 text-white px-4 py-2 flex items-center justify-between gap-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+          <p className="text-xs font-semibold flex-1">⚠️ Abonnement expiré — vous ne recevez plus de missions</p>
+          <button onClick={() => navigate('/ProSubscription')} className="text-xs font-bold bg-white text-red-600 px-3 py-1 rounded-full shrink-0">
+            Réactiver
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-hidden relative">
 

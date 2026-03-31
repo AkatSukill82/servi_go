@@ -184,11 +184,11 @@ export default function ProDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard Pro</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--accent-blue)' }}>Dashboard Pro</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{user?.category_name || 'Professionnel'} · {(() => { if (user?.first_name) return user.first_name; const h = (user?.full_name||'').includes('@') ? user.full_name.split('@')[0] : (user?.full_name||''); const s = h.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0]||''; return s.length>=2 ? s[0].toUpperCase()+s.slice(1).toLowerCase() : (user?.email||'').split('@')[0]; })()}</p>
         </div>
         {user?.verification_status === 'verified'
-          ? <span className="flex items-center gap-1.5 text-xs font-semibold text-brand-green bg-green-50 border border-green-200 rounded-full px-3 py-1.5"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
+          ? <span className="flex items-center gap-1.5 text-xs font-semibold text-[#38A169] bg-green-50 border border-green-200 rounded-full px-3 py-1.5"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
           : <button onClick={() => navigate('/ProProfile')} className="text-xs font-medium text-muted-foreground border border-border rounded-full px-3 py-1.5">Vérifier →</button>
         }
       </div>
