@@ -458,6 +458,32 @@ export default function AdminDashboard() {
     if (currentUser?.role !== 'admin') return;
     (async () => {
       try {
+        // Fix ciblé : mission jardinier Thomas Verhaegen bloquée
+        const STUCK_MISSION_ID = '69ca434ee96d5155ac7c6612';
+        const GUILLAUME_ID = '69c3c465524bb57e83e1fed0';
+        try {
+          const missions = await base44.entities.ServiceRequestV2.filter({ id: STUCK_MISSION_ID });
+          const stuck = missions[0];
+          if (stuck && stuck.status === 'searching') {
+            await base44.entities.ServiceRequestV2.update(STUCK_MISSION_ID, {
+              status: 'pending_pro',
+              professional_id: GUILLAUME_ID,
+              professional_name: 'Guillaume Maes',
+              professional_email: 'guillaume.maes@pro.be',
+              tried_professionals: [...(stuck.tried_professionals || []), 'guillaume.maes@pro.be'],
+            });
+            await base44.entities.Notification.create({
+              recipient_email: 'guillaume.maes@pro.be',
+              recipient_type: 'professionnel',
+              type: 'new_mission',
+              title: `Nouvelle mission : ${stuck.category_name}`,
+              body: `Une mission vous a été assignée. Client : ${stuck.customer_name || stuck.customer_email}.`,
+              request_id: STUCK_MISSION_ID,
+              action_url: `/Chat?requestId=${STUCK_MISSION_ID}`,
+            });
+          }
+        } catch (e) { console.warn('Fix mission spécifique:', e); }
+
         const stuckRequests = await base44.entities.ServiceRequestV2.filter({ status: 'searching' }, '-created_date', 100);
         if (stuckRequests.length === 0) return;
         const availablePros = await base44.entities.User.filter({ user_type: 'professionnel', available: true, verification_status: 'verified' }, '-created_date', 200);
