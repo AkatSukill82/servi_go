@@ -485,7 +485,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F3]" style={{ minHeight: '100dvh' }}>
+    <div className="bg-[#F7F6F3] overflow-y-auto" style={{ height: '100dvh' }}>
       <ProgressBar step={step} />
 
       <AnimatePresence mode="wait">
