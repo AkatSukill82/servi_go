@@ -4,11 +4,10 @@ import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 
-import NotificationDropdown from '@/components/notifications/NotificationDropdown';
+
 import BottomNav from './BottomNav';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
-import { useAppNotifications } from '@/hooks/useAppNotifications';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home'));
@@ -57,7 +56,6 @@ export default function AppLayout() {
   const [loading, setLoading] = useState(true);
   useDarkMode(); // Applique le thème sauvegardé
   const [currentUser, setCurrentUser] = React.useState(null);
-  useAppNotifications(currentUser);
   const userEmail = currentUser?.email;
   const queryClient = useQueryClient();
 
@@ -126,13 +124,6 @@ export default function AppLayout() {
         flexDirection: 'column',
       }}
     >
-      {/* Top right controls */}
-      <div
-        className="fixed right-4 z-50 flex items-center gap-2"
-        style={{ top: 'calc(env(safe-area-inset-top) + 12px)' }}
-      >
-        {userEmail && <NotificationDropdown userEmail={userEmail} />}
-      </div>
 
       {/* Expired subscription banner (pro only) */}
       {proSubExpired && (

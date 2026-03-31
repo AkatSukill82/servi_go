@@ -1,34 +1,57 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { LayoutDashboard, CalendarDays, MessageCircle, User } from 'lucide-react';
-import { useI18n } from '@/hooks/useI18n';
+
+const MISSION_TYPES = ['new_mission','mission_accepted','mission_refused','contract_to_sign','contract_signed','pro_en_route','mission_started','mission_completed','dispute_opened','dispute_resolved'];
+const MESSAGE_TYPES = ['message_received'];
+
+function NavBadge({ count, color = 'bg-red-500' }) {
+  if (!count) return null;
+  return (
+    <span className={`absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] ${color} rounded-full flex items-center justify-center text-[10px] font-semibold text-white px-0.5 leading-none`}>
+      {count > 9 ? '9+' : count}
+    </span>
+  );
+}
 
 export default function ProBottomNav() {
-  const { t } = useI18n();
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const { data: unreadMsgs = 0 } = useQuery({
-    queryKey: ['proUnreadMessages'],
-    queryFn: async () => {
-      const user = await base44.auth.me();
-      const requests = await base44.entities.ServiceRequestV2.filter({ professional_email: user.email }, '-created_date', 20);
-      const activeIds = requests.filter(r => !['cancelled'].includes(r.status)).map(r => r.id);
-      if (!activeIds.length) return 0;
-      const msgs = await base44.entities.Message.filter({}, '-created_date', 50);
-      return msgs.filter(m => activeIds.includes(m.request_id) && m.sender_email !== user.email).length;
-    },
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me(), staleTime: 60000 });
+
+  const { data: notifs = [] } = useQuery({
+    queryKey: ['proUnreadNotifs', user?.email],
+    queryFn: () => base44.entities.Notification.filter({ recipient_email: user.email, is_read: false }, '-created_date', 100),
+    enabled: !!user?.email,
     refetchInterval: 30000,
-    staleTime: 30000,
+    staleTime: 10000,
   });
 
+  const missionBadge = notifs.filter(n => MISSION_TYPES.includes(n.type)).length;
+  const messageBadge = notifs.filter(n => MESSAGE_TYPES.includes(n.type)).length;
+  const profileIncomplete = user && (!user.photo_url || !user.phone || user.eid_status !== 'verified');
+
+  useEffect(() => {
+    if (!user?.email || !notifs.length) return;
+    const toMark = notifs.filter(n => {
+      if (['/ProDashboard'].includes(location.pathname)) return MISSION_TYPES.includes(n.type);
+      if (['/Invoices'].includes(location.pathname)) return MESSAGE_TYPES.includes(n.type);
+      return false;
+    });
+    if (!toMark.length) return;
+    Promise.all(toMark.map(n => base44.entities.Notification.update(n.id, { is_read: true })))
+      .then(() => queryClient.invalidateQueries({ queryKey: ['proUnreadNotifs', user.email] }));
+  }, [location.pathname, user?.email]);
+
   const navItems = [
-    { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
+    { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard', badge: missionBadge },
     { path: '/ProAgenda', icon: CalendarDays, label: 'Agenda', badge: 0 },
-    { path: '/Invoices', icon: MessageCircle, label: 'Missions', badge: unreadMsgs },
-    { path: '/ProProfile', icon: User, label: 'Profil', badge: 0 },
+    { path: '/Invoices', icon: MessageCircle, label: 'Messages', badge: messageBadge },
+    { path: '/ProProfile', icon: User, label: 'Profil', badge: profileIncomplete ? 1 : 0, badgeColor: 'bg-amber-500' },
   ];
 
   const activeTab = location.pathname;
@@ -39,8 +62,8 @@ export default function ProBottomNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-14 px-2">
-        {navItems.map(({ path, icon: Icon, label, badge, key }) => {
-          const isActive = activeTab === path;
+        {navItems.map(({ path, icon: Icon, label, badge, key, badgeColor }) => {
+          const isActive = location.pathname === path;
           return (
             <button
               key={key || path}
@@ -49,9 +72,7 @@ export default function ProBottomNav() {
             >
               <div className="relative">
                 <Icon style={{ width: 20, height: 20 }} strokeWidth={isActive ? 2.2 : 1.6} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
-                {badge > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center text-[8px] font-bold text-white">{badge > 9 ? '9+' : badge}</span>
-                )}
+                <NavBadge count={badge} color={badgeColor} />
               </div>
               <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
             </button>
