@@ -596,12 +596,18 @@ export default function Register() {
   });
 
   useEffect(() => {
+    // Si utilisateur déjà connecté avec un rôle → rediriger vers son dashboard
+    if (user) {
+      if (user.role === 'admin') { navigate('/AdminDashboard', { replace: true }); return; }
+      if (user.user_type === 'professionnel') { navigate('/ProDashboard', { replace: true }); return; }
+      if (user.user_type === 'particulier') { navigate('/Home', { replace: true }); return; }
+    }
     const preselected = location.state?.preselectedType;
     if (preselected) {
       setUserType(preselected);
       setStep(1);
     }
-  }, []);
+  }, [user]);
 
   const saveMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),

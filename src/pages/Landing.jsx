@@ -80,7 +80,7 @@ export default function Landing() {
         if (user?.role === 'admin') navigate('/AdminDashboard', { replace: true });
         else if (user?.user_type === 'professionnel') navigate('/ProDashboard', { replace: true });
         else if (user?.user_type === 'particulier') navigate('/Home', { replace: true });
-        else navigate('/Register', { replace: true });
+        else navigate('/SelectUserType', { replace: true }); // compte sans type → choisir rôle
       } else {
         setChecking(false);
       }
