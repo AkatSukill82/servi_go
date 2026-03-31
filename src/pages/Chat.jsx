@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { format, parseISO, isToday, isYesterday, isSameDay } from 'date-fns';
 import { useVisualViewport } from '@/hooks/useVisualViewport';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -7,7 +8,7 @@ import FavoriteButton from '@/components/favorites/FavoriteButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
+
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import BackButton from '@/components/ui/BackButton';
@@ -116,6 +117,7 @@ export default function Chat() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
+  const isFinished = ['completed', 'cancelled', 'disputed'].includes(request?.status);
   const isCustomer = user?.user_type === 'particulier';
   const isPro = user?.user_type === 'professionnel';
   const customerDisplayName = request?.customer_first_name
@@ -230,25 +232,46 @@ export default function Chat() {
           </div>
         )}
         <AnimatePresence initial={false}>
-          {messages.map((msg) => {
+          {messages.map((msg, idx) => {
             const isMe = msg.sender_email === user?.email;
+            const isSystem = msg.message_type === 'system';
+            const msgDate = msg.created_date ? new Date(msg.created_date) : null;
+            const prevMsg = messages[idx - 1];
+            const prevDate = prevMsg?.created_date ? new Date(prevMsg.created_date) : null;
+            const showDateSep = msgDate && (!prevDate || !isSameDay(msgDate, prevDate));
+            const dateLabel = msgDate ? (isToday(msgDate) ? "Aujourd'hui" : isYesterday(msgDate) ? 'Hier' : format(msgDate, 'EEEE d MMMM', { locale: fr })) : '';
             return (
-              <motion.div key={msg.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                <div className="max-w-[75%] space-y-1">
-                  {!isMe && <p className="text-xs text-muted-foreground px-1">{msg.sender_name}</p>}
-                  <div className={`rounded-2xl overflow-hidden ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-card border border-border/50 rounded-bl-sm'}`}>
-                    {msg.message_type === 'photo' && msg.photo_url ? (
-                      <img src={msg.photo_url} alt="Photo" className="w-full max-w-[220px] object-cover rounded-2xl cursor-pointer" onClick={() => window.open(msg.photo_url, '_blank')} />
-                    ) : (
-                      <p className="px-4 py-2.5 text-sm leading-relaxed">{msg.content}</p>
-                    )}
+              <React.Fragment key={msg.id}>
+                {showDateSep && (
+                  <div className="flex items-center gap-2 my-2">
+                    <div className="flex-1 h-px bg-border/50" />
+                    <span className="text-[10px] text-muted-foreground font-medium capitalize">{dateLabel}</span>
+                    <div className="flex-1 h-px bg-border/50" />
                   </div>
-                  <p className={`text-[10px] text-muted-foreground px-1 ${isMe ? 'text-right' : 'text-left'}`}>
-                    {msg.created_date ? format(new Date(msg.created_date), 'HH:mm', { locale: fr }) : ''}
-                    {isMe && <CheckCheck className="w-3 h-3 inline ml-1 text-primary" />}
-                  </p>
-                </div>
-              </motion.div>
+                )}
+                {isSystem ? (
+                  <div className="flex justify-center">
+                    <span className="text-[11px] text-muted-foreground bg-muted/60 rounded-full px-3 py-1 text-center max-w-[80%]">{msg.content}</span>
+                  </div>
+                ) : (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                    <div className="max-w-[75%] space-y-1">
+                      {!isMe && <p className="text-xs text-muted-foreground px-1">{msg.sender_name}</p>}
+                      <div className={`rounded-2xl overflow-hidden ${isMe ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-card border border-border/50 rounded-bl-sm'}`}>
+                        {msg.message_type === 'photo' && msg.photo_url ? (
+                          <img src={msg.photo_url} alt="Photo" className="w-full max-w-[220px] object-cover rounded-2xl cursor-pointer" onClick={() => window.open(msg.photo_url, '_blank')} />
+                        ) : (
+                          <p className="px-4 py-2.5 text-sm leading-relaxed">{msg.content}</p>
+                        )}
+                      </div>
+                      <p className={`text-[10px] text-muted-foreground px-1 ${isMe ? 'text-right' : 'text-left'}`}>
+                        {msgDate ? format(msgDate, 'HH:mm', { locale: fr }) : ''}
+                        {isMe && <CheckCheck className="w-3 h-3 inline ml-1 text-primary" />}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </React.Fragment>
             );
           })}
         </AnimatePresence>
@@ -256,20 +279,26 @@ export default function Chat() {
       </div>
 
       {/* Input bar */}
-      <div className="px-4 py-3 bg-card border-t border-border/50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <div className="flex items-center gap-2">
-          <button onClick={() => fileInputRef.current?.click()} disabled={sending} aria-label="Photo"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0">
-            <Image className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-          <Input value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} placeholder="Votre message..." className="flex-1 h-11 rounded-2xl bg-muted border-0 focus-visible:ring-1" disabled={sending} />
-          <button onClick={handleSend} disabled={!text.trim() || sending} aria-label="Envoyer"
-            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-40">
-            <Send className="w-5 h-5 text-white" />
-          </button>
+      {isFinished ? (
+        <div className="px-4 py-4 bg-card border-t border-border/50 text-center" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+          <p className="text-xs text-muted-foreground">🔒 Cette mission est terminée — la conversation est archivée</p>
         </div>
-      </div>
+      ) : (
+        <div className="px-4 py-3 bg-card border-t border-border/50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+          <div className="flex items-center gap-2">
+            <button onClick={() => fileInputRef.current?.click()} disabled={sending} aria-label="Photo"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0">
+              <Image className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+            <Input value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} placeholder="Votre message..." className="flex-1 h-11 rounded-2xl bg-muted border-0 focus-visible:ring-1" disabled={sending} />
+            <button onClick={handleSend} disabled={!text.trim() || sending} aria-label="Envoyer"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors shrink-0 disabled:opacity-40">
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

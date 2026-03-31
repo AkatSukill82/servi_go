@@ -157,11 +157,29 @@ export default function ProDashboard() {
     enabled: !!user?.email,
   });
 
+  const upcomingJob = myJobs.find(j => {
+    if (!['contract_signed', 'accepted'].includes(j.status) || !j.scheduled_date) return false;
+    const d = new Date(j.scheduled_date);
+    const now = new Date();
+    return d >= now && d <= new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  });
+
   const completedJobs = myJobs.filter(j => j.status === 'completed');
   const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
 
   return (
     <div className="px-5 pt-7 pb-4 space-y-5">
+
+      {/* Upcoming mission reminder */}
+      {upcomingJob && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+          <span className="text-xl shrink-0">⏰</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-yellow-800">Mission demain !</p>
+            <p className="text-xs text-yellow-700">{upcomingJob.category_name} à {upcomingJob.scheduled_time || '?'} chez {upcomingJob.customer_name || 'le client'}</p>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">

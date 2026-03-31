@@ -23,6 +23,25 @@ export default function Home() {
     queryFn: () => base44.auth.me()
   });
 
+  const { data: upcomingReminder } = useQuery({
+    queryKey: ['upcomingReminder', user?.email],
+    queryFn: async () => {
+      const reqs = await base44.entities.ServiceRequestV2.filter(
+        { customer_email: user.email }, '-created_date', 10
+      );
+      const now = new Date();
+      const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+      return reqs.find(r => ['contract_signed', 'accepted'].includes(r.status) && r.scheduled_date) 
+        ? reqs.filter(r => ['contract_signed', 'accepted'].includes(r.status) && r.scheduled_date).find(r => {
+            const d = new Date(r.scheduled_date);
+            return d >= now && d <= in24h;
+          }) || null
+        : null;
+    },
+    enabled: !!user?.email && user?.user_type === 'particulier',
+    refetchInterval: 60000,
+  });
+
   const { data: activeRequest } = useQuery({
     queryKey: ['activeRequest', user?.email],
     queryFn: () => base44.entities.ServiceRequestV2.filter(
@@ -135,6 +154,17 @@ export default function Home() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Reminder banner */}
+        {upcomingReminder && (
+          <div className="w-full mb-3 rounded-2xl bg-yellow-50 border border-yellow-200 px-4 py-3 flex items-center gap-3">
+            <span className="text-xl shrink-0">⏰</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-yellow-800">Rappel — Mission demain</p>
+              <p className="text-xs text-yellow-700">{upcomingReminder.category_name} à {upcomingReminder.scheduled_time || '?'} avec {upcomingReminder.professional_name || 'votre pro'}</p>
             </div>
           </div>
         )}

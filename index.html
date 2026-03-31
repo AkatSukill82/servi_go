@@ -27,6 +27,18 @@
     <link rel="manifest" href="/manifest.json" />
 
     <title>ServiGo</title>
+  <script>
+    (function() {
+      try {
+        var dark = localStorage.getItem('servigo_dark_mode') === 'true';
+        if (dark) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.backgroundColor = '#0F0F0F';
+        }
+      } catch(e) {}
+    })();
+  </script>
   </head>
   <body>
     <div id="root"></div>

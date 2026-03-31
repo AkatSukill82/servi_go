@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Home, MapPin, Heart, User } from 'lucide-react';
+import { Home, ClipboardList, MessageCircle, User } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
 
 export default function BottomNav() {
@@ -10,26 +10,28 @@ export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { data: unreadCount = 0 } = useQuery({
-    queryKey: ['unreadNotifs'],
+  const { data: unreadMsgs = 0 } = useQuery({
+    queryKey: ['unreadMessages'],
     queryFn: async () => {
       const user = await base44.auth.me();
-      const notifs = await base44.entities.Notification.filter({ recipient_email: user.email, is_read: false }, '-created_date', 50);
-      return notifs.length;
+      const requests = await base44.entities.ServiceRequestV2.filter({ customer_email: user.email }, '-created_date', 20);
+      const activeIds = requests.filter(r => !['cancelled'].includes(r.status)).map(r => r.id);
+      if (!activeIds.length) return 0;
+      const msgs = await base44.entities.Message.filter({}, '-created_date', 50);
+      return msgs.filter(m => activeIds.includes(m.request_id) && m.sender_email !== user.email).length;
     },
     refetchInterval: 30000,
     staleTime: 30000,
   });
 
   const navItems = [
-    { path: '/Home', icon: Home, label: t('nav_home') },
-    { path: '/Map', icon: MapPin, label: t('nav_map') },
-    { path: '/Favorites', icon: Heart, label: t('nav_favorites') },
-    { path: '/Profile', icon: User, label: t('nav_profile') },
+    { path: '/Home', icon: Home, label: 'Accueil', badge: 0 },
+    { path: '/MissionHistory', icon: ClipboardList, label: 'Demandes', badge: 0 },
+    { path: '/MissionHistory', icon: MessageCircle, label: 'Messages', badge: unreadMsgs, key: '/Messages' },
+    { path: '/Profile', icon: User, label: 'Profil', badge: 0 },
   ];
 
   const activeTab = navItems.find(n => location.pathname === n.path)?.path || '/Home';
-  const profilePath = '/Profile';
 
   return (
     <nav
@@ -37,27 +39,21 @@ export default function BottomNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-14 px-2">
-        {navItems.map(({ path, icon: Icon, label }) => {
-          const isActive = activeTab === path;
+        {navItems.map(({ path, icon: Icon, label, badge, key }) => {
+          const isActive = location.pathname === path;
           return (
             <button
-              key={path}
+              key={key || path}
               onClick={() => navigate(path, { replace: true })}
               className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center"
             >
               <div className="relative">
-                <Icon
-                  style={{ width: 20, height: 20 }}
-                  strokeWidth={isActive ? 2.2 : 1.6}
-                  className={isActive ? 'text-primary' : 'text-muted-foreground'}
-                />
-                {path === profilePath && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center text-[8px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                <Icon style={{ width: 20, height: 20 }} strokeWidth={isActive ? 2.2 : 1.6} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
+                {badge > 0 && (
+                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center text-[8px] font-bold text-white">{badge > 9 ? '9+' : badge}</span>
                 )}
               </div>
-              <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                {label}
-              </span>
+              <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
             </button>
           );
         })}
