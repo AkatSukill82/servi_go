@@ -41,7 +41,6 @@ const TAB_COMPONENTS = {
 
 const STACK_COMPONENTS = {
   '/ServiceRequest': ServiceRequest,
-  '/MissionHistory': MissionHistory,
   '/ProSubscription': ProSubscription,
 };
 

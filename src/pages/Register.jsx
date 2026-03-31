@@ -642,7 +642,18 @@ export default function Register() {
 
   return (
     <div className="bg-[#F7F6F3] overflow-y-auto" style={{ height: '100dvh' }}>
-      <ProgressBar step={step} />
+      {/* Login link */}
+      <div className="text-center pt-4 pb-1">
+        <p className="text-sm text-[#6B7280]">
+          Vous avez déjà un compte ?{' '}
+          <button
+            onClick={() => base44.auth.redirectToLogin()}
+            className="font-semibold text-[#534AB7] hover:underline"
+          >
+            Se connecter
+          </button>
+        </p>
+      </div>
 
       <AnimatePresence mode="wait">
         {step === 0 && (
