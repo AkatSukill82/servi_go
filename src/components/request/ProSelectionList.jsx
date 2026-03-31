@@ -22,6 +22,7 @@ const RADIUS_FALLBACK_KM = 40;
 function buildProList(professionals, customerLat, customerLon, categoryName) {
   const filtered = professionals.filter(p =>
     p.available !== false &&
+    p.photo_url &&
     (!categoryName || !p.category_name || p.category_name === categoryName)
   );
 

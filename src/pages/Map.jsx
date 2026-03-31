@@ -46,7 +46,10 @@ export default function MapPage() {
 
   const { data: professionals = [], isLoading } = useQuery({
     queryKey: ['professionals'],
-    queryFn: () => base44.entities.User.filter({ user_type: 'professionnel', available: true }),
+    queryFn: async () => {
+      const all = await base44.entities.User.filter({ user_type: 'professionnel', available: true });
+      return all.filter(p => p.photo_url);
+    },
     refetchInterval: 3000,
   });
 
@@ -62,7 +65,7 @@ export default function MapPage() {
 
   const { data: urgentRequests = [] } = useQuery({
     queryKey: ['urgentMapRequests'],
-    queryFn: () => base44.entities.ServiceRequest.filter({ is_urgent: true, status: 'searching' }, '-created_date', 10),
+    queryFn: () => base44.entities.ServiceRequestV2.filter({ is_urgent: true, status: 'searching' }, '-created_date', 10),
     refetchInterval: 15000,
   });
 

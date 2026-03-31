@@ -29,7 +29,7 @@ export default function Favorites() {
     enabled: favoriteIds.length > 0,
   });
 
-  const favoritePros = allPros.filter(p => favoriteIds.includes(p.id));
+  const favoritePros = allPros.filter(p => favoriteIds.includes(p.id) && p.photo_url);
   const isLoading = loadingUser || loadingPros;
 
   return (

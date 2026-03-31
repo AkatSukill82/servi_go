@@ -74,8 +74,15 @@ export default function Home() {
   const filtered = categories;
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
-  const rawFirst = user?.first_name || user?.full_name?.split(' ')?.[0] || '';
-  const firstName = rawFirst && !/^\S*\d\S*$/.test(rawFirst) ? rawFirst : user?.email?.split('@')?.[0] || '';
+  const firstName = (() => {
+    if (user?.first_name) return user.first_name;
+    const handle = (user?.full_name || '').includes('@') ? (user.full_name.split('@')[0]) : (user?.full_name || '');
+    const letters = handle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
+    if (letters.length >= 2) return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
+    const emailLetters = (user?.email || '').split('@')[0].match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
+    if (emailLetters.length >= 2) return emailLetters.charAt(0).toUpperCase() + emailLetters.slice(1).toLowerCase();
+    return '';
+  })();
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

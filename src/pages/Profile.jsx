@@ -25,8 +25,10 @@ const TABS = [
 
 function getDisplayName(user) {
   if (user?.first_name || user?.last_name) return `${user.first_name || ''} ${user.last_name || ''}`.trim();
-  if (user?.full_name) return user.full_name;
-  if (user?.email) return user.email.split('@')[0];
+  const rawHandle = (user?.full_name || '').includes('@') ? user.full_name.split('@')[0] : (user?.full_name || '');
+  const smart = rawHandle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
+  if (smart.length >= 2) return smart.charAt(0).toUpperCase() + smart.slice(1).toLowerCase();
+  if (user?.email) return user.email.split('@')[0].replace(/[^a-zA-Z]/g, '') || 'Utilisateur';
   return 'Utilisateur';
 }
 
@@ -50,9 +52,12 @@ export default function Profile() {
 
   useEffect(() => {
     if (user) {
+      const rawHandle = (user.full_name || '').includes('@') ? user.full_name.split('@')[0] : user.full_name || '';
+      const smartFirst = rawHandle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
+      const defaultFirst = smartFirst.length >= 2 ? smartFirst.charAt(0).toUpperCase() + smartFirst.slice(1).toLowerCase() : '';
       setForm({
-        first_name: user.first_name || (user.full_name?.split(' ')[0] || ''),
-        last_name: user.last_name || (user.full_name?.split(' ').slice(1).join(' ') || ''),
+        first_name: user.first_name || defaultFirst,
+        last_name: user.last_name || '',
         phone: user.phone || '',
         address: user.address || '',
         photo_url: user.photo_url || '',
