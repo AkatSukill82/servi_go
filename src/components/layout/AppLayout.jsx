@@ -22,9 +22,10 @@ const ProProfile  = lazy(() => import('@/pages/ProProfile'));
 const ServiceRequest = lazy(() => import('@/pages/ServiceRequest'));
 const MissionHistory = lazy(() => import('@/pages/MissionHistory'));
 const ProSubscription = lazy(() => import('@/pages/ProSubscription'));
+const ProAgenda = lazy(() => import('@/pages/ProAgenda'));
 
 const CUSTOMER_TABS = ['/Home', '/Map', '/Emergency', '/Favorites', '/Profile'];
-const PRO_TABS = ['/ProDashboard', '/Map', '/Emergency', '/Invoices', '/ProProfile'];
+const PRO_TABS = ['/ProDashboard', '/ProAgenda', '/MissionHistory', '/ProProfile'];
 
 const TAB_COMPONENTS = {
   '/Home': Home,
@@ -33,6 +34,8 @@ const TAB_COMPONENTS = {
   '/Favorites': Favorites,
   '/Profile': Profile,
   '/ProDashboard': ProDashboard,
+  '/ProAgenda': ProAgenda,
+  '/MissionHistory': MissionHistory,
   '/Invoices': Invoices,
   '/ProProfile': ProProfile,
 };

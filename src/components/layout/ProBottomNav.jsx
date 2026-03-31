@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { LayoutDashboard, ClipboardList, MessageCircle, User } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, MessageCircle, User } from 'lucide-react';
 import { useI18n } from '@/hooks/useI18n';
 
 export default function ProBottomNav() {
@@ -26,8 +26,8 @@ export default function ProBottomNav() {
 
   const navItems = [
     { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard', badge: 0 },
-    { path: '/MissionHistory', icon: ClipboardList, label: 'Missions', badge: 0 },
-    { path: '/MissionHistory', icon: MessageCircle, label: 'Messages', badge: unreadMsgs, key: '/ProMessages' },
+    { path: '/ProAgenda', icon: CalendarDays, label: 'Agenda', badge: 0 },
+    { path: '/MissionHistory', icon: MessageCircle, label: 'Messages', badge: unreadMsgs },
     { path: '/ProProfile', icon: User, label: 'Profil', badge: 0 },
   ];
 
