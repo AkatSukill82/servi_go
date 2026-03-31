@@ -123,13 +123,13 @@ export default function Landing() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/Login')}
+              onClick={() => base44.auth.redirectToLogin()}
               className="hidden md:block text-sm font-semibold text-[#1A365D] hover:underline"
             >
               Se connecter
             </button>
             <button
-              onClick={() => navigate('/Register')}
+              onClick={() => base44.auth.redirectToLogin()}
               className="bg-[#1A365D] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#2D4A7A] transition-colors shadow-sm"
             >
               Commencer
@@ -144,7 +144,7 @@ export default function Landing() {
             <a href="#categories" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Services</a>
             <a href="#how" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Comment ça marche</a>
             <a href="#reviews" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Avis clients</a>
-            <button onClick={() => navigate('/Login')} className="block w-full text-left text-sm font-semibold text-[#2B6CB0]">Se connecter</button>
+            <button onClick={() => base44.auth.redirectToLogin()} className="block w-full text-left text-sm font-semibold text-[#2B6CB0]">Se connecter</button>
           </div>
         )}
       </nav>
@@ -263,7 +263,7 @@ export default function Landing() {
                   key={cat.id}
                   category={cat}
                   index={i}
-                  onClick={() => navigate('/Register', { state: { preselectedType: 'particulier' } })}
+                  onClick={() => base44.auth.redirectToLogin()}
                 />
               ))}
             </div>
