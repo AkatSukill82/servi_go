@@ -332,14 +332,18 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
             </div>
 
             <Field label="Catégorie de service" required touched={touched.category_name} error={errors.category_name} valid={!errors.category_name && !!form.category_name}>
-              <Select value={form.category_name} onValueChange={val => { set('category_name', val); touch('category_name'); }}>
-                <SelectTrigger className="h-11 rounded-lg border-[#E5E7EB] focus:border-[#534AB7]">
-                  <SelectValue placeholder="Choisissez votre métier" />
-                </SelectTrigger>
-                <SelectContent side="bottom" className="bg-white border border-[#E5E7EB] shadow-lg z-[9999]">
-                  {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <select
+                value={form.category_name}
+                onChange={e => { set('category_name', e.target.value); touch('category_name'); }}
+                onBlur={() => touch('category_name')}
+                className={`w-full h-11 px-3.5 border rounded-lg text-[#111827] bg-white focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${
+                  touched.category_name ? (errors.category_name ? 'border-red-400' : 'border-[#1D9E75]') : 'border-[#E5E7EB]'
+                }`}
+                style={{ fontSize: 16 }}
+              >
+                <option value="">Choisissez votre métier</option>
+                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+              </select>
             </Field>
 
             <Field label="Numéro BCE/KBO" touched={touched.bce_number} error={errors.bce_number} valid={!errors.bce_number && !!form.bce_number}>
