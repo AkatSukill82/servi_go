@@ -368,14 +368,17 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
           </>
         )}
 
+        {!canProceed && Object.values(touched).some(Boolean) && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+            <div className="text-xs text-red-700 space-y-0.5">
+              {Object.entries(errors).filter(([,v]) => v && touched[Object.keys(errors).find(k => errors[k] === v)]).map(([key, msg]) => msg ? <p key={key}>• {msg}</p> : null)}
+            </div>
+          </div>
+        )}
         <button
           onClick={handleSubmit}
-          className={`w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 ${
-            canProceed
-              ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer'
-              : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
-          }`}
-          title={!canProceed ? 'Veuillez remplir tous les champs correctement' : ''}
+          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer"
         >
           Continuer <ChevronRight className="inline w-5 h-5 ml-1" />
         </button>
