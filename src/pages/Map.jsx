@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { deduplicateByEmail } from '@/utils/deduplicateByEmail';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { Star, ChevronDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -48,7 +49,7 @@ export default function MapPage() {
     queryKey: ['professionals'],
     queryFn: async () => {
       const all = await base44.entities.User.filter({ user_type: 'professionnel', available: true });
-      return all.filter(p => p.photo_url);
+      return deduplicateByEmail(all.filter(p => p.photo_url));
     },
     refetchInterval: 3000,
   });

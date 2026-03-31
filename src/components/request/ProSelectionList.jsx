@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Star, ShieldCheck, ChevronRight, MapPin, Heart, Info } from 'lucide-react';
+import { deduplicateByEmail } from '@/utils/deduplicateByEmail';
 import { useFavorites } from '@/hooks/useFavorites';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { Button } from '@/components/ui/button';
@@ -47,7 +48,7 @@ export default function ProSelectionList({ professionals, customerLat, customerL
   const { favorites } = useFavorites();
 
   // Sort: favorites first, then verified, then distance
-  const rawPros = buildProList(professionals, customerLat, customerLon, categoryName);
+  const rawPros = buildProList(deduplicateByEmail(professionals), customerLat, customerLon, categoryName);
   const pros = [
     ...rawPros.filter(p => favorites.includes(p.id)),
     ...rawPros.filter(p => !favorites.includes(p.id)),

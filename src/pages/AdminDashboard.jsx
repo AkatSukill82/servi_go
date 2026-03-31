@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity } from 'lucide-react';
@@ -452,6 +452,44 @@ export default function AdminDashboard() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  // Auto-réassignation des missions bloquées au chargement admin
+  useEffect(() => {
+    if (currentUser?.role !== 'admin') return;
+    (async () => {
+      try {
+        const stuckRequests = await base44.entities.ServiceRequestV2.filter({ status: 'searching' }, '-created_date', 100);
+        if (stuckRequests.length === 0) return;
+        const availablePros = await base44.entities.User.filter({ user_type: 'professionnel', available: true, verification_status: 'verified' }, '-created_date', 200);
+        for (const req of stuckRequests) {
+          const tried = req.tried_professionals || [];
+          const eligible = availablePros.filter(p =>
+            p.email && p.category_name === req.category_name && !tried.includes(p.email)
+          ).sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          if (eligible.length === 0) continue;
+          const best = eligible[0];
+          await base44.entities.ServiceRequestV2.update(req.id, {
+            status: 'pending_pro',
+            professional_id: best.id,
+            professional_name: best.full_name,
+            professional_email: best.email,
+            tried_professionals: [...tried, best.email],
+          });
+          await base44.entities.Notification.create({
+            recipient_email: best.email,
+            recipient_type: 'professionnel',
+            type: 'new_mission',
+            title: `Nouvelle mission : ${req.category_name}`,
+            body: `Une mission vous a été assignée. Client : ${req.customer_name || req.customer_email}.`,
+            request_id: req.id,
+            action_url: `/Chat?requestId=${req.id}`,
+          });
+        }
+      } catch (e) {
+        console.warn('Auto-reassign error:', e);
+      }
+    })();
+  }, [currentUser?.role]);
 
   const { data: disputes = [] } = useQuery({
     queryKey: ['adminDisputes'],

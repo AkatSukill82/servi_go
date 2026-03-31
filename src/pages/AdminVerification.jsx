@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro, CreditCard, AlertTriangle, Clock, Eye } from 'lucide-react';
+import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro, CreditCard, AlertTriangle, Clock, Eye, Wrench, RefreshCw } from 'lucide-react';
+import { deduplicateByEmail } from '@/utils/deduplicateByEmail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -260,6 +261,126 @@ function IdentityVerifTab() {
   );
 }
 
+function MaintenanceTab() {
+  const queryClient = useQueryClient();
+  const [deduping, setDeduping] = useState(false);
+  const [reassigning, setReassigning] = useState(false);
+  const [dedupeResult, setDedupeResult] = useState(null);
+  const [reassignResult, setReassignResult] = useState(null);
+
+  const handleDeduplicatePros = async () => {
+    setDeduping(true);
+    setDedupeResult(null);
+    const allPros = await base44.entities.User.filter({ user_type: 'professionnel' }, '-created_date', 500);
+    const emailMap = new Map();
+    for (const pro of allPros) {
+      if (!pro.email) continue;
+      const existing = emailMap.get(pro.email);
+      if (!existing) {
+        emailMap.set(pro.email, pro);
+      } else {
+        const existingDate = existing.created_date ? new Date(existing.created_date) : new Date(0);
+        const newDate = pro.created_date ? new Date(pro.created_date) : new Date(0);
+        if (newDate > existingDate) emailMap.set(pro.email, pro);
+      }
+    }
+    const keepIds = new Set([...emailMap.values()].map(p => p.id));
+    const duplicates = allPros.filter(p => p.email && !keepIds.has(p.id));
+    for (const dup of duplicates) {
+      await base44.entities.User.update(dup.id, { available: false, pro_description: `[DOUBLON] ${dup.pro_description || ''}`.trim() });
+    }
+    setDedupeResult(duplicates.length);
+    queryClient.invalidateQueries();
+    setDeduping(false);
+  };
+
+  const handleReassignStuck = async () => {
+    setReassigning(true);
+    setReassignResult(null);
+    const stuckRequests = await base44.entities.ServiceRequestV2.filter({ status: 'searching' }, '-created_date', 100);
+    const availablePros = await base44.entities.User.filter({ user_type: 'professionnel', available: true, verification_status: 'verified' }, '-created_date', 200);
+    let assigned = 0;
+    for (const req of stuckRequests) {
+      const tried = req.tried_professionals || [];
+      const eligible = availablePros.filter(p =>
+        p.email &&
+        p.category_name === req.category_name &&
+        !tried.includes(p.email)
+      ).sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      if (eligible.length === 0) continue;
+      const best = eligible[0];
+      await base44.entities.ServiceRequestV2.update(req.id, {
+        status: 'pending_pro',
+        professional_id: best.id,
+        professional_name: best.full_name,
+        professional_email: best.email,
+        tried_professionals: [...tried, best.email],
+      });
+      await base44.entities.Notification.create({
+        recipient_email: best.email,
+        recipient_type: 'professionnel',
+        type: 'new_mission',
+        title: `Nouvelle mission : ${req.category_name}`,
+        body: `Une mission vous a été assignée. Client : ${req.customer_name || req.customer_email}.`,
+        request_id: req.id,
+        action_url: `/Chat?requestId=${req.id}`,
+      });
+      assigned++;
+    }
+    setReassignResult(assigned);
+    queryClient.invalidateQueries();
+    setReassigning(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">Outils de maintenance et nettoyage de la base de données.</p>
+
+      {/* Dedup card */}
+      <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-primary" />
+          <p className="font-semibold text-sm">Nettoyer les doublons de professionnels</p>
+        </div>
+        <p className="text-xs text-muted-foreground">Détecte les professionnels avec le même email, désactive les doublons et conserve l'enregistrement le plus récent.</p>
+        {dedupeResult !== null && (
+          <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+            <p className="text-sm font-semibold text-green-700">{dedupeResult === 0 ? 'Aucun doublon trouvé ✓' : `${dedupeResult} doublon${dedupeResult > 1 ? 's' : ''} désactivé${dedupeResult > 1 ? 's' : ''} ✓`}</p>
+          </div>
+        )}
+        <button
+          onClick={handleDeduplicatePros}
+          disabled={deduping}
+          className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {deduping ? <><RefreshCw className="w-4 h-4 animate-spin" /> Analyse en cours...</> : <><User className="w-4 h-4" /> Nettoyer les doublons</>}
+        </button>
+      </div>
+
+      {/* Reassign card */}
+      <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Wrench className="w-4 h-4 text-orange-600" />
+          <p className="font-semibold text-sm">Réassigner les missions bloquées</p>
+        </div>
+        <p className="text-xs text-muted-foreground">Récupère toutes les missions en statut "searching" et assigne automatiquement le meilleur professionnel disponible et vérifié.</p>
+        {reassignResult !== null && (
+          <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+            <p className="text-sm font-semibold text-green-700">{reassignResult === 0 ? 'Aucune mission à réassigner' : `${reassignResult} mission${reassignResult > 1 ? 's' : ''} réassignée${reassignResult > 1 ? 's' : ''} ✓`}</p>
+          </div>
+        )}
+        <button
+          onClick={handleReassignStuck}
+          disabled={reassigning}
+          className="w-full h-10 rounded-xl bg-orange-500 text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {reassigning ? <><RefreshCw className="w-4 h-4 animate-spin" /> Réassignation en cours...</> : <><Wrench className="w-4 h-4" /> Réassigner les missions bloquées</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ReportsTab() {
   const queryClient = useQueryClient();
   const { data: reports = [], isLoading } = useQuery({
@@ -378,6 +499,7 @@ export default function AdminVerification() {
     { key: 'subscriptions', label: 'Abonnements', icon: <CreditCard className="w-3.5 h-3.5" />, badge: 0 },
     { key: 'reports', label: 'Signalements', icon: <AlertTriangle className="w-3.5 h-3.5" />, badge: reportsCount },
     { key: 'stats', label: 'Stats', icon: <BarChart2 className="w-3.5 h-3.5" />, badge: 0 },
+    { key: 'maintenance', label: 'Maintenance', icon: <Wrench className="w-3.5 h-3.5" />, badge: 0 },
   ];
 
   return (
@@ -400,6 +522,7 @@ export default function AdminVerification() {
       {tab === 'stats' && <ProStatsTable pros={pros} />}
       {tab === 'subscriptions' && <SubscriptionsTab />}
       {tab === 'reports' && <ReportsTab />}
+      {tab === 'maintenance' && <MaintenanceTab />}
       {tab === 'verif' && (
         <>
           <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
