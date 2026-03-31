@@ -352,7 +352,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* ─── REVIEWS ─── */
+      {/* ─── REVIEWS ─── */}
       <section id="reviews" className="py-16 bg-[#F7FAFC] border-t border-[#E2E8F0]">
         <div className="max-w-5xl mx-auto px-5">
           <div className="text-center mb-10">
