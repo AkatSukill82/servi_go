@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -435,17 +435,27 @@ export default function Register() {
   const [userType, setUserType] = useState(null);
   const [personalData, setPersonalData] = useState({});
 
+  const location = useLocation();
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  // Pre-select type if coming from Landing page
+  useEffect(() => {
+    const preselected = location.state?.preselectedType;
+    if (preselected) {
+      setUserType(preselected);
+      setStep(1);
+    }
+  }, []);
 
   const saveMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['currentUser'] }),
   });
 
-  const handleTypeSelect = async (type) => {
+  const handleTypeSelect = (type) => {
     setUserType(type);
     setStep(1);
   };

@@ -1,108 +1,156 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Zap, Shield, Star } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
-import CookieBanner from '@/components/legal/CookieBanner';
-import { useDarkMode } from '@/hooks/useDarkMode';
+import { Home, Briefcase, CheckCircle, ChevronRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const features = [
-  { icon: Zap, label: 'Rapide', text: 'Un pro disponible en quelques minutes' },
-  { icon: Shield, label: 'Sécurisé', text: 'Paiements protégés, pros vérifiés' },
-  { icon: Star, label: 'Fiable', text: 'Noté par de vrais clients' },
+const CARDS = [
+  {
+    type: 'particulier',
+    icon: Home,
+    title: 'Je cherche un professionnel',
+    subtitle: 'Trouvez un expert près de chez vous, gratuitement',
+    badge: '100% gratuit',
+    badgeColor: 'bg-[#E1F5EE] text-[#085041]',
+    points: ['Accès illimité aux pros', 'Contrats sécurisés', 'Paiement direct au pro'],
+  },
+  {
+    type: 'professionnel',
+    icon: Briefcase,
+    title: 'Je propose mes services',
+    subtitle: 'Recevez des missions dans votre domaine',
+    badge: '10 € / mois',
+    badgeColor: 'bg-[#EEEDFE] text-[#534AB7]',
+    points: ['Missions géolocalisées', 'Badge vérifié', 'Contrats protégés'],
+  },
 ];
 
 export default function Landing() {
-  useDarkMode();
+  const navigate = useNavigate();
+  const [selected, setSelected] = useState(null);
+  const [checking, setChecking] = useState(true);
 
-  const handleGetStarted = () => base44.auth.redirectToLogin('/SelectUserType');
-  const handleLogin = () => base44.auth.redirectToLogin('/Home');
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(async (authed) => {
+      if (authed) {
+        const user = await base44.auth.me();
+        if (user?.role === 'admin') navigate('/AdminDashboard', { replace: true });
+        else if (user?.user_type === 'professionnel') navigate('/ProDashboard', { replace: true });
+        else if (user?.user_type === 'particulier') navigate('/Home', { replace: true });
+        else navigate('/Register', { replace: true });
+      } else {
+        setChecking(false);
+      }
+    });
+  }, []);
+
+  const handleContinue = () => {
+    if (!selected) return;
+    navigate('/Register', { state: { preselectedType: selected } });
+  };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#F7F6F3] flex items-center justify-center" style={{ minHeight: '100dvh' }}>
+        <Loader2 className="w-7 h-7 animate-spin text-[#534AB7]" />
+      </div>
+    );
+  }
 
   return (
     <div
-      className="bg-background flex flex-col overflow-hidden"
-      style={{
-        height: '100vh',
-        height: '100dvh',
-        paddingTop: 'env(safe-area-inset-top)',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }}
+      className="bg-[#F7F6F3] flex flex-col items-center justify-center px-5 py-10"
+      style={{ minHeight: '100dvh' }}
     >
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 pt-8">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-xs font-black text-background">S</span>
-          </div>
-          <span className="text-sm font-semibold tracking-tight text-foreground">ServiGo</span>
-        </div>
-        <button
-          onClick={handleLogin}
-          className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Se connecter
-        </button>
-      </div>
-
-      {/* Hero */}
-      <div className="flex-1 flex flex-col justify-center px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: 'easeOut' }}
-        >
-          <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
-            La plateforme pro
-          </p>
-          <h1 className="text-4xl font-black tracking-tight text-foreground leading-[1.1] mb-5" style={{ whiteSpace: 'pre-line' }}>
-            {'Trouvez le bon\nprofessionnel,\nmaintenant.'}
-          </h1>
-          <p className="text-base text-muted-foreground leading-relaxed max-w-xs mb-10">
-            Mettez en relation particuliers et artisans qualifiés près de chez vous.
-          </p>
-
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            onClick={handleGetStarted}
-            className="group flex items-center gap-3 bg-foreground text-background rounded-xl px-6 py-4 text-sm font-semibold w-full justify-between active:scale-[0.98] transition-transform"
-          >
-            <span>Créer un compte gratuitement</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </motion.button>
-        </motion.div>
-      </div>
-
-      {/* Features strip */}
+      {/* Logo */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="px-6 pb-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-8"
       >
-        <div className="grid grid-cols-3 gap-2">
-          {features.map((f, i) => {
-            const Icon = f.icon;
-            return (
-              <div key={i} className="bg-muted rounded-xl p-3 flex flex-col gap-2">
-                <Icon className="w-4 h-4 text-foreground" strokeWidth={1.8} />
-                <div>
-                  <p className="text-xs font-semibold text-foreground">{f.label}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{f.text}</p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="w-16 h-16 rounded-2xl bg-[#534AB7] flex items-center justify-center mx-auto mb-3 shadow-lg">
+          <span className="text-2xl font-black text-white">S</span>
         </div>
-
-        <div className="flex justify-center gap-4 mt-6">
-          <Link to="/CGU" className="text-[10px] text-muted-foreground underline underline-offset-2">CGU</Link>
-          <Link to="/PrivacyPolicy" className="text-[10px] text-muted-foreground underline underline-offset-2">Confidentialité</Link>
-        </div>
+        <p className="text-sm font-semibold text-[#534AB7] tracking-wide uppercase">ServiGo</p>
+        <p className="text-xs text-[#9CA3AF] mt-0.5">Trouvez le bon professionnel</p>
       </motion.div>
 
-      <CookieBanner />
+      {/* Title */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="text-center mb-6"
+      >
+        <h1 className="text-2xl font-bold text-[#111827]">Bienvenue sur ServiGo</h1>
+        <p className="text-[#6B7280] mt-1 text-sm">Choisissez votre profil pour commencer</p>
+      </motion.div>
+
+      {/* Cards */}
+      <div className="w-full max-w-lg space-y-3 mb-6">
+        {CARDS.map(({ type, icon: Icon, title, subtitle, badge, badgeColor, points }, i) => (
+          <motion.button
+            key={type}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 + i * 0.08 }}
+            onClick={() => setSelected(type)}
+            className={`w-full text-left p-5 rounded-2xl border-2 transition-all shadow-sm ${
+              selected === type
+                ? 'border-[#534AB7] bg-[#EEEDFE]/40 shadow-md'
+                : 'border-[#E5E7EB] bg-white hover:border-[#534AB7]/40 hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${selected === type ? 'bg-[#534AB7]' : 'bg-[#F3F4F6]'}`}>
+                <Icon className={`w-6 h-6 ${selected === type ? 'text-white' : 'text-[#6B7280]'}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-bold text-[#111827]">{title}</p>
+                  {selected === type && <CheckCircle className="w-4 h-4 text-[#534AB7] shrink-0" />}
+                </div>
+                <p className="text-sm text-[#6B7280] mb-2">{subtitle}</p>
+                <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${badgeColor}`}>{badge}</span>
+                <ul className="mt-2 space-y-0.5">
+                  {points.map(p => (
+                    <li key={p} className="text-xs text-[#6B7280] flex items-center gap-1.5">
+                      <span className="text-[#1D9E75]">✓</span> {p}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </motion.button>
+        ))}
+      </div>
+
+      {/* CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="w-full max-w-lg space-y-3"
+      >
+        <Button
+          onClick={handleContinue}
+          disabled={!selected}
+          className="w-full h-12 rounded-xl text-base bg-[#534AB7] hover:bg-[#4338A0] disabled:opacity-40"
+        >
+          Continuer <ChevronRight className="w-5 h-5 ml-1" />
+        </Button>
+
+        <p className="text-center text-sm text-[#9CA3AF]">
+          Déjà un compte ?{' '}
+          <button
+            onClick={() => base44.auth.redirectToLogin()}
+            className="text-[#534AB7] font-semibold hover:underline"
+          >
+            Se connecter
+          </button>
+        </p>
+      </motion.div>
     </div>
   );
 }
