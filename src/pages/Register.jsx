@@ -11,13 +11,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import {
   User, Briefcase, MapPin, CheckCircle, ChevronRight, ChevronLeft,
-  Upload, Camera, Loader2, ShieldCheck, Star, Zap, FileText, Home
+  Upload, Loader2, ShieldCheck, Home, X, AlertCircle
 } from 'lucide-react';
 
 const STEPS = ['Type', 'Infos', 'Identité', 'Confirmation'];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function isAdult(str) {
+  if (!str || str.length < 10) return false;
+  const parts = str.split('/');
+  if (parts.length !== 3) return false;
+  const [day, month, year] = parts.map(Number);
+  if (!day || !month || !year || year < 1900) return false;
+  const birth = new Date(year, month - 1, day);
+  if (isNaN(birth.getTime())) return false;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age >= 18;
+}
+
+function isValidPhone(p) {
+  return /^(\+32|0032|0)[0-9\s]{8,11}$/.test(p.trim());
+}
+
+function isValidBce(v) {
+  return v === '' || /^0[0-9]{3}\.[0-9]{3}\.[0-9]{3}$/.test(v.trim());
+}
+
+// ─── ProgressBar ──────────────────────────────────────────────────────────────
 function ProgressBar({ step }) {
-  const pct = Math.round(((step) / (STEPS.length - 1)) * 100);
+  const pct = Math.round((step / (STEPS.length - 1)) * 100);
   return (
     <div className="w-full max-w-lg mx-auto px-5 pt-6 pb-4">
       <div className="flex items-center justify-between mb-2">
@@ -36,12 +61,45 @@ function ProgressBar({ step }) {
   );
 }
 
-function FieldValidation({ valid, message }) {
-  if (!message && !valid) return null;
+// ─── Field component with validation ─────────────────────────────────────────
+function Field({ label, required, error, touched, valid, children }) {
   return (
-    <p className={`text-xs mt-1 flex items-center gap-1 ${valid ? 'text-[#1D9E75]' : 'text-red-500'}`}>
-      {valid ? <CheckCircle className="w-3 h-3" /> : '⚠'} {message}
-    </p>
+    <div>
+      <label className="block text-[13px] font-medium text-[#111827] mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      {children}
+      {touched && error && (
+        <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3 shrink-0" /> {error}
+        </p>
+      )}
+      {touched && !error && valid && (
+        <p className="text-xs text-[#1D9E75] mt-1 flex items-center gap-1">
+          <CheckCircle className="w-3 h-3 shrink-0" /> Valide
+        </p>
+      )}
+    </div>
+  );
+}
+
+function StyledInput({ value, onChange, onBlur, placeholder, type = 'text', suffix, className = '', ...props }) {
+  return (
+    <div className="relative">
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        className={`w-full h-11 px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${suffix ? 'pr-10' : ''} ${className}`}
+        style={{ fontSize: 16 }}
+        {...props}
+      />
+      {suffix && (
+        <div className="absolute right-3 top-1/2 -translate-y-1/2">{suffix}</div>
+      )}
+    </div>
   );
 }
 
@@ -115,13 +173,17 @@ function StepTypeChoice({ onSelect }) {
         ))}
       </div>
 
-      <Button
+      <button
         onClick={() => selected && onSelect(selected)}
         disabled={!selected}
-        className="w-full h-13 rounded-xl text-base bg-[#534AB7] hover:bg-[#4338A0] disabled:opacity-40"
+        className={`w-full h-12 rounded-xl text-base font-semibold transition-colors ${
+          selected
+            ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer'
+            : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+        }`}
       >
-        Continuer <ChevronRight className="w-5 h-5 ml-1" />
-      </Button>
+        Continuer <ChevronRight className="inline w-5 h-5 ml-1" />
+      </button>
     </div>
   );
 }
@@ -138,7 +200,10 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
     bce_number: initialData.bce_number || '',
     pro_description: initialData.pro_description || '',
   });
+
+  const [touched, setTouched] = useState({});
   const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState('');
 
   const { data: categories = [] } = useQuery({
     queryKey: ['serviceCategories'],
@@ -146,49 +211,51 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
     enabled: userType === 'professionnel',
   });
 
-  const validate = {
-    first_name: form.first_name.length >= 2,
-    last_name: form.last_name.length >= 2,
-    birth_date: (() => {
-      if (!form.birth_date) return false;
-      const parts = form.birth_date.split('/');
-      if (parts.length !== 3) return false;
-      const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-      if (isNaN(d)) return false;
-      const age = (new Date() - d) / (365.25 * 24 * 3600 * 1000);
-      return age >= 18;
-    })(),
-    address: form.address.length >= 5,
-    phone: /^(\+32|0)[0-9]{8,9}$/.test(form.phone.replace(/\s/g, '')),
-    category_name: userType !== 'professionnel' || !!form.category_name,
-    bce_number: userType !== 'professionnel' || /^(BE\s?)?0\d{3}\.\d{3}\.\d{3}$/.test(form.bce_number) || form.bce_number === '',
-    pro_description: userType !== 'professionnel' || form.pro_description.length >= 50,
+  const touch = (field) => setTouched(t => ({ ...t, [field]: true }));
+  const set = (field, val) => setForm(f => ({ ...f, [field]: val }));
+
+  const errors = {
+    first_name: form.first_name.length < 2 ? 'Minimum 2 caractères' : '',
+    last_name: form.last_name.length < 2 ? 'Minimum 2 caractères' : '',
+    birth_date: !isAdult(form.birth_date) ? (form.birth_date.length > 0 ? 'Vous devez avoir au moins 18 ans (format JJ/MM/AAAA)' : 'Champ requis') : '',
+    address: form.address.length < 5 ? 'Adresse trop courte' : '',
+    phone: !isValidPhone(form.phone) ? 'Format invalide (ex: 0477 12 34 56 ou +32477123456)' : '',
+    ...(userType === 'professionnel' ? {
+      category_name: !form.category_name ? 'Veuillez choisir votre métier' : '',
+      bce_number: !isValidBce(form.bce_number) ? 'Format invalide (ex: 0477.123.456)' : '',
+      pro_description: form.pro_description.length < 50 ? `Encore ${50 - form.pro_description.length} caractères requis` : '',
+    } : {}),
   };
 
-  const isValid = Object.values(validate).every(Boolean);
+  const baseValid = !errors.first_name && !errors.last_name && !errors.birth_date && !errors.address && !errors.phone;
+  const proValid = userType !== 'professionnel' || (!errors.category_name && !errors.bce_number && !errors.pro_description);
+  const canProceed = baseValid && proValid;
 
   const handleGeolocate = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) { setGeoError("Géolocalisation non supportée"); return; }
     setGeoLoading(true);
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
-        const data = await res.json();
-        if (data.display_name) setForm(f => ({ ...f, address: data.display_name }));
-      } catch {}
-      setGeoLoading(false);
-    }, () => setGeoLoading(false));
+    setGeoError('');
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`);
+          const data = await res.json();
+          set('address', data.display_name || `${pos.coords.latitude}, ${pos.coords.longitude}`);
+          touch('address');
+        } catch { setGeoError("Erreur lors de la récupération de l'adresse"); }
+        setGeoLoading(false);
+      },
+      () => { setGeoError("Permission refusée. Saisissez votre adresse manuellement."); setGeoLoading(false); }
+    );
   };
 
-  const ageError = (() => {
-    if (!form.birth_date) return null;
-    const parts = form.birth_date.split('/');
-    if (parts.length !== 3) return null;
-    const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-    if (isNaN(d)) return null;
-    const age = (new Date() - d) / (365.25 * 24 * 3600 * 1000);
-    return age < 18 ? 'Vous devez avoir au moins 18 ans pour vous inscrire' : null;
-  })();
+  const handleSubmit = () => {
+    // Touch all fields to show errors
+    const allFields = ['first_name', 'last_name', 'birth_date', 'address', 'phone',
+      ...(userType === 'professionnel' ? ['category_name', 'bce_number', 'pro_description'] : [])];
+    setTouched(Object.fromEntries(allFields.map(f => [f, true])));
+    if (canProceed) onNext(form);
+  };
 
   return (
     <div className="w-full max-w-lg mx-auto px-5 pb-10">
@@ -202,77 +269,116 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label className="text-xs text-[#6B7280] mb-1 block">Prénom *</Label>
-            <Input value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} placeholder="Jean" className="h-11 rounded-xl" />
-            {form.first_name && <FieldValidation valid={validate.first_name} message={validate.first_name ? 'Valide' : 'Min. 2 caractères'} />}
-          </div>
-          <div>
-            <Label className="text-xs text-[#6B7280] mb-1 block">Nom *</Label>
-            <Input value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} placeholder="Dupont" className="h-11 rounded-xl" />
-            {form.last_name && <FieldValidation valid={validate.last_name} message={validate.last_name ? 'Valide' : 'Min. 2 caractères'} />}
-          </div>
+          <Field label="Prénom" required touched={touched.first_name} error={errors.first_name} valid={!errors.first_name}>
+            <StyledInput
+              value={form.first_name}
+              onChange={e => set('first_name', e.target.value)}
+              onBlur={() => touch('first_name')}
+              placeholder="Jean"
+              className={touched.first_name ? (errors.first_name ? 'border-red-400' : 'border-[#1D9E75]') : ''}
+            />
+          </Field>
+          <Field label="Nom" required touched={touched.last_name} error={errors.last_name} valid={!errors.last_name}>
+            <StyledInput
+              value={form.last_name}
+              onChange={e => set('last_name', e.target.value)}
+              onBlur={() => touch('last_name')}
+              placeholder="Dupont"
+              className={touched.last_name ? (errors.last_name ? 'border-red-400' : 'border-[#1D9E75]') : ''}
+            />
+          </Field>
         </div>
 
-        <div>
-          <Label className="text-xs text-[#6B7280] mb-1 block">Date de naissance * (JJ/MM/AAAA)</Label>
-          <Input value={form.birth_date} onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))} placeholder="Ex: 15/03/1990" className="h-11 rounded-xl" />
-          {form.birth_date && <FieldValidation valid={validate.birth_date} message={ageError || (validate.birth_date ? 'Valide' : 'Format incorrect')} />}
-        </div>
+        <Field label="Date de naissance (JJ/MM/AAAA)" required touched={touched.birth_date} error={errors.birth_date} valid={!errors.birth_date}>
+          <StyledInput
+            value={form.birth_date}
+            onChange={e => set('birth_date', e.target.value)}
+            onBlur={() => touch('birth_date')}
+            placeholder="15/03/1990"
+            className={touched.birth_date ? (errors.birth_date ? 'border-red-400' : 'border-[#1D9E75]') : ''}
+          />
+        </Field>
 
-        <div>
-          <Label className="text-xs text-[#6B7280] mb-1 block">Téléphone * (format belge)</Label>
-          <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="Ex: +32 477 12 34 56" className="h-11 rounded-xl" />
-          {form.phone && <FieldValidation valid={validate.phone} message={validate.phone ? 'Valide' : 'Format: +32 XXXXXXXXX'} />}
-        </div>
+        <Field label="Téléphone (format belge)" required touched={touched.phone} error={errors.phone} valid={!errors.phone}>
+          <StyledInput
+            value={form.phone}
+            onChange={e => set('phone', e.target.value)}
+            onBlur={() => touch('phone')}
+            placeholder="0477 12 34 56"
+            type="tel"
+            className={touched.phone ? (errors.phone ? 'border-red-400' : 'border-[#1D9E75]') : ''}
+          />
+        </Field>
 
-        <div>
-          <Label className="text-xs text-[#6B7280] mb-1 block">Adresse complète *</Label>
-          <div className="relative">
-            <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Ex: Rue de la Loi 16, 1000 Bruxelles" className="h-11 rounded-xl pr-10" />
-            <button onClick={handleGeolocate} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#534AB7]" title="Géolocaliser">
-              {geoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-            </button>
-          </div>
-          {form.address && <FieldValidation valid={validate.address} message={validate.address ? 'Valide' : 'Adresse trop courte'} />}
-        </div>
+        <Field label="Adresse complète" required touched={touched.address} error={errors.address || geoError} valid={!errors.address && !geoError && !!form.address}>
+          <StyledInput
+            value={form.address}
+            onChange={e => set('address', e.target.value)}
+            onBlur={() => touch('address')}
+            placeholder="Rue de la Loi 16, 1000 Bruxelles"
+            className={touched.address ? (errors.address ? 'border-red-400' : 'border-[#1D9E75]') : ''}
+            suffix={
+              <button type="button" onClick={handleGeolocate} className="text-[#534AB7]" title="Géolocaliser">
+                {geoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+              </button>
+            }
+          />
+        </Field>
 
         {userType === 'professionnel' && (
           <>
-            <div className="border-t border-[#E5E7EB] pt-4">
-              <p className="text-sm font-semibold text-[#534AB7] mb-3">Informations professionnelles</p>
+            <div className="border-t border-[#E5E7EB] pt-2">
+              <p className="text-sm font-semibold text-[#534AB7]">Informations professionnelles</p>
             </div>
-            <div>
-              <Label className="text-xs text-[#6B7280] mb-1 block">Catégorie de service *</Label>
-              <Select value={form.category_name} onValueChange={val => setForm(f => ({ ...f, category_name: val }))}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Choisissez votre métier" /></SelectTrigger>
+
+            <Field label="Catégorie de service" required touched={touched.category_name} error={errors.category_name} valid={!errors.category_name && !!form.category_name}>
+              <Select value={form.category_name} onValueChange={val => { set('category_name', val); touch('category_name'); }}>
+                <SelectTrigger className="h-11 rounded-lg border-[#E5E7EB] focus:border-[#534AB7]">
+                  <SelectValue placeholder="Choisissez votre métier" />
+                </SelectTrigger>
                 <SelectContent side="bottom" className="bg-white border border-[#E5E7EB] shadow-lg z-[9999]">
                   {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              <Label className="text-xs text-[#6B7280] mb-1 block">Numéro BCE/KBO</Label>
-              <Input value={form.bce_number} onChange={e => setForm(f => ({ ...f, bce_number: e.target.value }))} placeholder="Ex: 0477.123.456" className="h-11 rounded-xl" />
-              {form.bce_number && <FieldValidation valid={validate.bce_number} message={validate.bce_number ? 'Valide' : 'Format: 0XXX.XXX.XXX'} />}
-            </div>
-            <div>
-              <Label className="text-xs text-[#6B7280] mb-1 block">Description de vos services * <span className="text-[#9CA3AF]">({form.pro_description.length}/50 min)</span></Label>
-              <Textarea
+            </Field>
+
+            <Field label="Numéro BCE/KBO" touched={touched.bce_number} error={errors.bce_number} valid={!errors.bce_number && !!form.bce_number}>
+              <StyledInput
+                value={form.bce_number}
+                onChange={e => set('bce_number', e.target.value)}
+                onBlur={() => touch('bce_number')}
+                placeholder="0477.123.456"
+                className={touched.bce_number && form.bce_number ? (errors.bce_number ? 'border-red-400' : 'border-[#1D9E75]') : ''}
+              />
+            </Field>
+
+            <Field label={`Description de vos services (${form.pro_description.length}/50 min)`} required touched={touched.pro_description} error={errors.pro_description} valid={!errors.pro_description && form.pro_description.length >= 50}>
+              <textarea
                 value={form.pro_description}
-                onChange={e => setForm(f => ({ ...f, pro_description: e.target.value }))}
+                onChange={e => set('pro_description', e.target.value)}
+                onBlur={() => touch('pro_description')}
                 placeholder="Décrivez vos compétences, expériences et services proposés..."
                 rows={4}
-                className="rounded-xl resize-none"
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] resize-none text-base ${
+                  touched.pro_description ? (errors.pro_description ? 'border-red-400' : 'border-[#1D9E75]') : 'border-[#E5E7EB]'
+                }`}
+                style={{ fontSize: 16 }}
               />
-              {form.pro_description.length > 0 && <FieldValidation valid={validate.pro_description} message={validate.pro_description ? 'Valide' : `Encore ${50 - form.pro_description.length} caractères requis`} />}
-            </div>
+            </Field>
           </>
         )}
 
-        <Button onClick={() => isValid && onNext(form)} disabled={!isValid} className="w-full h-13 rounded-xl text-base bg-[#534AB7] hover:bg-[#4338A0] disabled:opacity-40 mt-2">
-          Continuer <ChevronRight className="w-5 h-5 ml-1" />
-        </Button>
+        <button
+          onClick={handleSubmit}
+          className={`w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 ${
+            canProceed
+              ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer'
+              : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+          }`}
+          title={!canProceed ? 'Veuillez remplir tous les champs correctement' : ''}
+        >
+          Continuer <ChevronRight className="inline w-5 h-5 ml-1" />
+        </button>
       </div>
     </div>
   );
@@ -282,40 +388,65 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack }) {
 function UploadZone({ label, hint, value, onChange, required = true }) {
   const [preview, setPreview] = useState(value || null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const validateFile = (file) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowed.includes(file.type)) return 'Format non accepté. Utilisez JPG, PNG ou PDF.';
+    if (file.size > 5 * 1024 * 1024) return `Fichier trop volumineux (${(file.size/1024/1024).toFixed(1)}MB). Maximum 5MB.`;
+    return null;
+  };
 
   const handleFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const err = validateFile(file);
+    if (err) { setError(err); return; }
+    setError('');
     setLoading(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setPreview(file_url);
+    const isImage = file.type.startsWith('image/');
+    setPreview(isImage ? URL.createObjectURL(file) : file_url);
     onChange(file_url);
     setLoading(false);
   };
 
+  const handleRemove = () => { setPreview(null); onChange(''); };
+
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs text-[#6B7280] block">
-        {label} {required ? '*' : <span className="text-[#9CA3AF]">(optionnel)</span>}
-      </Label>
-      <label className={`flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${preview ? 'border-[#1D9E75] bg-[#E1F5EE]/30' : 'border-[#D1D5DB] bg-[#F9FAFB] hover:border-[#534AB7]/50'}`}>
-        {loading ? (
-          <Loader2 className="w-6 h-6 animate-spin text-[#534AB7]" />
-        ) : preview ? (
-          <div className="flex flex-col items-center gap-1">
-            <CheckCircle className="w-6 h-6 text-[#1D9E75]" />
-            <span className="text-xs text-[#1D9E75] font-medium">Document uploadé ✓</span>
-            <span className="text-[10px] text-[#6B7280]">Cliquez pour remplacer</span>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-1.5">
-            <Upload className="w-6 h-6 text-[#9CA3AF]" />
-            <span className="text-xs text-[#6B7280] font-medium">Cliquez pour uploader</span>
-            {hint && <span className="text-[10px] text-[#9CA3AF] text-center px-4">{hint}</span>}
-          </div>
-        )}
-        <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFile} />
+      <label className="block text-[13px] font-medium text-[#111827]">
+        {label} {required ? <span className="text-red-500">*</span> : <span className="text-[#9CA3AF] font-normal">(optionnel)</span>}
       </label>
+      {preview && value ? (
+        <div className="relative w-full h-28 rounded-xl border border-[#1D9E75] bg-[#E1F5EE]/30 overflow-hidden flex items-center justify-center">
+          {preview.startsWith('blob:') || preview.startsWith('http') ? (
+            <img src={preview} alt="preview" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center gap-1">
+              <CheckCircle className="w-6 h-6 text-[#1D9E75]" />
+              <span className="text-xs text-[#1D9E75] font-medium">Document uploadé ✓</span>
+            </div>
+          )}
+          <button onClick={handleRemove} className="absolute top-2 right-2 w-6 h-6 bg-white rounded-full shadow flex items-center justify-center">
+            <X className="w-3.5 h-3.5 text-[#6B7280]" />
+          </button>
+        </div>
+      ) : (
+        <label className="flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-colors border-[#D1D5DB] bg-[#F9FAFB] hover:border-[#534AB7]/50">
+          {loading ? (
+            <Loader2 className="w-6 h-6 animate-spin text-[#534AB7]" />
+          ) : (
+            <div className="flex flex-col items-center gap-1.5">
+              <Upload className="w-6 h-6 text-[#9CA3AF]" />
+              <span className="text-xs text-[#6B7280] font-medium">Cliquez pour uploader</span>
+              {hint && <span className="text-[10px] text-[#9CA3AF] text-center px-4">{hint}</span>}
+            </div>
+          )}
+          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={handleFile} />
+        </label>
+      )}
+      {error && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{error}</p>}
     </div>
   );
 }
@@ -324,7 +455,8 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
   const [docs, setDocs] = useState({ eid_front_url: '', eid_back_url: '', selfie_url: '', insurance_url: '', onss_url: '' });
   const [saving, setSaving] = useState(false);
 
-  const requiredDone = docs.eid_front_url && docs.eid_back_url && docs.selfie_url && (userType !== 'professionnel' || docs.insurance_url);
+  const requiredDone = docs.eid_front_url && docs.eid_back_url && docs.selfie_url &&
+    (userType !== 'professionnel' || docs.insurance_url);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -364,14 +496,22 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
         {userType === 'professionnel' && (
           <>
             <p className="text-sm font-semibold text-[#111827] pt-2">Documents professionnels</p>
-            <UploadZone label="Attestation d'assurance professionnelle" hint="Document attestant que vous êtes assuré pour exercer votre activité" value={docs.insurance_url} onChange={v => setDocs(d => ({ ...d, insurance_url: v }))} />
+            <UploadZone label="Attestation d'assurance professionnelle" hint="Document attestant que vous êtes assuré pour exercer" value={docs.insurance_url} onChange={v => setDocs(d => ({ ...d, insurance_url: v }))} />
             <UploadZone label="Attestation ONSS" hint="Preuve de votre statut d'indépendant" value={docs.onss_url} onChange={v => setDocs(d => ({ ...d, onss_url: v }))} required={false} />
           </>
         )}
 
-        <Button onClick={handleSubmit} disabled={!requiredDone || saving} className="w-full h-13 rounded-xl text-base bg-[#534AB7] hover:bg-[#4338A0] disabled:opacity-40 mt-2">
-          {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Envoi en cours...</> : <>Soumettre mes documents <ChevronRight className="w-5 h-5 ml-1" /></>}
-        </Button>
+        <button
+          onClick={handleSubmit}
+          disabled={!requiredDone || saving}
+          className={`w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 ${
+            requiredDone && !saving
+              ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer'
+              : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
+          }`}
+        >
+          {saving ? <><Loader2 className="inline w-4 h-4 mr-2 animate-spin" />Envoi en cours...</> : <>Soumettre mes documents <ChevronRight className="inline w-5 h-5 ml-1" /></>}
+        </button>
       </div>
     </div>
   );
@@ -390,7 +530,7 @@ function StepConfirmation({ userType, firstName, navigate }) {
       <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 mb-6 text-left shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <ShieldCheck className="w-5 h-5 text-[#1D9E75]" />
-          <p className="font-semibold text-sm text-[#111827]">Email vérifié ✓</p>
+          <p className="font-semibold text-sm text-[#111827]">Compte créé ✓</p>
         </div>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-5 h-5 rounded-full border-2 border-[#F59E0B] flex items-center justify-center shrink-0">
@@ -417,12 +557,12 @@ function StepConfirmation({ userType, firstName, navigate }) {
         ))}
       </div>
 
-      <Button
+      <button
         onClick={() => navigate(userType === 'professionnel' ? '/ProDashboard' : '/Home')}
-        className="w-full h-13 rounded-xl text-base bg-[#534AB7] hover:bg-[#4338A0]"
+        className="w-full h-12 rounded-xl text-base font-semibold bg-[#534AB7] hover:bg-[#4338A0] text-white transition-colors"
       >
-        Découvrir ServiGo <ChevronRight className="w-5 h-5 ml-1" />
-      </Button>
+        Découvrir ServiGo <ChevronRight className="inline w-5 h-5 ml-1" />
+      </button>
     </div>
   );
 }
@@ -431,17 +571,16 @@ function StepConfirmation({ userType, firstName, navigate }) {
 export default function Register() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const location = useLocation();
   const [step, setStep] = useState(0);
   const [userType, setUserType] = useState(null);
   const [personalData, setPersonalData] = useState({});
 
-  const location = useLocation();
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
 
-  // Pre-select type if coming from Landing page
   useEffect(() => {
     const preselected = location.state?.preselectedType;
     if (preselected) {
@@ -480,10 +619,6 @@ export default function Register() {
     setStep(2);
   };
 
-  const handleIdentityNext = () => {
-    setStep(3);
-  };
-
   return (
     <div className="bg-[#F7F6F3] overflow-y-auto" style={{ height: '100dvh' }}>
       <ProgressBar step={step} />
@@ -510,7 +645,7 @@ export default function Register() {
               userType={userType}
               userName={[personalData.first_name, personalData.last_name].filter(Boolean).join(' ')}
               userEmail={user?.email}
-              onNext={handleIdentityNext}
+              onNext={() => setStep(3)}
               onBack={() => setStep(1)}
             />
           </motion.div>
