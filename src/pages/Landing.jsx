@@ -123,7 +123,7 @@ export default function Landing() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => base44.auth.redirectToLogin()}
+              onClick={() => navigate('/Login')}
               className="hidden md:block text-sm font-semibold text-[#1A365D] hover:underline"
             >
               Se connecter
@@ -144,7 +144,7 @@ export default function Landing() {
             <a href="#categories" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Services</a>
             <a href="#how" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Comment ça marche</a>
             <a href="#reviews" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Avis clients</a>
-            <button onClick={() => base44.auth.redirectToLogin()} className="block w-full text-left text-sm font-semibold text-[#2B6CB0]">Se connecter</button>
+            <button onClick={() => navigate('/Login')} className="block w-full text-left text-sm font-semibold text-[#2B6CB0]">Se connecter</button>
           </div>
         )}
       </nav>
@@ -423,7 +423,7 @@ export default function Landing() {
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/40">
             <p>© 2026 ServiGo. Tous droits réservés.</p>
-            <button onClick={() => base44.auth.redirectToLogin()} className="text-white/60 hover:text-white transition-colors font-medium">
+            <button onClick={() => navigate('/Login')} className="text-white/60 hover:text-white transition-colors font-medium">
               Se connecter / Se connecter →
             </button>
           </div>

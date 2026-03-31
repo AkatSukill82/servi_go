@@ -643,16 +643,19 @@ export default function Register() {
   return (
     <div className="bg-[#F7F6F3] overflow-y-auto" style={{ height: '100dvh' }}>
       {/* Login link */}
-      <div className="text-center pt-4 pb-1">
-        <p className="text-sm text-[#6B7280]">
-          Vous avez déjà un compte ?{' '}
-          <button
-            onClick={() => base44.auth.redirectToLogin()}
-            className="font-semibold text-[#534AB7] hover:underline"
-          >
-            Se connecter
-          </button>
-        </p>
+      <div className="w-full max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-[#534AB7] flex items-center justify-center">
+            <span className="text-white font-black text-sm">S</span>
+          </div>
+          <span className="font-black text-[#111827] text-lg">ServiGo</span>
+        </div>
+        <button
+          onClick={() => base44.auth.redirectToLogin()}
+          className="text-sm font-semibold text-[#534AB7] border border-[#534AB7]/30 px-4 py-2 rounded-xl hover:bg-[#534AB7]/5 transition-colors"
+        >
+          Se connecter
+        </button>
       </div>
 
       <AnimatePresence mode="wait">
