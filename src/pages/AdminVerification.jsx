@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro, CreditCard, AlertTriangle, Clock } from 'lucide-react';
+import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro, CreditCard, AlertTriangle, Clock, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -164,6 +164,102 @@ function SubscriptionsTab() {
   );
 }
 
+function IdentityVerifTab() {
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState('pending_review');
+  const [expanded, setExpanded] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const { data: verifs = [], isLoading } = useQuery({
+    queryKey: ['allIdentityVerifs'],
+    queryFn: () => base44.entities.IdentityVerification.list('-created_date', 100),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, status, reason, userEmail, userName }) => {
+      await base44.entities.IdentityVerification.update(id, { status, rejection_reason: reason || null });
+      const eidStatus = status === 'approved' ? 'verified' : 'rejected';
+      const users = await base44.entities.User.filter({ contact_email: userEmail });
+      if (users[0]) await base44.entities.User.update(users[0].id, { eid_status: eidStatus, verification_status: status === 'approved' ? 'verified' : 'rejected' });
+      await base44.integrations.Core.SendEmail({
+        to: userEmail,
+        subject: status === 'approved' ? '✅ Identité vérifiée — ServiGo' : '❌ Vérification refusée — ServiGo',
+        body: status === 'approved'
+          ? `Bonjour ${userName},\n\nVotre identité a été vérifiée avec succès. Vous pouvez maintenant accéder à toutes les fonctionnalités ServiGo.\n\nL'équipe ServiGo`
+          : `Bonjour ${userName},\n\nVotre vérification d'identité a été refusée.\nRaison : ${reason}\n\nVeuillez soumettre à nouveau vos documents.\n\nL'équipe ServiGo`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allIdentityVerifs'] });
+      setExpanded(null);
+      setRejectReason('');
+      toast.success('Dossier mis à jour.');
+    },
+  });
+
+  const filters = [{ v: 'pending_review', l: 'En attente' }, { v: 'approved', l: 'Approuvés' }, { v: 'rejected', l: 'Refusés' }];
+  const filtered = verifs.filter(v => v.status === filter);
+  const pendingCount = verifs.filter(v => v.status === 'pending_review').length;
+
+  return (
+    <div className="space-y-4">
+      {pendingCount > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-orange-600 shrink-0" />
+          <p className="text-sm text-orange-700 font-medium">{pendingCount} dossier{pendingCount > 1 ? 's' : ''} en attente de vérification</p>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {filters.map(f => (
+          <button key={f.v} onClick={() => setFilter(f.v)} className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${filter === f.v ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'}`}>{f.l}</button>
+        ))}
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-10"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-14 text-muted-foreground"><ShieldCheck className="w-10 h-10 mx-auto mb-3 opacity-30" /><p className="text-sm">Aucun dossier</p></div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(v => (
+            <div key={v.id} className="bg-card rounded-2xl border border-border p-4 space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold text-sm">{v.user_name || v.user_email}</p>
+                  <p className="text-xs text-muted-foreground">{v.user_email}</p>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1 inline-block ${v.user_type === 'professionnel' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>{v.user_type}</span>
+                </div>
+                <button onClick={() => setExpanded(expanded === v.id ? null : v.id)} className="text-xs text-primary underline">{expanded === v.id ? 'Réduire' : 'Voir'}</button>
+              </div>
+              {expanded === v.id && (
+                <div className="space-y-2 border-t border-border/40 pt-3">
+                  {[['Recto eID', v.eid_front_url], ['Verso eID', v.eid_back_url], ['Selfie', v.selfie_url], ['Assurance', v.insurance_url], ['ONSS', v.onss_url]].map(([label, url]) =>
+                    url ? (
+                      <div key={label} className="flex items-center justify-between bg-muted/40 rounded-lg px-3 py-2">
+                        <span className="text-xs font-medium text-muted-foreground">{label}</span>
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary underline"><Eye className="w-3 h-3" />Voir</a>
+                      </div>
+                    ) : null
+                  )}
+                  {v.status === 'pending_review' && (
+                    <div className="space-y-2 pt-1">
+                      <input value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Raison du refus (si refus)" className="w-full text-sm border border-border rounded-xl px-3 py-2" />
+                      <div className="flex gap-2">
+                        <Button onClick={() => updateMutation.mutate({ id: v.id, status: 'approved', userEmail: v.user_email, userName: v.user_name })} disabled={updateMutation.isPending} className="flex-1 h-9 rounded-xl bg-green-600 hover:bg-green-700 text-sm"><CheckCircle className="w-3.5 h-3.5 mr-1" />Approuver</Button>
+                        <Button onClick={() => updateMutation.mutate({ id: v.id, status: 'rejected', reason: rejectReason, userEmail: v.user_email, userName: v.user_name })} disabled={updateMutation.isPending || !rejectReason} variant="outline" className="flex-1 h-9 rounded-xl border-red-200 text-red-600 text-sm"><XCircle className="w-3.5 h-3.5 mr-1" />Refuser</Button>
+                      </div>
+                    </div>
+                  )}
+                  {v.rejection_reason && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">Raison : {v.rejection_reason}</p>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ReportsTab() {
   const queryClient = useQueryClient();
   const { data: reports = [], isLoading } = useQuery({
@@ -270,8 +366,15 @@ export default function AdminVerification() {
     : pros.filter(p => p.verification_status === filter);
   const pendingCount = pros.filter(p => p.verification_status === 'pending' || (p.id_card_url && !p.verification_status)).length;
 
+  const { data: pendingIdentityCount = 0 } = useQuery({
+    queryKey: ['pendingIdentityCount'],
+    queryFn: () => base44.entities.IdentityVerification.filter({ status: 'pending_review' }, '-created_date', 50).then(r => r.length),
+    enabled: currentUser?.role === 'admin',
+  });
+
   const tabs = [
-    { key: 'verif', label: 'Vérifications', icon: <ShieldCheck className="w-3.5 h-3.5" />, badge: pendingCount },
+    { key: 'identity', label: 'Identités', icon: <ShieldCheck className="w-3.5 h-3.5" />, badge: pendingIdentityCount },
+    { key: 'verif', label: 'Pros', icon: <User className="w-3.5 h-3.5" />, badge: pendingCount },
     { key: 'subscriptions', label: 'Abonnements', icon: <CreditCard className="w-3.5 h-3.5" />, badge: 0 },
     { key: 'reports', label: 'Signalements', icon: <AlertTriangle className="w-3.5 h-3.5" />, badge: reportsCount },
     { key: 'stats', label: 'Stats', icon: <BarChart2 className="w-3.5 h-3.5" />, badge: 0 },
@@ -293,6 +396,7 @@ export default function AdminVerification() {
         ))}
       </div>
 
+      {tab === 'identity' && <IdentityVerifTab />}
       {tab === 'stats' && <ProStatsTable pros={pros} />}
       {tab === 'subscriptions' && <SubscriptionsTab />}
       {tab === 'reports' && <ReportsTab />}

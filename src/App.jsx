@@ -19,6 +19,7 @@ import CGU from './pages/CGU';
 import EidVerification from './pages/EidVerification';
 import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Register from './pages/Register';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -49,6 +50,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/Landing" element={<Landing />} />
       <Route path="/SelectUserType" element={<SelectUserType />} />
+      <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
       <Route path="/AdminDashboard" element={<AdminDashboard />} />

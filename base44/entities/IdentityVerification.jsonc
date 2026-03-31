@@ -1,0 +1,94 @@
+{
+  "name": "IdentityVerification",
+  "type": "object",
+  "description": "Dossier de v\u00e9rification d'identit\u00e9 soumis par un utilisateur",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "particulier",
+        "professionnel"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending_review"
+    },
+    "eid_front_url": {
+      "type": "string",
+      "description": "Recto de la carte eID"
+    },
+    "eid_back_url": {
+      "type": "string",
+      "description": "Verso de la carte eID"
+    },
+    "selfie_url": {
+      "type": "string",
+      "description": "Selfie avec la carte eID"
+    },
+    "insurance_url": {
+      "type": "string",
+      "description": "Attestation d'assurance professionnelle (pros)"
+    },
+    "onss_url": {
+      "type": "string",
+      "description": "Attestation ONSS (pros, optionnel)"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_date": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "user_email",
+    "user_type"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

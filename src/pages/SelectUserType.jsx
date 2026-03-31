@@ -78,29 +78,11 @@ export default function SelectUserType() {
 
   const updateMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
-    onSuccess: (_, data) => {
-      if (data.user_type === 'particulier') navigate('/Home');
-      else navigate('/ProVerificationOnboarding');
-    },
+    onSuccess: () => navigate('/Register'),
   });
 
   const handleChoose = async (type) => {
-    // Enregistre immédiatement, géolocalisation en arrière-plan
     updateMutation.mutate({ user_type: type });
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const { latitude, longitude } = pos.coords;
-          try {
-            const address = await reverseGeocode(latitude, longitude);
-            await base44.auth.updateMe({ address, latitude, longitude });
-          } catch {}
-        },
-        () => {},
-        { timeout: 5000, enableHighAccuracy: false }
-      );
-    }
   };
 
   const handleConfirmAddress = () => {

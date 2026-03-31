@@ -156,6 +156,18 @@ export default function Home() {
           </button>
         )}
 
+        {/* Identity pending banner */}
+        {user && user.eid_status !== 'verified' && user.eid_status !== undefined && (
+          <div className="w-full mb-3 rounded-2xl bg-orange-50 border border-orange-200 px-4 py-3 flex items-center gap-3">
+            <span className="text-lg shrink-0">⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-orange-800">Identité non vérifiée</p>
+              <p className="text-xs text-orange-600">Certaines fonctionnalités sont limitées en attendant la vérification.</p>
+            </div>
+            <button onClick={() => navigate('/EidVerification')} className="text-xs font-bold text-orange-700 underline shrink-0">Vérifier</button>
+          </div>
+        )}
+
         {/* SOS banner */}
         <button
           onClick={() => navigate('/Emergency')}
