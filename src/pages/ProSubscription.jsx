@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { CheckCircle, CreditCard, Calendar, Shield, Zap, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { CheckCircle, CreditCard, Calendar, Shield, Zap, AlertCircle, RefreshCw, X, Receipt, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useNavigate } from 'react-router-dom';
@@ -90,6 +90,37 @@ export default function ProSubscription() {
     } else {
       await updateSubMutation.mutateAsync({ auto_renew: true });
       toast.success('Renouvellement automatique activé ✓');
+    }
+  };
+
+  const [billingLoading, setBillingLoading] = useState(false);
+
+  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
+    queryKey: ['stripeInvoices', user?.email],
+    queryFn: () => base44.functions.invoke('getStripeInvoices', {}).then(r => r.data?.invoices || []),
+    enabled: !!user?.email && !!subscription,
+    staleTime: 60000,
+  });
+
+  const handleOpenBillingPortal = async () => {
+    if (isInIframe()) {
+      toast.error('Fonctionne uniquement depuis l\'app publiée.');
+      return;
+    }
+    setBillingLoading(true);
+    try {
+      const res = await base44.functions.invoke('createBillingPortal', {
+        returnUrl: `${window.location.origin}/ProSubscription`,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error(res.data?.error || 'Erreur, réessayez.');
+      }
+    } catch (err) {
+      toast.error('Erreur : ' + (err?.message || 'réessayez'));
+    } finally {
+      setBillingLoading(false);
     }
   };
 
@@ -214,25 +245,52 @@ export default function ProSubscription() {
               </div>
             )}
 
-            {/* Payment history */}
-            {subscription.payment_history?.length > 0 && (
-              <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
-                <h3 className="font-semibold text-sm mb-3">Historique des paiements</h3>
+            {/* Update payment method */}
+            <Button variant="outline" onClick={handleOpenBillingPortal} disabled={billingLoading}
+              className="w-full h-11 rounded-xl border-dashed">
+              {billingLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
+              Mettre à jour ma carte de paiement
+            </Button>
+
+            {/* Stripe invoice history */}
+            <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
+              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-muted-foreground" /> Factures
+              </h3>
+              {invoicesLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : invoicesData?.length > 0 ? (
                 <div className="space-y-2">
-                  {subscription.payment_history.map((p, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm py-1.5 border-b border-border/50 last:border-0">
-                      <span className="text-muted-foreground">{p.date}</span>
+                  {invoicesData.map(inv => (
+                    <div key={inv.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                      <div>
+                        <p className="text-sm font-medium">{inv.amount.toFixed(2)} {inv.currency}</p>
+                        <p className="text-xs text-muted-foreground">{inv.date}{inv.period_start ? ` · ${inv.period_start} → ${inv.period_end}` : ''}</p>
+                      </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{p.amount} €</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.status === 'paid' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
-                          {p.status === 'paid' ? 'Payé' : 'Échoué'}
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          inv.status === 'paid' ? 'bg-green-50 text-green-700' :
+                          inv.status === 'open' ? 'bg-orange-50 text-orange-600' :
+                          'bg-gray-50 text-gray-500'
+                        }`}>
+                          {inv.status === 'paid' ? 'Payée' : inv.status === 'open' ? 'En attente' : inv.status}
                         </span>
+                        {inv.pdf_url && (
+                          <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer"
+                            className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
+                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                          </a>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Aucune facture disponible</p>
+              )}
+            </div>
 
             {/* Cancel */}
             <div className="pt-2">
