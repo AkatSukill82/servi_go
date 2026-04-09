@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, BarChart2, CreditCard, AlertCircle, Play, StopCircle, X } from 'lucide-react';
+import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, CreditCard, AlertCircle, Play, StopCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import ProStats from '@/components/pro/ProStats';
@@ -11,6 +11,13 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 import MissionProgress from '@/components/mission/MissionProgress';
+
+const getTimeSinceCreated = (createdDate) => {
+  if (!createdDate) return 0;
+  const created = new Date(createdDate);
+  const now = new Date();
+  return Math.floor((now - created) / 60000);
+};
 
 export default function ProDashboard() {
   const navigate = useNavigate();
@@ -29,7 +36,13 @@ export default function ProDashboard() {
 
   const { data: subscription } = useQuery({
     queryKey: ['proSubscription', user?.email],
-    queryFn: () => base44.entities.ProSubscription.filter({ professional_email: user.email }, '-created_date', 1).then(r => r[0] || null),
+    queryFn: () => {
+      const PRIORITY = { active: 0, trial: 1, pending_payment: 2, expired: 3, cancelled: 4 };
+      return base44.entities.ProSubscription.filter({ professional_email: user.email }, '-created_date').then(subs => {
+        subs.sort((a, b) => (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9));
+        return subs[0] || null;
+      });
+    },
     enabled: !!user?.email,
   });
 
@@ -47,33 +60,45 @@ export default function ProDashboard() {
 
   const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
 
-  const { data: incomingRequests = [] } = useQuery({
-    queryKey: ['incomingRequests', proCategory, user?.email],
+  // Query A: open pool (status='searching')
+  const { data: poolRequests = [] } = useQuery({
+    queryKey: ['poolRequests', proCategory],
     queryFn: async () => {
-      if (!proCategory || !user?.email) return [];
-      // Query A: Open pool (searching)
-      const openPool = await base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date', 100);
-      // Query B: Specifically assigned to this pro (pending_pro)
-      const assigned = await base44.entities.ServiceRequestV2.filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date', 50);
-      // Merge and deduplicate by id, with assigned at the top
-      const merged = []
-        .concat(assigned.map(r => ({ ...r, _assigned: true })))
-        .concat(openPool.filter(r => !assigned.some(a => a.id === r.id)));
-      return merged;
+      if (!proCategory) return [];
+      return base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
     },
-    enabled: !!proCategory && !!user?.email && hasActiveSubscription,
+    enabled: !!proCategory,
     staleTime: 10000,
   });
 
+  // Query B: assigned to this pro (status='pending_pro')
+  const { data: assignedRequests = [] } = useQuery({
+    queryKey: ['assignedRequests', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      return base44.entities.ServiceRequestV2.filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date');
+    },
+    enabled: !!user?.email,
+    staleTime: 10000,
+  });
+
+  // Merge and deduplicate by id, assigned first
+  const mergedIds = new Set();
+  const incomingRequests = [
+    ...assignedRequests.filter(r => { if (mergedIds.has(r.id)) return false; mergedIds.add(r.id); return true; }),
+    ...poolRequests.filter(r => { if (mergedIds.has(r.id)) return false; mergedIds.add(r.id); return true; }),
+  ];
+
   useEffect(() => {
-    if (!proCategory) return;
+    if (!proCategory || !user?.email) return;
     const unsub = base44.entities.ServiceRequestV2.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update' || event.type === 'delete') {
-        queryClient.invalidateQueries({ queryKey: ['incomingRequests', proCategory] });
+        queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
+        queryClient.invalidateQueries({ queryKey: ['assignedRequests', user.email] });
       }
     });
     return unsub;
-  }, [proCategory]);
+  }, [proCategory, user?.email, queryClient]);
 
   useEffect(() => {
     if (!incomingRequests?.length) return;
@@ -109,14 +134,12 @@ export default function ProDashboard() {
 
   const acceptMutation = useMutation({
     mutationFn: async ({ requestId, request }) => {
-      // 1. Update request to contract_pending
       await base44.entities.ServiceRequestV2.update(requestId, {
         status: 'contract_pending',
         professional_id: user.id,
         professional_name: user.full_name,
         professional_email: user.email,
       });
-      // 2. Create MissionContract
       const contractNumber = `CTR-${Date.now()}`;
       await base44.entities.MissionContract.create({
         request_id: requestId,
@@ -141,7 +164,6 @@ export default function ProDashboard() {
         payment_terms: 'after_completion',
         status: 'sent_to_customer',
       });
-      // 3. Notify customer
       await base44.entities.Notification.create({
         recipient_email: request.customer_email,
         recipient_type: 'particulier',
@@ -151,24 +173,24 @@ export default function ProDashboard() {
         request_id: requestId,
         action_url: `/Chat?requestId=${requestId}`,
       });
-      // 4. Update subscription missions count
       if (subscription?.id) {
         await base44.entities.ProSubscription.update(subscription.id, { missions_received: (subscription.missions_received || 0) + 1 });
       }
     },
     onMutate: async ({ requestId }) => {
-      await queryClient.cancelQueries({ queryKey: ['incomingRequests', proCategory] });
-      const previous = queryClient.getQueryData(['incomingRequests', proCategory]);
-      queryClient.setQueryData(['incomingRequests', proCategory], old => (old || []).filter(r => r.id !== requestId));
+      await queryClient.cancelQueries({ queryKey: ['poolRequests', proCategory] });
+      const previous = queryClient.getQueryData(['poolRequests', proCategory]);
+      queryClient.setQueryData(['poolRequests', proCategory], old => (old || []).filter(r => r.id !== requestId));
       return { previous };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['incomingRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['poolRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['assignedRequests'] });
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
       toast.success('Mission acceptée ! Un contrat a été envoyé au client.');
     },
     onError: (_, __, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(['incomingRequests', proCategory], ctx.previous);
+      if (ctx?.previous) queryClient.setQueryData(['poolRequests', proCategory], ctx.previous);
       toast.error('Mission déjà prise. Réessayez.');
     },
   });
@@ -182,7 +204,7 @@ export default function ProDashboard() {
           recipient_email: job.customer_email,
           recipient_type: 'particulier',
           type: 'review_request',
-          title: 'Comment s\'est passée votre mission ?',
+          title: "Comment s'est passée votre mission ?",
           body: `Évaluez ${user?.full_name || 'votre artisan'} pour sa prestation ${job.category_name}. Votre avis aide d'autres clients.`,
           request_id: id,
           action_url: `/Chat?requestId=${id}`,
@@ -258,28 +280,37 @@ export default function ProDashboard() {
       )}
 
       {/* Subscription banner */}
-      {subscription ? (
-        <button onClick={() => navigate('/ProSubscription')} className={`w-full rounded-2xl p-4 border flex items-center gap-3 text-left transition-colors ${hasActiveSubscription ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-          <CreditCard className={`w-5 h-5 shrink-0 ${hasActiveSubscription ? 'text-brand-green' : 'text-destructive'}`} />
+      {!subscription || subscription.status === 'pending_payment' ? (
+        <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-blue-200 bg-blue-50 flex items-center gap-3 text-left">
+          <CreditCard className="w-5 h-5 text-blue-600 shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-semibold">{hasActiveSubscription ? 'Abonnement actif' : '⚠️ Abonnement expiré'}</p>
-            <p className="text-xs text-muted-foreground">{hasActiveSubscription ? `10 €/mois · ${subscription.renewal_date ? `Renouvellement le ${subscription.renewal_date}` : ''}` : 'Renouvelez pour continuer à recevoir des missions'}</p>
+            <p className="text-sm font-semibold text-blue-900">🚀 Activez votre abonnement Pro</p>
+            <p className="text-xs text-blue-700">10€/mois — Recevez des missions dès aujourd'hui</p>
+          </div>
+          <span className="text-xs font-bold text-blue-600">S'abonner →</span>
+        </button>
+      ) : hasActiveSubscription ? (
+        <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-green-200 bg-green-50 flex items-center gap-3 text-left">
+          <CreditCard className="w-5 h-5 text-[#38A169] shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold">Abonnement actif</p>
+            <p className="text-xs text-muted-foreground">{`10 €/mois · ${subscription.renewal_date ? `Renouvellement le ${subscription.renewal_date}` : ''}`}</p>
           </div>
           <span className="text-xs font-bold text-primary">→</span>
         </button>
       ) : (
-        <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-primary/30 bg-primary/5 flex items-center gap-3 text-left">
-          <CreditCard className="w-5 h-5 text-primary shrink-0" />
+        <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-red-200 bg-red-50 flex items-center gap-3 text-left">
+          <CreditCard className="w-5 h-5 text-destructive shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-primary">Activez votre abonnement</p>
-            <p className="text-xs text-muted-foreground">10 €/mois pour recevoir des missions</p>
+            <p className="text-sm font-semibold text-red-800">⚠️ Abonnement expiré</p>
+            <p className="text-xs text-red-600">Renouvelez-le pour continuer à recevoir des missions</p>
           </div>
-          <span className="text-xs font-bold text-primary">S'abonner →</span>
+          <span className="text-xs font-bold text-red-600">Renouveler →</span>
         </button>
       )}
 
       {/* Subscription expired overlay */}
-      {subscription && !hasActiveSubscription && (
+      {subscription && ['expired', 'cancelled'].includes(subscription.status) && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center space-y-3">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
           <h3 className="font-bold text-red-800">Abonnement expiré</h3>
@@ -302,170 +333,191 @@ export default function ProDashboard() {
 
       {activeTab === 'stats' && <ProStats userEmail={user?.email} />}
 
-      {activeTab === 'missions' && hasActiveSubscription && <>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <div className="flex items-center gap-1.5 mb-2"><TrendingUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Missions terminées</p></div>
-            <p className="text-3xl font-bold tracking-tight">{completedJobs.length}</p>
-          </div>
-          <div className="bg-card rounded-xl p-4 border border-border">
-            <div className="flex items-center gap-1.5 mb-2"><Star className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Note moyenne</p></div>
-            <p className="text-3xl font-bold tracking-tight">{user?.rating ? user.rating.toFixed(1) : '—'}</p>
-            {user?.reviews_count > 0 && <p className="text-xs text-muted-foreground mt-1">{user.reviews_count} avis</p>}
-          </div>
-        </div>
-
-        {/* Incoming requests */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold">Demandes disponibles</h2>
-              {incomingRequests.length > 0 && <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center">{incomingRequests.length}</span>}
+      {activeTab === 'missions' && (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-card rounded-xl p-4 border border-border">
+              <div className="flex items-center gap-1.5 mb-2"><TrendingUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Missions terminées</p></div>
+              <p className="text-3xl font-bold tracking-tight">{completedJobs.length}</p>
             </div>
-            {incomingRequests.length > 0 && <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse" /><span className="text-xs text-muted-foreground">En direct</span></div>}
+            <div className="bg-card rounded-xl p-4 border border-border">
+              <div className="flex items-center gap-1.5 mb-2"><Star className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Note moyenne</p></div>
+              <p className="text-3xl font-bold tracking-tight">{user?.rating ? user.rating.toFixed(1) : '—'}</p>
+              {user?.reviews_count > 0 && <p className="text-xs text-muted-foreground mt-1">{user.reviews_count} avis</p>}
+            </div>
           </div>
 
-          {incomingRequests.length === 0 ? (
-            <div className="bg-muted/50 rounded-xl p-5 text-center border border-border">
-              <Clock className="w-6 h-6 text-muted-foreground mx-auto mb-2" strokeWidth={1.5} />
-              <p className="text-sm font-medium">Aucune demande pour l'instant</p>
-              <p className="text-xs text-muted-foreground mt-1">Les nouvelles missions de {proCategory || 'votre métier'} apparaîtront ici</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {incomingRequests.map((req, i) => (
-                <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={`rounded-xl p-4 border ${req._assigned ? 'bg-blue-50 border-blue-200' : 'bg-card border-border'}`}>
-                  {req._assigned && (
-                    <div className="bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5 mb-3 text-xs font-semibold text-blue-700 inline-flex items-center gap-1">
-                      📌 Assignée à vous
-                    </div>
-                  )}
-                  {req._assigned && (
-                    <div className="bg-white/60 border border-blue-200 rounded-lg px-3 py-2 mb-3 text-xs text-blue-800 font-medium">
-                      ⏰ Cette demande vous attend depuis {Math.floor((Date.now() - new Date(req.created_date).getTime()) / 60000)} minutes — répondez vite !
-                    </div>
-                  )}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm">{req.category_name}</p>
-                        {req.is_urgent && <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5">⚡ SOS</span>}
-                        {req._assigned && <span className="text-[10px] font-bold bg-blue-600 text-white rounded-full px-2 py-0.5">⏱️ En attente</span>}
-                      </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
-                        <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
-                      </p>
-                      {req.scheduled_date && <p className="text-xs text-muted-foreground mt-0.5">📅 {req.scheduled_date}{req.scheduled_time ? ` à ${req.scheduled_time}` : ''}</p>}
-                    </div>
-                    <div className="text-right shrink-0 ml-3">
-                      <p className="font-bold text-base text-primary">{(req.estimated_price || req.base_price || 0).toFixed(0)} €</p>
-                      <p className="text-[10px] text-muted-foreground">estimé</p>
-                    </div>
+          {/* Locked preview for inactive subscription */}
+          {!hasActiveSubscription && incomingRequests.length > 0 && (
+            <div className="relative rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
+                <div className="text-center px-4">
+                  <p className="text-white text-sm font-semibold mb-3">Abonnez-vous pour voir ces {incomingRequests.length} demande{incomingRequests.length !== 1 ? 's' : ''}</p>
+                  <Button onClick={() => navigate('/ProSubscription')} className="bg-white text-primary hover:bg-white/90">
+                    S'abonner maintenant
+                  </Button>
+                </div>
+              </div>
+              <div className="pointer-events-none opacity-40 space-y-3 p-1">
+                {incomingRequests.slice(0, 2).map((req) => (
+                  <div key={req.id} className="bg-card rounded-xl p-4 border border-border">
+                    <p className="text-sm font-semibold">{req.category_name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{req.customer_address || 'Adresse non précisée'}</p>
                   </div>
-                  {req.answers?.length > 0 && (
-                    <div className="bg-muted rounded-lg p-3 mb-3 space-y-1">
-                      {req.answers.slice(0, 2).map((a, idx) => (
-                        <p key={idx} className="text-xs"><span className="text-muted-foreground">{a.question} : </span><span className="font-medium">{a.answer}</span></p>
-                      ))}
-                    </div>
-                  )}
-                  <button onClick={() => acceptMutation.mutate({ requestId: req.id, request: req })} disabled={acceptMutation.isPending}
-                    className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50">
-                    <Check className="w-4 h-4" strokeWidth={2.2} /> Accepter cette mission
-                  </button>
-                </motion.div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Active missions */}
-        {activeJobs.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold mb-3">Missions en cours</h2>
-            <div className="space-y-3">
-              {activeJobs.map(job => (
-                <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-semibold text-sm">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
+          {/* Incoming requests (only when active) */}
+          {hasActiveSubscription && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold">Demandes disponibles</h2>
+                  {incomingRequests.length > 0 && <span className="text-xs font-bold bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center">{incomingRequests.length}</span>}
+                </div>
+                {incomingRequests.length > 0 && <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-[#38A169] animate-pulse" /><span className="text-xs text-muted-foreground">En direct</span></div>}
+              </div>
+
+              {incomingRequests.length === 0 ? (
+                <div className="bg-muted/50 rounded-xl p-5 text-center border border-border">
+                  <Clock className="w-6 h-6 text-muted-foreground mx-auto mb-2" strokeWidth={1.5} />
+                  <p className="text-sm font-medium">Aucune demande pour l'instant</p>
+                  <p className="text-xs text-muted-foreground mt-1">Les nouvelles missions de {proCategory || 'votre métier'} apparaîtront ici</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {incomingRequests.map((req, i) => {
+                    const isAssigned = assignedRequests.some(a => a.id === req.id);
+                    const createdMinutesAgo = isAssigned ? getTimeSinceCreated(req.created_date) : null;
+                    return (
+                      <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border border-border">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              {isAssigned && <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">📌 Assigné à vous</span>}
+                              <p className="font-semibold text-sm">{req.category_name}</p>
+                              {req.is_urgent && <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5">⚡ SOS</span>}
+                            </div>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
+                              <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
+                            </p>
+                            {req.scheduled_date && <p className="text-xs text-muted-foreground mt-0.5">📅 {req.scheduled_date}{req.scheduled_time ? ` à ${req.scheduled_time}` : ''}</p>}
+                            {createdMinutesAgo !== null && <p className="text-xs text-orange-600 mt-2">⏰ Cette demande vous attend depuis {createdMinutesAgo} minute{createdMinutesAgo !== 1 ? 's' : ''} — répondez vite !</p>}
+                          </div>
+                          <div className="text-right shrink-0 ml-3">
+                            <p className="font-bold text-base text-primary">{(req.estimated_price || req.base_price || 0).toFixed(0)} €</p>
+                            <p className="text-[10px] text-muted-foreground">estimé</p>
+                          </div>
+                        </div>
+                        {req.answers?.length > 0 && (
+                          <div className="bg-muted rounded-lg p-3 mb-3 space-y-1">
+                            {req.answers.slice(0, 2).map((a, idx) => (
+                              <p key={idx} className="text-xs"><span className="text-muted-foreground">{a.question} : </span><span className="font-medium">{a.answer}</span></p>
+                            ))}
+                          </div>
+                        )}
+                        <button onClick={() => acceptMutation.mutate({ requestId: req.id, request: req })} disabled={acceptMutation.isPending}
+                          className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-xl py-3 text-sm font-semibold active:scale-[0.98] transition-transform disabled:opacity-50">
+                          <Check className="w-4 h-4" strokeWidth={2.2} /> Accepter cette mission
+                        </button>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Active missions */}
+          {hasActiveSubscription && activeJobs.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold mb-3">Missions en cours</h2>
+              <div className="space-y-3">
+                {activeJobs.map(job => (
+                  <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-semibold text-sm">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
+                        <p className="text-xs text-muted-foreground">{job.category_name}</p>
+                      </div>
+                      <span className="text-sm font-bold text-primary">{(job.base_price || 0).toFixed(0)} €</span>
+                    </div>
+                    <MissionProgress status={job.status} compact />
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1 rounded-xl h-9 text-xs" onClick={() => navigate(`/Chat?requestId=${job.id}`)}>
+                        <ChevronRight className="w-3.5 h-3.5 mr-1" /> Chat & Contrat
+                      </Button>
+                      {job.status === 'contract_signed' && (
+                        <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-[#38A169] hover:bg-[#38A169]/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'pro_en_route', job })}>
+                          <Play className="w-3.5 h-3.5 mr-1" /> En route
+                        </Button>
+                      )}
+                      {job.status === 'pro_en_route' && (
+                        <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => statusMutation.mutate({ id: job.id, status: 'in_progress', job })}>
+                          <Play className="w-3.5 h-3.5 mr-1" /> Démarrer
+                        </Button>
+                      )}
+                      {job.status === 'in_progress' && (
+                        <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-[#38A169] hover:bg-[#38A169]/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'completed', job })}>
+                          <StopCircle className="w-3.5 h-3.5 mr-1" /> Terminer
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recent completed */}
+          {hasActiveSubscription && completedJobs.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold mb-3">Missions récentes</h2>
+              <div className="space-y-2">
+                {completedJobs.slice(0, 5).map(job => (
+                  <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)} className="w-full bg-card rounded-xl px-4 py-3 border border-border flex items-center gap-3 active:scale-[0.98] transition-transform">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">{(job.customer_first_name || job.customer_name || 'C')[0]}</div>
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-sm font-medium truncate">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
                       <p className="text-xs text-muted-foreground">{job.category_name}</p>
                     </div>
-                    <span className="text-sm font-bold text-primary">{(job.base_price || 0).toFixed(0)} €</span>
-                  </div>
-                  <MissionProgress status={job.status} compact />
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1 rounded-xl h-9 text-xs" onClick={() => navigate(`/Chat?requestId=${job.id}`)}>
-                      <ChevronRight className="w-3.5 h-3.5 mr-1" /> Chat & Contrat
-                    </Button>
-                    {job.status === 'contract_signed' && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'pro_en_route', job })}>
-                        <Play className="w-3.5 h-3.5 mr-1" /> En route
-                      </Button>
-                    )}
-                    {job.status === 'pro_en_route' && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-blue-600 hover:bg-blue-700" onClick={() => statusMutation.mutate({ id: job.id, status: 'in_progress', job })}>
-                        <Play className="w-3.5 h-3.5 mr-1" /> Démarrer
-                      </Button>
-                    )}
-                    {job.status === 'in_progress' && (
-                      <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-brand-green hover:bg-brand-green/90" onClick={() => statusMutation.mutate({ id: job.id, status: 'completed', job })}>
-                        <StopCircle className="w-3.5 h-3.5 mr-1" /> Terminer
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Recent completed */}
-        {completedJobs.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold mb-3">Missions récentes</h2>
-            <div className="space-y-2">
-              {completedJobs.slice(0, 5).map(job => (
-                <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)} className="w-full bg-card rounded-xl px-4 py-3 border border-border flex items-center gap-3 active:scale-[0.98] transition-transform">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">{(job.customer_first_name || job.customer_name || 'C')[0]}</div>
-                  <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium truncate">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
-                    <p className="text-xs text-muted-foreground">{job.category_name}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold">{(job.base_price || 0).toFixed(0)} €</p>
-                    <p className="text-[10px] text-brand-green font-medium">Terminé</p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.8} />
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Reviews */}
-        {myReviews.length > 0 && (
-          <div>
-            <h2 className="text-sm font-semibold mb-3">Avis clients</h2>
-            <div className="space-y-2">
-              {myReviews.map(review => (
-                <div key={review.id} className="bg-card rounded-xl p-3.5 border border-border">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
-                    <div className="flex gap-0.5">
-                      {[1,2,3,4,5].map(s => <Star key={s} style={{ width: 12, height: 12 }} className={s <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-border fill-border'} />)}
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-semibold">{(job.base_price || 0).toFixed(0)} €</p>
+                      <p className="text-[10px] text-[#38A169] font-medium">Terminé</p>
                     </div>
-                  </div>
-                  {review.comment && <p className="text-xs text-muted-foreground leading-relaxed">{review.comment}</p>}
-                </div>
-              ))}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.8} />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </>}
+          )}
+
+          {/* Reviews */}
+          {hasActiveSubscription && myReviews.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold mb-3">Avis clients</h2>
+              <div className="space-y-2">
+                {myReviews.map(review => (
+                  <div key={review.id} className="bg-card rounded-xl p-3.5 border border-border">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
+                      <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(s => <Star key={s} style={{ width: 12, height: 12 }} className={s <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-border fill-border'} />)}
+                      </div>
+                    </div>
+                    {review.comment && <p className="text-xs text-muted-foreground leading-relaxed">{review.comment}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
       {/* ProReview modal */}
       <Dialog open={!!showProReviewModal} onOpenChange={(open) => { if (!open) setShowProReviewModal(null); }}>
         <DialogContent className="max-w-sm rounded-2xl">
