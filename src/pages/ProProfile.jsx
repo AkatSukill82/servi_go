@@ -203,9 +203,9 @@ export default function ProProfile() {
   const isActive = subscription?.status === 'active' || subscription?.status === 'trial';
 
   return (
-    <div className="min-h-full bg-[#F8F8F6]">
+    <div className="min-h-full bg-background">
       {/* Hero Card */}
-      <div className="bg-white border-b border-border/50 shadow-sm px-5 pt-8 pb-5">
+      <div className="bg-card border-b border-border/50 shadow-sm px-5 pt-8 pb-5">
         <div className="flex items-start gap-4">
           <div className="relative shrink-0">
             <Avatar className="w-20 h-20 border-4 border-white shadow-md">
@@ -251,7 +251,7 @@ export default function ProProfile() {
         </div>
 
         {/* Toggle disponibilité */}
-        <div className="flex items-center justify-between mt-4 bg-muted/30 rounded-xl px-4 py-2.5">
+        <div className="flex items-center justify-between mt-4 bg-muted rounded-xl px-4 py-2.5">
           <div>
             <p className="text-sm font-medium">Disponible pour des missions</p>
             <p className="text-xs text-muted-foreground">{form.available ? 'Vous recevez des nouvelles demandes' : 'Vous êtes hors ligne'}</p>
@@ -285,7 +285,7 @@ export default function ProProfile() {
             className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-colors ${
               activeTab === key
                 ? 'bg-[#534AB7] text-white border-[#534AB7] shadow-sm'
-                : 'bg-white text-muted-foreground border-border hover:bg-gray-50'
+                : 'bg-card text-muted-foreground border-border hover:bg-muted'
             }`}
           >
             <Icon className="w-4 h-4" />
@@ -299,7 +299,7 @@ export default function ProProfile() {
         {/* ─── ONGLET INFOS ─── */}
         {activeTab === 'infos' && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
                 <h3 className="font-semibold text-sm">Coordonnées</h3>
                 <button
@@ -349,9 +349,9 @@ export default function ProProfile() {
             </div>
 
             {/* Abonnement */}
-            <button onClick={() => navigate('/ProSubscription')} className={`w-full bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left ${isActive ? 'border-green-200' : 'border-orange-200'}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-green-50' : 'bg-orange-50'}`}>
-                <CreditCard className={`w-5 h-5 ${isActive ? 'text-green-600' : 'text-orange-600'}`} />
+            <button onClick={() => navigate('/ProSubscription')} className={`w-full bg-card rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left ${isActive ? 'border-green-200' : 'border-orange-200'}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-green-50 dark:bg-green-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
+                <CreditCard className={`w-5 h-5 ${isActive ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">ServiGo Pro — 10€/mois</p>
@@ -361,9 +361,9 @@ export default function ProProfile() {
             </button>
 
             {/* eID */}
-            <button onClick={() => navigate('/EidVerification')} className={`w-full bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left ${user?.eid_status === 'verified' ? 'border-green-200' : 'border-red-200'}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${user?.eid_status === 'verified' ? 'bg-green-50' : 'bg-red-50'}`}>
-                <ShieldCheck className={`w-5 h-5 ${user?.eid_status === 'verified' ? 'text-green-600' : 'text-red-500'}`} />
+            <button onClick={() => navigate('/EidVerification')} className={`w-full bg-card rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left ${user?.eid_status === 'verified' ? 'border-green-200' : 'border-red-200'}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${user?.eid_status === 'verified' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
+                <ShieldCheck className={`w-5 h-5 ${user?.eid_status === 'verified' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">{user?.eid_status === 'verified' ? '✓ Identité vérifiée' : 'Vérifier mon identité (eID)'}</p>
@@ -372,7 +372,7 @@ export default function ProProfile() {
               {user?.eid_status !== 'verified' && <span className="text-primary font-bold">→</span>}
             </button>
 
-            <div className="flex items-center justify-between bg-white rounded-2xl border border-border/50 shadow-sm px-5 py-4">
+            <div className="flex items-center justify-between bg-card rounded-2xl border border-border/50 shadow-sm px-5 py-4">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
                   <div>
@@ -389,7 +389,7 @@ export default function ProProfile() {
                   aria-label="Mode nuit"
                   className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-[#534AB7]' : 'bg-muted'}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-card shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />
                 </button>
               </div>
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
@@ -406,21 +406,21 @@ export default function ProProfile() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             {/* Statistiques rapides */}
             <div className="grid grid-cols-3 gap-2.5">
-              <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-[#534AB7]">{completedMissions.length}</p>
+              <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-[#534AB7] dark:text-[#8B83D4]">{completedMissions.length}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Missions complétées</p>
               </div>
-              <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-[#1D9E75]">{avgRating || '—'}</p>
+              <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-[#1D9E75] dark:text-[#34D399]">{avgRating || '—'}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Note moyenne</p>
               </div>
-              <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-blue-600">{totalEarnings.toFixed(0)}€</p>
+              <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalEarnings.toFixed(0)}€</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Revenus estimés</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2"><Briefcase className="w-4 h-4 text-[#534AB7]" />Mon métier</h3>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Catégorie de service</Label>
@@ -437,8 +437,8 @@ export default function ProProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2"><Euro className="w-4 h-4 text-[#1D9E75]" />Mes tarifs</h3>
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
+              <h3 className="font-semibold text-sm flex items-center gap-2"><Euro className="w-4 h-4 text-[#1D9E75] dark:text-[#34D399]" />Mes tarifs</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Prix de base (€)</Label>
@@ -468,12 +468,12 @@ export default function ProProfile() {
         {activeTab === 'documents' && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
             {/* Barre de complétion */}
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4">
               <ProfileCompletion user={user} />
             </div>
 
             {/* Documents requis */}
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-border/50">
                 <h3 className="font-semibold text-sm">Documents de vérification</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Requis pour recevoir le badge "Pro Vérifié ✓"</p>
@@ -512,7 +512,7 @@ export default function ProProfile() {
             </div>
 
             {/* Factures & contrats */}
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
               <div className="px-5 py-4">
                 <h3 className="font-semibold text-sm mb-3">Factures & contrats</h3>
                 <DocumentsTab user={user} />
@@ -524,24 +524,24 @@ export default function ProProfile() {
         {/* ─── ONGLET SÉCURITÉ ─── */}
         {activeTab === 'securite' && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5">
               <h3 className="font-semibold mb-4 text-sm">Sécurité du compte</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
                   <div>
                     <p className="text-sm font-medium">Email de connexion</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
                   </div>
                   <Check className="w-4 h-4 text-green-500" />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
                   <div>
                     <p className="text-sm font-medium">Vérification ServiGo</p>
                     <p className="text-xs text-muted-foreground">{isVerified ? 'Pro Vérifié' : 'En attente de vérification'}</p>
                   </div>
                   <ShieldCheck className={`w-4 h-4 ${isVerified ? 'text-green-500' : 'text-yellow-400'}`} />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
                   <div>
                     <p className="text-sm font-medium">Abonnement</p>
                     <p className="text-xs text-muted-foreground">{isActive ? 'Actif' : 'Inactif'}</p>
@@ -549,7 +549,7 @@ export default function ProProfile() {
                   <CreditCard className={`w-4 h-4 ${isActive ? 'text-green-500' : 'text-red-400'}`} />
                 </div>
                 {user?.bank_iban && (
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-xl">
                     <div>
                       <p className="text-sm font-medium">IBAN</p>
                       <p className="text-xs text-muted-foreground font-mono">{maskIban(user.bank_iban)}</p>
