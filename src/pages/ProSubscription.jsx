@@ -252,7 +252,7 @@ export default function ProSubscription() {
               Mettre à jour ma carte de paiement
             </Button>
 
-            {/* PaymentHistory section */}
+            {/* Payment History */}
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
                 <Receipt className="w-4 h-4 text-muted-foreground" /> Historique des paiements
@@ -263,22 +263,22 @@ export default function ProSubscription() {
                 </div>
               ) : paymentHistory.length > 0 ? (
                 <div className="space-y-2">
-                  {paymentHistory.map(p => (
-                    <div key={p.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                  {paymentHistory.map(ph => (
+                    <div key={ph.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                       <div>
-                        <p className="text-sm font-medium">{(p.amount || 0).toFixed(2)} €</p>
+                        <p className="text-sm font-medium">{(ph.amount || 0).toFixed(2)} €</p>
                         <p className="text-xs text-muted-foreground">
-                          {p.payment_date ? format(new Date(p.payment_date), 'dd MMM yyyy', { locale: fr }) : '—'}
-                          {p.invoice_ref ? ` · ${p.invoice_ref.slice(0, 12)}…` : ''}
+                          {ph.payment_date ? format(new Date(ph.payment_date), 'dd MMM yyyy', { locale: fr }) : '—'}
+                          {ph.invoice_ref ? ` · ${ph.invoice_ref.slice(-8)}` : ''}
                         </p>
                       </div>
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        p.status === 'paid' ? 'bg-green-50 text-green-700' :
-                        p.status === 'failed' ? 'bg-red-50 text-red-600' :
-                        p.status === 'refunded' ? 'bg-orange-50 text-orange-600' :
+                        ph.status === 'paid' ? 'bg-green-50 text-green-700' :
+                        ph.status === 'failed' ? 'bg-red-50 text-red-600' :
+                        ph.status === 'refunded' ? 'bg-orange-50 text-orange-600' :
                         'bg-gray-50 text-gray-500'
                       }`}>
-                        {p.status === 'paid' ? 'Payé' : p.status === 'failed' ? 'Échoué' : p.status === 'refunded' ? 'Remboursé' : p.status}
+                        {ph.status === 'paid' ? 'Payé' : ph.status === 'failed' ? 'Échoué' : ph.status === 'refunded' ? 'Remboursé' : ph.status}
                       </span>
                     </div>
                   ))}

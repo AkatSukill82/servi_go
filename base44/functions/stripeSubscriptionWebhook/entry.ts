@@ -110,10 +110,10 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.ProSubscription.update(sub.id, { status: 'active', auto_renew: true });
       await syncUserProfile(customerEmail, true);
 
-      // PaymentHistory record — deduplicate by stripe_payment_intent_id
+      // PaymentHistory record — dedup by stripe_payment_intent_id
       const paymentIntentId = inv.payment_intent || inv.id;
-      const existing = await base44.asServiceRole.entities.PaymentHistory.filter({ stripe_payment_intent_id: paymentIntentId }, '-created_date', 1).catch(() => []);
-      if (existing.length === 0) {
+      const existingPH = await base44.asServiceRole.entities.PaymentHistory.filter({ stripe_payment_intent_id: paymentIntentId }, '-created_date', 1).catch(() => []);
+      if (existingPH.length === 0) {
         await base44.asServiceRole.entities.PaymentHistory.create({
           professional_email: customerEmail,
           professional_name: sub.professional_name || '',
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
           period_end: inv.period_end ? new Date(inv.period_end * 1000).toISOString().split('T')[0] : '',
         }).catch(e => console.error('PaymentHistory create error:', e.message));
       } else {
-        console.log(`PaymentHistory already exists for payment_intent ${paymentIntentId}, skipping.`);
+        console.log('PaymentHistory already exists for', paymentIntentId, '— skipping');
       }
 
       // Notification in-app

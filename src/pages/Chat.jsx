@@ -48,17 +48,17 @@ export default function Chat() {
     refetchInterval: 3000,
   });
 
-  // Auto-create Conversation if needed
+  // Auto-create Conversation record if not exists
   useEffect(() => {
     if (!request?.customer_email || !request?.professional_email) return;
     base44.entities.Conversation.filter({
       customer_email: request.customer_email,
       professional_email: request.professional_email,
-    }).then(async (convs) => {
+    }, '-created_date', 1).then(convs => {
       if (convs.length > 0) {
         setConversationId(convs[0].id);
       } else {
-        const conv = await base44.entities.Conversation.create({
+        base44.entities.Conversation.create({
           customer_email: request.customer_email,
           customer_name: request.customer_name || '',
           professional_email: request.professional_email,
@@ -67,8 +67,7 @@ export default function Chat() {
           last_message_at: new Date().toISOString(),
           unread_count_customer: 0,
           unread_count_pro: 0,
-        });
-        setConversationId(conv.id);
+        }).then(conv => setConversationId(conv.id)).catch(() => {});
       }
     }).catch(() => {});
   }, [request?.customer_email, request?.professional_email]);
@@ -128,7 +127,7 @@ export default function Chat() {
     setSending(true);
     await sendMutation.mutateAsync({
       request_id: requestId,
-      conversation_id: conversationId,
+      conversation_id: conversationId || undefined,
       sender_email: user.email,
       sender_name: user.full_name,
       sender_type: user.user_type || 'particulier',
@@ -146,7 +145,7 @@ export default function Chat() {
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     await sendMutation.mutateAsync({
       request_id: requestId,
-      conversation_id: conversationId,
+      conversation_id: conversationId || undefined,
       sender_email: user.email,
       sender_name: user.full_name,
       sender_type: user.user_type || 'particulier',
