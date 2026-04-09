@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag } from 'lucide-react';
 import { formatPrice, formatDateFr } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,120 @@ const TABS = [
   { key: 'finance', label: 'Finances', icon: Euro },
   { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
   { key: 'blacklist', label: 'Blacklist', icon: Ban },
+  { key: 'reports', label: 'Signalements', icon: Flag },
 ];
+
+const REASON_LABELS = {
+  comportement_agressif: 'Comportement agressif',
+  arnaque: 'Arnaque',
+  no_show: 'No-show',
+  travail_non_conforme: 'Travail non conforme',
+  fausse_identite: 'Fausse identité',
+  harcelement: 'Harcèlement',
+  danger_securite: 'Danger sécurité',
+  autre: 'Autre',
+};
+
+const PRIORITY_CONFIG = {
+  low: { label: 'Faible', color: 'bg-gray-100 text-gray-600' },
+  medium: { label: 'Moyen', color: 'bg-yellow-100 text-yellow-700' },
+  high: { label: 'Haut', color: 'bg-orange-100 text-orange-700' },
+  urgent: { label: 'Urgent', color: 'bg-red-100 text-red-700' },
+};
+
+const REPORT_STATUS = [
+  { value: 'all', label: 'Tous' },
+  { value: 'pending', label: 'En attente' },
+  { value: 'under_review', label: 'En examen' },
+  { value: 'resolved_warning', label: 'Avertissement' },
+  { value: 'resolved_banned', label: 'Banni' },
+  { value: 'dismissed', label: 'Rejeté' },
+];
+
+function ReportsTab() {
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const { data: reports = [], isLoading } = useQuery({
+    queryKey: ['adminReports'],
+    queryFn: () => base44.entities.Report.list('-created_date', 200),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data, report }) => {
+      await base44.entities.Report.update(id, data);
+      if (data.user_suspended) {
+        const users = await base44.entities.User.filter({ email: report.reported_user_email }, '-created_date', 1);
+        if (users.length > 0) await base44.entities.User.update(users[0].id, { is_blacklisted: true, blacklist_reason: `Banni suite signalement: ${REASON_LABELS[report.reason] || report.reason}` });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminReports'] });
+      toast.success('Signalement mis à jour');
+    },
+  });
+
+  const filtered = statusFilter === 'all' ? reports : reports.filter(r => r.status === statusFilter);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        {REPORT_STATUS.map(s => (
+          <button key={s.value} onClick={() => setStatusFilter(s.value)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusFilter === s.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
+            {s.label}
+          </button>
+        ))}
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-14 text-muted-foreground">
+          <Flag className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Aucun signalement</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(r => {
+            const priority = PRIORITY_CONFIG[r.priority] || PRIORITY_CONFIG.medium;
+            return (
+              <div key={r.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm truncate">{r.reported_user_name}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.reported_user_type === 'professionnel' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {r.reported_user_type === 'professionnel' ? 'Pro' : 'Client'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{r.reported_user_email}</p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <span className="text-xs font-medium text-foreground">{REASON_LABELS[r.reason] || r.reason}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.color}`}>{priority.label}</span>
+                    </div>
+                  </div>
+                </div>
+                {r.description && <p className="text-xs text-muted-foreground leading-relaxed">{r.description}</p>}
+                <div className="flex flex-wrap gap-2">
+                  {r.status !== 'under_review' && (
+                    <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'under_review' }, report: r })}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">En examen</button>
+                  )}
+                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'resolved_warning', user_suspended: false }, report: r })}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-yellow-200 text-yellow-700 bg-yellow-50 font-medium">Avertissement</button>
+                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'resolved_banned', user_suspended: true }, report: r })}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-red-50 font-medium">Bannir</button>
+                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'dismissed' }, report: r })}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">Rejeter</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab() {
@@ -101,62 +214,65 @@ const DISPUTE_STATUS = {
 
 // ─── Finance Tab ─────────────────────────────────────────────────────────────
 function FinanceTab() {
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const [period, setPeriod] = useState('all');
 
-  const { data: paymentHistory = [] } = useQuery({
-    queryKey: ['adminPaymentHistory'],
-    queryFn: () => base44.entities.PaymentHistory.list('-created_date', 100),
+  const { data: requests = [] } = useQuery({
+    queryKey: ['adminAllRequests'],
+    queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500),
   });
 
-  const { data: completedRequests = [] } = useQuery({
-    queryKey: ['adminCompletedRequests'],
-    queryFn: () => base44.entities.ServiceRequestV2.filter({ status: 'completed' }, '-created_date', 500),
-  });
+  const stats = useMemo(() => {
+    const now = new Date();
+    let filtered = requests.filter(r => ['accepted', 'completed', 'in_progress'].includes(r.status));
 
-  const paidAll = paymentHistory.filter(p => p.status === 'paid');
-  const paidThisMonth = paidAll.filter(p => p.payment_date && new Date(p.payment_date) >= monthStart);
+    if (period === 'week') {
+      const since = new Date(now - 7 * 86400000);
+      filtered = filtered.filter(r => r.created_date && new Date(r.created_date) >= since);
+    } else if (period === 'month') {
+      const since = new Date(now.getFullYear(), now.getMonth(), 1);
+      filtered = filtered.filter(r => r.created_date && new Date(r.created_date) >= since);
+    }
 
-  const revenueAllTime = paidAll.reduce((s, p) => s + (p.amount || 0), 0);
-  const revenueThisMonth = paidThisMonth.reduce((s, p) => s + (p.amount || 0), 0);
+    const ca = filtered.reduce((s, r) => s + (r.total_price || 0), 0);
+    const commission = filtered.reduce((s, r) => s + (r.commission || (r.base_price || 0) * 0.10), 0);
+    const tva = filtered.reduce((s, r) => {
+      const base = (r.base_price || 0) + (r.commission || (r.base_price || 0) * 0.10);
+      return s + base * 0.21;
+    }, 0);
+    const proRevenue = filtered.reduce((s, r) => s + (r.base_price || 0), 0);
 
-  // Monthly CA from completed missions
-  const caThisMonth = completedRequests
-    .filter(r => r.updated_date && new Date(r.updated_date) >= monthStart)
-    .reduce((s, r) => s + (r.estimated_price || 0), 0);
-  const commissionThisMonth = caThisMonth * 0.10;
-  const vatThisMonth = commissionThisMonth * 0.21;
+    return { ca, commission, tva, proRevenue, count: filtered.length };
+  }, [requests, period]);
 
-  // Last 6 months bar chart from completed requests
+  // Last 6 months breakdown
   const monthlyData = useMemo(() => {
+    const now = new Date();
     return Array.from({ length: 6 }, (_, i) => {
       const m = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
       const mEnd = new Date(now.getFullYear(), now.getMonth() - 4 + i, 1);
-      const jobs = completedRequests.filter(r =>
-        r.updated_date && new Date(r.updated_date) >= m && new Date(r.updated_date) < mEnd
+      const jobs = requests.filter(r =>
+        ['accepted', 'completed', 'in_progress'].includes(r.status) &&
+        r.created_date && new Date(r.created_date) >= m && new Date(r.created_date) < mEnd
       );
-      const ca = jobs.reduce((s, r) => s + (r.estimated_price || 0), 0);
       return {
         label: format(m, 'MMM', { locale: fr }),
-        ca,
-        commission: ca * 0.10,
+        ca: jobs.reduce((s, r) => s + (r.total_price || 0), 0),
+        commission: jobs.reduce((s, r) => s + (r.commission || (r.base_price || 0) * 0.10), 0),
         count: jobs.length,
       };
     });
-  }, [completedRequests]);
+  }, [requests]);
 
   const maxCa = Math.max(...monthlyData.map(m => m.ca), 1);
-
-  const recentPayments = paymentHistory.slice(0, 20);
 
   return (
     <div className="space-y-4">
       {/* Period filter */}
       <div className="flex gap-2">
-        {[['all', 'Tout'], ['week', '7 jours'], ['month', 'Ce mois']].map(([k, l]) => (
-          <button key={k} onClick={() => setPeriod(k)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${period === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
-            {l}
+        {[['all', 'Tout'], ['week', '7 jours'], ['month', 'Ce mois']].map((item) => (
+          <button key={item[0]} onClick={() => setPeriod(item[0])}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${period === item[0] ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
+            {item[1]}
           </button>
         ))}
       </div>
@@ -164,12 +280,10 @@ function FinanceTab() {
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Revenus ce mois', value: `${revenueThisMonth.toFixed(0)} €`, icon: TrendingUp, color: 'text-green-600' },
-          { label: 'Revenus total', value: `${revenueAllTime.toFixed(0)} €`, icon: Euro, color: 'text-foreground' },
-          { label: 'CA missions (mois)', value: `${caThisMonth.toFixed(0)} €`, icon: BarChart2, color: 'text-blue-600' },
-          { label: 'Commission 10%', value: `${commissionThisMonth.toFixed(0)} €`, icon: CheckCircle, color: 'text-purple-600' },
-          { label: 'TVA 21% (comm.)', value: `${vatThisMonth.toFixed(2)} €`, icon: BarChart2, color: 'text-orange-600' },
-          { label: 'Paiements reçus', value: paidAll.length, icon: CheckCircle, color: 'text-green-600' },
+          { label: 'CA total TTC', value: `${stats.ca.toFixed(0)} €`, icon: TrendingUp, color: 'text-foreground' },
+          { label: 'Commissions (10%)', value: `${stats.commission.toFixed(0)} €`, icon: Euro, color: 'text-blue-600' },
+          { label: 'TVA collectée (21%)', value: `${stats.tva.toFixed(0)} €`, icon: BarChart2, color: 'text-orange-600' },
+          { label: 'Missions payées', value: stats.count, icon: CheckCircle, color: 'text-green-600' },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-card rounded-xl p-4 border border-border">
             <div className="flex items-center gap-1.5 mb-1">
@@ -210,34 +324,6 @@ function FinanceTab() {
             <p className="text-sm text-right">{m.count}</p>
           </div>
         ))}
-      </div>
-
-      {/* Recent payments */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border">Paiements récents</p>
-        {recentPayments.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-6">Aucun paiement enregistré</p>
-        ) : (
-          <div className="divide-y divide-border/50">
-            {recentPayments.map((p, i) => (
-              <div key={p.id || i} className="flex items-center gap-3 px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{p.professional_name || p.professional_email || '—'}</p>
-                  <p className="text-xs text-muted-foreground">{p.payment_date ? format(new Date(p.payment_date), 'dd MMM yyyy', { locale: fr }) : '—'}{p.invoice_ref ? ` · ${p.invoice_ref}` : ''}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-bold">{(p.amount || 0).toFixed(2)} €</p>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                    p.status === 'paid' ? 'bg-green-100 text-green-700' :
-                    p.status === 'failed' ? 'bg-red-100 text-red-600' :
-                    p.status === 'refunded' ? 'bg-gray-100 text-gray-500' :
-                    'bg-yellow-100 text-yellow-700'
-                  }`}>{p.status === 'paid' ? 'Payé' : p.status === 'failed' ? 'Échoué' : p.status === 'refunded' ? 'Remboursé' : 'En attente'}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -474,6 +560,12 @@ function BlacklistTab() {
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
+  const { data: pendingReports = [] } = useQuery({
+    queryKey: ['adminPendingReports'],
+    queryFn: () => base44.entities.Report.filter({ status: 'pending' }, '-created_date', 200),
+    enabled: true,
+    staleTime: 30000,
+  });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -580,6 +672,9 @@ export default function AdminDashboard() {
             {key === 'disputes' && openDisputes > 0 && (
               <span className="text-xs font-bold bg-yellow-500 text-white rounded-full px-1.5">{openDisputes}</span>
             )}
+            {key === 'reports' && pendingReports.length > 0 && (
+              <span className="text-xs font-bold bg-red-500 text-white rounded-full px-1.5">{pendingReports.length}</span>
+            )}
           </button>
         ))}
       </div>
@@ -588,6 +683,7 @@ export default function AdminDashboard() {
       {tab === 'finance' && <FinanceTab />}
       {tab === 'disputes' && <DisputesTab />}
       {tab === 'blacklist' && <BlacklistTab />}
+      {tab === 'reports' && <ReportsTab />}
     </div>
     </div>
   );
