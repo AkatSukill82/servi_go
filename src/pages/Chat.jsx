@@ -80,22 +80,25 @@ export default function Chat() {
     return unsubscribe;
   }, [requestId]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
-
-  // Auto-sync: if contract is signed_both, mark mission as contract_signed
-  const { data: contract } = useQuery({
-    queryKey: ['contract', request?.id],
-    queryFn: () => request?.contract_id ? base44.entities.MissionContract.filter({ id: request.contract_id }).then(r => r[0]) : null,
-    enabled: !!request?.contract_id,
-  });
-
+  // Auto-sync contract status to request
   useEffect(() => {
-    if (contract?.status === 'signed_both' && request && !['contract_signed', 'pro_en_route', 'in_progress', 'completed'].includes(request.status)) {
-      base44.entities.ServiceRequestV2.update(request.id, { status: 'contract_signed' }).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['request', requestId] });
-      }).catch(() => {});
-    }
-  }, [contract?.status, request?.status, request?.id]);
+    if (!request || !requestId) return;
+    const checkAndUpdateContract = async () => {
+      try {
+        const contracts = await base44.entities.MissionContract.filter({ request_id: requestId }, '-created_date', 1);
+        const contract = contracts[0];
+        if (contract?.status === 'signed_both' && !['contract_signed', 'pro_en_route', 'in_progress', 'completed'].includes(request.status)) {
+          await base44.entities.ServiceRequestV2.update(requestId, { status: 'contract_signed' });
+          queryClient.invalidateQueries({ queryKey: ['request', requestId] });
+        }
+      } catch (e) {
+        console.warn('Contract sync error:', e);
+      }
+    };
+    checkAndUpdateContract();
+  }, [request?.status, requestId]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 
   const sendMutation = useMutation({
     mutationFn: (msgData) => base44.entities.Message.create(msgData),
