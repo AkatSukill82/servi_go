@@ -1,11 +1,19 @@
 import { useEffect, useRef } from 'react';
 
-/**
- * Hook to request notification permission and show browser notifications.
- * Call requestPermission() once (e.g. on login/dashboard mount).
- * Call notify(title, body, options) to trigger a notification.
- */
-export function useNotifications() {
+// Deep link mapping: notification action_url → navigate
+const DEEP_LINK_MAP = {
+  new_mission: (n) => n.action_url || '/ProDashboard',
+  contract_to_sign: (n) => n.action_url || '/ProDashboard',
+  message_received: (n) => n.action_url || '/Messages',
+  mission_accepted: (n) => n.action_url || '/MissionHistory',
+  review_request: (n) => n.action_url || '/MissionHistory',
+  contract_signed: (n) => n.action_url || '/Chat',
+  pro_en_route: (n) => n.action_url || '/TrackingMap',
+  mission_completed: (n) => n.action_url || '/MissionHistory',
+  new_review: (n) => n.action_url || '/ProDashboard',
+};
+
+export function useNotifications(navigate) {
   const permissionRef = useRef(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
@@ -24,16 +32,29 @@ export function useNotifications() {
     return false;
   };
 
-  const notify = (title, body, options = {}) => {
+  const notify = (title, body, notificationData = {}, options = {}) => {
     if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'granted') {
-      new Notification(title, {
-        body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        ...options,
-      });
-    }
+    if (Notification.permission !== 'granted') return;
+
+    const n = new Notification(title, {
+      body,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      ...options,
+    });
+
+    // Deep link on click
+    n.onclick = () => {
+      window.focus();
+      n.close();
+      if (navigate && notificationData.type) {
+        const resolver = DEEP_LINK_MAP[notificationData.type];
+        const url = resolver ? resolver(notificationData) : (notificationData.action_url || '/');
+        navigate(url);
+      } else if (notificationData.action_url && navigate) {
+        navigate(notificationData.action_url);
+      }
+    };
   };
 
   return { requestPermission, notify };

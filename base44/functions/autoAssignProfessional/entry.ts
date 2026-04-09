@@ -1,5 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -10,7 +20,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'requestId requis' }, { status: 400 });
     }
 
-    // Get the service request
     const requests = await base44.asServiceRole.entities.ServiceRequestV2.filter({ id: requestId });
     const request = requests[0];
     if (!request) {
@@ -22,8 +31,9 @@ Deno.serve(async (req) => {
     }
 
     const triedPros = request.tried_professionals || [];
+    const customerLat = request.customer_latitude;
+    const customerLon = request.customer_longitude;
 
-    // Find available verified professionals matching category
     const allPros = await base44.asServiceRole.entities.User.filter({
       user_type: 'professionnel',
       category_name: request.category_name,
@@ -32,88 +42,91 @@ Deno.serve(async (req) => {
     });
 
     // Filter out already tried pros
-    const candidates = allPros.filter(p => !triedPros.includes(p.email));
+    let candidates = allPros.filter(p => !triedPros.includes(p.email));
+
+    // Filter and sort by distance if coordinates are available
+    if (customerLat && customerLon) {
+      candidates = candidates
+        .map(p => ({
+          ...p,
+          _distance: (p.latitude && p.longitude)
+            ? calculateDistance(customerLat, customerLon, p.latitude, p.longitude)
+            : 9999,
+        }))
+        .filter(p => p._distance <= 30) // Max 30 km
+        .sort((a, b) => a._distance - b._distance);
+
+      console.log(`Candidates within 30km: ${candidates.length}`);
+      candidates.forEach(p => console.log(`  ${p.full_name}: ${p._distance.toFixed(1)} km`));
+    } else {
+      // Fallback: sort by rating
+      candidates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
 
     if (candidates.length === 0) {
       console.log(`No available pros for category: ${request.category_name}`);
-      // Keep searching status, notify client
       return Response.json({ 
-        message: 'Aucun professionnel disponible pour le moment',
+        message: 'Aucun professionnel disponible dans un rayon de 30 km',
         status: 'searching'
       });
     }
 
-    // Sort by rating descending, pick best
-    candidates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    const bestPro = candidates[0];
+    // Check subscription for each candidate in order
+    let chosenPro = null;
+    const newTried = [...triedPros];
 
-    console.log(`Assigning ${bestPro.full_name} (${bestPro.email}) to request ${requestId}`);
-
-    // Update request
-    await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
-      status: 'pending_pro',
-      professional_id: bestPro.id,
-      professional_name: bestPro.full_name,
-      professional_email: bestPro.email,
-      tried_professionals: [...triedPros, bestPro.email],
-    });
-
-    // Check if pro has active subscription
-    const subs = await base44.asServiceRole.entities.ProSubscription.filter({
-      professional_email: bestPro.email,
-    });
-    const activeSub = subs.find(s => ['active', 'trial'].includes(s.status));
-
-    if (!activeSub) {
-      console.log(`Pro ${bestPro.email} has no active subscription, trying next...`);
-      // Mark this pro as tried and recurse to next
-      const nextCandidates = candidates.slice(1);
-      if (nextCandidates.length === 0) {
-        await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
-          status: 'searching',
-          professional_id: null,
-          professional_name: null,
-          professional_email: null,
-        });
-        return Response.json({ message: 'Aucun pro avec abonnement actif', status: 'searching' });
+    for (const pro of candidates) {
+      const subs = await base44.asServiceRole.entities.ProSubscription.filter({
+        professional_email: pro.email,
+      });
+      const activeSub = subs.find(s => ['active', 'trial'].includes(s.status));
+      newTried.push(pro.email);
+      if (activeSub) {
+        chosenPro = pro;
+        break;
       }
-      // Try next pro
-      const nextPro = nextCandidates[0];
-      await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
-        status: 'pending_pro',
-        professional_id: nextPro.id,
-        professional_name: nextPro.full_name,
-        professional_email: nextPro.email,
-        tried_professionals: [...triedPros, bestPro.email, nextPro.email],
-      });
-      // Notify next pro
-      await base44.asServiceRole.entities.Notification.create({
-        recipient_email: nextPro.email,
-        recipient_type: 'professionnel',
-        type: 'new_mission',
-        title: `Nouvelle mission — ${request.category_name}`,
-        body: `Demande de ${request.customer_name || 'un client'} à ${request.customer_address || 'adresse non précisée'}`,
-        request_id: requestId,
-        action_url: '/ProDashboard',
-      });
-      return Response.json({ assigned: nextPro.full_name, email: nextPro.email });
+      console.log(`Pro ${pro.email} has no active subscription, skipping.`);
     }
 
-    // Notify the assigned pro
+    if (!chosenPro) {
+      await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
+        status: 'searching',
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+        tried_professionals: newTried,
+      });
+      return Response.json({ message: 'Aucun pro avec abonnement actif dans la zone', status: 'searching' });
+    }
+
+    const distanceInfo = chosenPro._distance && chosenPro._distance < 9999
+      ? ` (à ${chosenPro._distance.toFixed(1)} km)`
+      : '';
+
+    console.log(`Assigning ${chosenPro.full_name}${distanceInfo} to request ${requestId}`);
+
+    await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
+      status: 'pending_pro',
+      professional_id: chosenPro.id,
+      professional_name: chosenPro.full_name,
+      professional_email: chosenPro.email,
+      tried_professionals: newTried,
+    });
+
     await base44.asServiceRole.entities.Notification.create({
-      recipient_email: bestPro.email,
+      recipient_email: chosenPro.email,
       recipient_type: 'professionnel',
       type: 'new_mission',
       title: `Nouvelle mission — ${request.category_name}`,
-      body: `Demande de ${request.customer_name || 'un client'} à ${request.customer_address || 'adresse non précisée'}`,
+      body: `Demande de ${request.customer_name || 'un client'} à ${request.customer_address || 'adresse non précisée'}${distanceInfo}`,
       request_id: requestId,
-      action_url: '/ProDashboard',
+      action_url: `/Chat?requestId=${requestId}`,
     });
 
-    console.log(`Successfully assigned ${bestPro.full_name} to request ${requestId}`);
     return Response.json({ 
-      assigned: bestPro.full_name, 
-      email: bestPro.email,
+      assigned: chosenPro.full_name, 
+      email: chosenPro.email,
+      distance_km: chosenPro._distance ? parseFloat(chosenPro._distance.toFixed(1)) : null,
       requestId 
     });
 

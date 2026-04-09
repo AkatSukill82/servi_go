@@ -1,10 +1,21 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 /**
  * Demande la permission et écoute les événements en temps réel
  * pour notifier client et pro selon leur type d'utilisateur.
  */
+function fireNotification(title, body, actionUrl, navigate) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const n = new Notification(title, { body, icon: '/favicon.ico' });
+  n.onclick = () => {
+    window.focus();
+    n.close();
+    if (navigate && actionUrl) navigate(actionUrl);
+  };
+}
+
 export function useAppNotifications(user) {
   const permissionAsked = useRef(false);
 
@@ -18,12 +29,11 @@ export function useAppNotifications(user) {
     }
   }, [user]);
 
-  const notify = (title, body) => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'granted') {
-      new Notification(title, { body, icon: '/favicon.ico' });
-    }
-  };
+  let navigate;
+  try {
+    // useNavigate must be called inside Router context
+    navigate = useNavigate(); // eslint-disable-line react-hooks/rules-of-hooks
+  } catch {}
 
   // Abonnements temps réel
   useEffect(() => {
@@ -38,12 +48,10 @@ export function useAppNotifications(user) {
       if (!inv) return;
 
       if (!isPro && inv.customer_email === user.email) {
-        // Client : nouvelle facture reçue
-        notify('📄 Facture reçue', `Facture ${inv.invoice_number} disponible — à signer`);
+        fireNotification('📄 Facture reçue', `Facture ${inv.invoice_number} disponible — à signer`, '/Invoices', navigate);
       }
       if (isPro && inv.professional_name === user.full_name) {
-        // Pro : facture générée pour lui → à signer
-        notify('✍️ Facture à signer', `Facture ${inv.invoice_number} en attente de votre signature`);
+        fireNotification('✍️ Facture à signer', `Facture ${inv.invoice_number} en attente de votre signature`, '/Invoices', navigate);
       }
     });
 
@@ -52,7 +60,7 @@ export function useAppNotifications(user) {
       if (event.type !== 'create') return;
       const notif = event.data;
       if (!notif || notif.recipient_email !== user.email) return;
-      notify(notif.title, notif.body || '');
+      fireNotification(notif.title, notif.body || '', notif.action_url, navigate);
     });
 
     // Écoute les demandes de service V2
@@ -63,17 +71,17 @@ export function useAppNotifications(user) {
 
       if (!isPro && req.customer_email === user.email) {
         if (req.status === 'accepted') {
-          notify('✅ Mission acceptée !', `${req.professional_name || 'Un professionnel'} a accepté votre demande`);
+          fireNotification('✅ Mission acceptée !', `${req.professional_name || 'Un professionnel'} a accepté votre demande`, `/Chat?requestId=${req.id}`, navigate);
         } else if (req.status === 'pro_en_route') {
-          notify('🚗 Pro en route !', `${req.professional_name} arrive chez vous`);
+          fireNotification('🚗 Pro en route !', `${req.professional_name} arrive chez vous`, `/TrackingMap?requestId=${req.id}`, navigate);
         } else if (req.status === 'completed') {
-          notify('🎉 Mission terminée', `La mission ${req.category_name} est terminée`);
+          fireNotification('🎉 Mission terminée', `La mission ${req.category_name} est terminée`, `/Chat?requestId=${req.id}`, navigate);
         }
       }
 
       if (isPro && req.professional_email === user.email) {
         if (req.status === 'contract_signed') {
-          notify('✍️ Contrat signé !', `Le client a signé. Vous pouvez démarrer la mission.`);
+          fireNotification('✍️ Contrat signé !', `Le client a signé. Vous pouvez démarrer la mission.`, `/Chat?requestId=${req.id}`, navigate);
         }
       }
     });
