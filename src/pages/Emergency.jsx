@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, AlertTriangle, ChevronRight, Phone, Clock } from 'lucide-react';
+import { Zap, AlertTriangle, ChevronRight, Phone, Clock, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 
 const SOS_CATEGORIES = [
   { icon: '🔧', name: 'Plombier', desc: 'Fuite, inondation, canalisation' },
@@ -13,10 +14,17 @@ const SOS_CATEGORIES = [
   { icon: '🏗️', name: 'Constructeur', desc: 'Dégât structurel urgent' },
 ];
 
+const EMERGENCY_NUMBERS = [
+  { label: 'Police', number: '101' },
+  { label: 'Pompiers', number: '100' },
+  { label: 'SAMU', number: '112' },
+];
+
 export default function Emergency() {
   const navigate = useNavigate();
-  const [step, setStep] = useState('select'); // select | confirm
+  const [step, setStep] = useState('select'); // select | confirm | success
   const [selectedCat, setSelectedCat] = useState(null);
+  const [countdown, setCountdown] = useState(5);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -28,17 +36,68 @@ export default function Emergency() {
     queryFn: () => base44.entities.ServiceCategory.list(),
   });
 
+  const createSosMutation = useMutation({
+    mutationFn: async () => {
+      const cat = categories.find(c => c.name === selectedCat);
+      if (!cat || !user) throw new Error('Catégorie ou utilisateur manquant');
+      const estimatedPrice = (cat.base_price || 50) * 1.5;
+      const req = await base44.entities.ServiceRequestV2.create({
+        category_id: cat.id,
+        category_name: cat.name,
+        customer_id: user.id,
+        customer_name: user.full_name || user.email,
+        customer_email: user.email,
+        customer_phone: user.phone || '',
+        customer_address: user.address || '',
+        customer_latitude: user.latitude || null,
+        customer_longitude: user.longitude || null,
+        estimated_price: estimatedPrice,
+        status: 'searching',
+        is_urgent: true,
+      });
+      await base44.entities.Notification.create({
+        recipient_email: user.email,
+        recipient_type: 'particulier',
+        type: 'new_mission',
+        title: '🚨 Intervention SOS lancée',
+        body: `Nous cherchons un ${cat.name} disponible pour vous. Vous recevrez une notification dès qu'un pro accepte.`,
+        request_id: req.id,
+        action_url: `/Chat?requestId=${req.id}`,
+      });
+      return req.id;
+    },
+    onSuccess: (requestId) => {
+      setStep('success');
+      setCountdown(5);
+      toast.success('Demande SOS envoyée !');
+    },
+    onError: (err) => {
+      toast.error('Erreur : ' + (err?.message || 'impossible de créer la demande'));
+    },
+  });
+
   const handleSelect = (catName) => {
     setSelectedCat(catName);
     setStep('confirm');
   };
 
-  const handleConfirm = () => {
-    const cat = categories.find(c => c.name === selectedCat);
-    if (cat) {
-      navigate(`/ServiceRequest?categoryId=${cat.id}&urgent=true`);
-    }
+  const handleConfirm = async () => {
+    await createSosMutation.mutateAsync();
   };
+
+  useEffect(() => {
+    if (step !== 'success') return;
+    const timer = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          navigate(`/Chat?requestId=${createSosMutation.data}`);
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [step, createSosMutation.data, navigate]);
 
   return (
     <div
@@ -103,14 +162,30 @@ export default function Emergency() {
               ))}
             </div>
 
-            {/* 112 link */}
-            <a
-              href="tel:112"
-              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-destructive/30 text-destructive text-sm font-medium"
-            >
-              <Phone className="w-4 h-4" strokeWidth={2} />
-              Danger réel → Appeler le 112
-            </a>
+            {/* Emergency numbers */}
+            <div className="bg-muted/50 rounded-2xl p-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Appels d'urgence</p>
+              <div className="grid grid-cols-3 gap-2">
+                {EMERGENCY_NUMBERS.map(em => (
+                  <a
+                    key={em.number}
+                    href={`tel:${em.number}`}
+                    className="flex flex-col items-center gap-2 p-3 bg-card rounded-xl border border-border active:scale-95 transition-transform"
+                  >
+                    <Phone className="w-4 h-4 text-destructive" strokeWidth={2} />
+                    <span className="text-xs font-bold">{em.label}</span>
+                    <span className="text-sm font-mono font-bold text-foreground">{em.number}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 text-center">
+              <p className="text-xs text-yellow-800 font-medium">
+                ⚠️ ServiGo SOS est réservé aux urgences <strong>non-vitales</strong>. Pour toute urgence médicale ou incendie, appelez le <strong>112</strong>.
+              </p>
+            </div>
           </motion.div>
         )}
 
@@ -140,18 +215,56 @@ export default function Emergency() {
             <div className="w-full space-y-3 pt-2">
               <button
                 onClick={handleConfirm}
-                className="w-full bg-destructive text-white font-bold rounded-2xl py-4 text-base active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+                disabled={createSosMutation.isPending}
+                className="w-full bg-destructive text-white font-bold rounded-2xl py-4 text-base active:scale-[0.98] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <Zap className="w-5 h-5" strokeWidth={2.5} />
-                Confirmer l'intervention SOS
+                {createSosMutation.isPending ? 'Création...' : 'Confirmer l\'intervention SOS'}
               </button>
               <button
                 onClick={() => setStep('select')}
-                className="w-full text-sm text-muted-foreground underline underline-offset-2"
+                disabled={createSosMutation.isPending}
+                className="w-full text-sm text-muted-foreground underline underline-offset-2 disabled:opacity-50"
               >
                 Retour
               </button>
             </div>
+          </motion.div>
+        )}
+
+        {step === 'success' && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center min-h-[70vh] text-center space-y-6 px-2"
+          >
+            <motion.div
+              className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center"
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ duration: 0.6, repeat: Infinity }}
+            >
+              <CheckCircle className="w-12 h-12 text-green-600" strokeWidth={1.5} />
+            </motion.div>
+            <div>
+              <h2 className="text-2xl font-black text-green-700">Demande SOS envoyée !</h2>
+              <p className="text-muted-foreground mt-2 text-sm">Nous cherchons un pro disponible pour vous.</p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-2xl p-4 w-full">
+              <p className="text-sm font-semibold text-green-700 mb-2">Étapes suivantes :</p>
+              <ul className="text-xs text-green-700 space-y-1 text-left">
+                <li>✅ Acceptation par un professionnel</li>
+                <li>✅ Signature du contrat en ligne</li>
+                <li>✅ Intervention à domicile</li>
+              </ul>
+            </div>
+            <p className="text-sm text-muted-foreground">Redirection en <span className="font-bold text-foreground">{countdown}s</span>...</p>
+            <button
+              onClick={() => navigate('/Home')}
+              className="w-full px-6 py-3 rounded-xl border border-border text-sm font-medium"
+            >
+              Retour à l'accueil
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

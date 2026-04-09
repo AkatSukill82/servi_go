@@ -132,15 +132,28 @@ function ReportsTab() {
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab() {
+  const queryClient = useQueryClient();
   const { data: allUsers = [] } = useQuery({ queryKey: ['adminUsers'], queryFn: () => base44.entities.User.list('-created_date', 500) });
   const { data: allSubs = [] } = useQuery({ queryKey: ['adminSubs'], queryFn: () => base44.entities.ProSubscription.list('-created_date', 200) });
   const { data: allRequests = [] } = useQuery({ queryKey: ['adminAllRequestsOv'], queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500) });
   const { data: allDisputes = [] } = useQuery({ queryKey: ['adminDisputesOv'], queryFn: () => base44.entities.Dispute.list('-created_date', 100) });
 
+  // Auto-expire past subscriptions
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    allSubs.forEach(s => {
+      if (s.status === 'active' && s.renewal_date && s.renewal_date < today) {
+        base44.entities.ProSubscription.update(s.id, { status: 'expired' }).catch(() => {});
+      }
+    });
+  }, [allSubs]);
+
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const today = now.toISOString().split('T')[0];
 
   const activeSubs = allSubs.filter(s => s.status === 'active' || s.status === 'trial');
+  const expiredSubs = allSubs.filter(s => s.status === 'expired' && s.renewal_date && s.renewal_date < today);
   const ongoingMissions = allRequests.filter(r => !['completed', 'cancelled'].includes(r.status));
   const completedThisMonth = allRequests.filter(r => r.status === 'completed' && r.updated_date && new Date(r.updated_date) >= monthStart);
   const monthRevenue = activeSubs.length * 10;
@@ -151,6 +164,7 @@ function OverviewTab() {
   const kpis = [
     { label: 'Utilisateurs inscrits', value: allUsers.length, icon: Users, color: 'text-blue-600' },
     { label: 'Abonnements actifs', value: activeSubs.length, icon: CheckCircle, color: 'text-green-600' },
+    { label: 'Abonnements expirés', value: expiredSubs.length, icon: AlertTriangle, color: 'text-red-500' },
     { label: 'Missions en cours', value: ongoingMissions.length, icon: Activity, color: 'text-orange-600' },
     { label: 'Terminées ce mois', value: completedThisMonth.length, icon: TrendingUp, color: 'text-purple-600' },
     { label: 'Revenus abonnements', value: `${monthRevenue} €`, icon: Euro, color: 'text-green-700' },
@@ -159,6 +173,22 @@ function OverviewTab() {
 
   return (
     <div className="space-y-4">
+      {/* Expired subscriptions alert */}
+      {expiredSubs.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <h3 className="font-semibold text-red-700">{expiredSubs.length} abonnement{expiredSubs.length !== 1 ? 's' : ''} expiré{expiredSubs.length !== 1 ? 's' : ''}</h3>
+          </div>
+          <div className="space-y-1.5">
+            {expiredSubs.slice(0, 5).map(s => (
+              <p key={s.id} className="text-xs text-red-600">
+                <span className="font-medium">{s.professional_name}</span> — Date d'expiration : {s.renewal_date}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         {kpis.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-card rounded-xl p-4 border border-border">
