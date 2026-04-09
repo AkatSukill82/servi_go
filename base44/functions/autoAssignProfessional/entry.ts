@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       .filter(p => activeEmails.has(p.email))
       .sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
-    // 5. No eligible candidates
+    // 5. No eligible candidates (hard stop)
     if (eligible.length === 0) {
       await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
         status: 'searching',
@@ -50,12 +50,24 @@ Deno.serve(async (req) => {
         professional_name: null,
         professional_email: null,
       });
-      return Response.json({ message: 'Aucun professionnel avec abonnement actif' });
+      return Response.json({ message: 'All eligible professionals have been tried. Resetting to searching.' });
     }
 
-    // 6. Assign best candidate
+    // 6. Hard stop check: if tried_professionals covers all eligible candidates, stop
+    const allEligibleCount = allPros.filter(p => activeEmails.has(p.email)).length;
+    if (triedEmails.size >= allEligibleCount) {
+      await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
+        status: 'searching',
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+      });
+      return Response.json({ message: 'All eligible candidates exhausted. Resetting to searching.' });
+    }
+
+    // 7. Assign best candidate with deduplicated tried_professionals
     const pro = eligible[0];
-    const updatedTriedPros = [...(request.tried_professionals || []), pro.email];
+    const updatedTriedPros = [...new Set([...(request.tried_professionals || []), pro.email])];
 
     await base44.asServiceRole.entities.ServiceRequestV2.update(requestId, {
       status: 'pending_pro',
@@ -65,7 +77,7 @@ Deno.serve(async (req) => {
       tried_professionals: updatedTriedPros,
     });
 
-    // 7. Notify assigned pro
+    // 8. Notify assigned pro
     await base44.asServiceRole.entities.Notification.create({
       recipient_email: pro.email,
       recipient_type: 'professionnel',
@@ -76,7 +88,7 @@ Deno.serve(async (req) => {
       action_url: '/ProDashboard',
     });
 
-    // 8. Return result
+    // 9. Return result
     return Response.json({ assigned: pro.full_name, email: pro.email, requestId });
 
   } catch (error) {
