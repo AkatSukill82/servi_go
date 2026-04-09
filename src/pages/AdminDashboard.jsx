@@ -132,15 +132,28 @@ function ReportsTab() {
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab() {
+  const queryClient = useQueryClient();
   const { data: allUsers = [] } = useQuery({ queryKey: ['adminUsers'], queryFn: () => base44.entities.User.list('-created_date', 500) });
   const { data: allSubs = [] } = useQuery({ queryKey: ['adminSubs'], queryFn: () => base44.entities.ProSubscription.list('-created_date', 200) });
   const { data: allRequests = [] } = useQuery({ queryKey: ['adminAllRequestsOv'], queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500) });
   const { data: allDisputes = [] } = useQuery({ queryKey: ['adminDisputesOv'], queryFn: () => base44.entities.Dispute.list('-created_date', 100) });
 
+  // Auto-expire past subscriptions
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    allSubs.forEach(s => {
+      if (s.status === 'active' && s.renewal_date && s.renewal_date < today) {
+        base44.entities.ProSubscription.update(s.id, { status: 'expired' }).catch(() => {});
+      }
+    });
+  }, [allSubs]);
+
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const today = now.toISOString().split('T')[0];
 
   const activeSubs = allSubs.filter(s => s.status === 'active' || s.status === 'trial');
+  const expiredSubs = allSubs.filter(s => s.status === 'expired' && s.renewal_date && s.renewal_date < today);
   const ongoingMissions = allRequests.filter(r => !['completed', 'cancelled'].includes(r.status));
   const completedThisMonth = allRequests.filter(r => r.status === 'completed' && r.updated_date && new Date(r.updated_date) >= monthStart);
   const monthRevenue = activeSubs.length * 10;

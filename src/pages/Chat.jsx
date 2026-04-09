@@ -41,6 +41,21 @@ export default function Chat() {
     refetchInterval: 5000,
   });
 
+  const { data: contract } = useQuery({
+    queryKey: ['contract', request?.contract_id],
+    queryFn: () => base44.entities.MissionContract.filter({ id: request.contract_id }).then(r => r[0]),
+    enabled: !!request?.contract_id,
+    refetchInterval: 3000,
+  });
+
+  // Auto-sync contract signature state to request status
+  useEffect(() => {
+    if (!contract || contract.status !== 'signed_both' || !request || !requestId) return;
+    if (['pro_en_route', 'in_progress', 'completed', 'contract_signed'].includes(request.status)) return;
+    base44.entities.ServiceRequestV2.update(requestId, { status: 'contract_signed' }).catch(() => {});
+    queryClient.invalidateQueries({ queryKey: ['request', requestId] });
+  }, [contract?.status, request?.status, request?.id, requestId, queryClient]);
+
   const { data: messages = [] } = useQuery({
     queryKey: ['messages', requestId],
     queryFn: () => base44.entities.Message.filter({ request_id: requestId }, 'created_date'),

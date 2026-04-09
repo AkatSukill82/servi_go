@@ -36,20 +36,14 @@ export default function ProDashboard() {
   // Auto-expire subscription if renewal_date has passed
   useEffect(() => {
     if (!subscription || subscription.status !== 'active') return;
-    const renewalDate = subscription.renewal_date ? new Date(subscription.renewal_date) : null;
+    const renewalDate = new Date(subscription.renewal_date);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (renewalDate && renewalDate < today) {
-      (async () => {
-        try {
-          await base44.entities.ProSubscription.update(subscription.id, { status: 'expired', auto_renew: false });
-          await base44.auth.updateMe({ subscription_active: false });
-          queryClient.invalidateQueries({ queryKey: ['proSubscription', user?.email] });
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-        } catch (e) { console.warn('Subscription auto-expire:', e); }
-      })();
+    if (renewalDate < today) {
+      base44.entities.ProSubscription.update(subscription.id, { status: 'expired', auto_renew: false }).catch(() => {});
+      if (user?.id) base44.entities.User.update(user.id, { subscription_active: false }).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ['proSubscription', user?.email] });
     }
-  }, [subscription?.id, subscription?.status, subscription?.renewal_date, user?.email]);
+  }, [subscription, user, queryClient]);
 
   const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
 
