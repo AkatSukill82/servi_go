@@ -145,7 +145,7 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
             {contract.signature_pro ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
             <span className="text-muted-foreground">Pro</span>
           </div>
-          {contract.agreed_price > 0 && (
+          {userType === 'professionnel' && contract.agreed_price > 0 && (
             <span className="ml-auto font-bold text-foreground text-sm">{contract.agreed_price} €</span>
           )}
         </div>

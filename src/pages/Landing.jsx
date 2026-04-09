@@ -119,9 +119,7 @@ function CategoryCard({ category, index, onClick }) {
       </div>
       <p className="font-bold text-[#1A365D] text-sm mb-1">{category.name}</p>
       <p className="text-xs text-[#718096] line-clamp-2">{category.description || 'Service professionnel à domicile'}</p>
-      {category.base_price && (
-        <p className="text-xs font-semibold text-[#2B6CB0] mt-2">À partir de {category.base_price} €</p>
-      )}
+
     </motion.button>
   );
 }

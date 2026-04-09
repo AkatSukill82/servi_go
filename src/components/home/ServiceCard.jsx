@@ -53,11 +53,7 @@ export default function ServiceCard({ category, index, unavailable = false }) {
               {category.description}
             </p>
           )}
-          {category.base_price && (
-            <p className="text-xs font-medium text-foreground mt-2">
-              À partir de {category.base_price} €
-            </p>
-          )}
+
         </div>
       </Link>
     </motion.div>

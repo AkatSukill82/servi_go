@@ -34,43 +34,12 @@ export default function PriceQuote({
           <AlertTriangle className="w-5 h-5 text-destructive shrink-0" strokeWidth={2} />
           <div>
             <p className="text-sm font-bold text-destructive flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5" /> Intervention SOS · Surcharge +50%
+              <Zap className="w-3.5 h-3.5" /> Intervention SOS — Priorité absolue
             </p>
-            <p className="text-xs text-muted-foreground">Professionnel mobilisé en priorité absolue</p>
+            <p className="text-xs text-muted-foreground">Professionnel mobilisé en priorité</p>
           </div>
         </div>
       )}
-
-      {/* Price Breakdown */}
-      <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-sm">
-        <h3 className="font-semibold text-lg mb-4">Détail du prix</h3>
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Prix du service (HTVA)</span>
-            <span className="font-medium">{(basePrice + commission).toFixed(2)} €</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">TVA (21%)</span>
-            <span className="font-medium">{((basePrice + commission) * 0.21).toFixed(2)} €</span>
-          </div>
-          {scheduledDate && scheduledTime && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <CalendarDays className="w-3.5 h-3.5" /> Intervention prévue
-              </span>
-              <span className="font-medium">
-                {format(new Date(scheduledDate), 'dd MMM', { locale: fr })} à {scheduledTime}
-              </span>
-            </div>
-          )}
-          <div className="border-t border-border pt-3">
-            <div className="flex justify-between">
-              <span className="font-semibold text-lg">Total TTC</span>
-              <span className="font-bold text-2xl text-primary">{totalPrice.toFixed(2)} €</span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Payment Method */}
       <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-sm">
@@ -124,7 +93,7 @@ export default function PriceQuote({
           className="flex-1 h-14 rounded-xl text-base bg-primary hover:bg-primary/90"
         >
           {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Check className="w-5 h-5 mr-2" />}
-          {isSubmitting ? 'Traitement...' : paymentMethod === 'stripe' ? '💳 Payer en ligne' : 'Confirmer'}
+          {isSubmitting ? 'Traitement...' : 'Confirmer ma demande'}
         </Button>
       </div>
     </motion.div>
