@@ -27,6 +27,7 @@ export default function Chat() {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [showRating, setShowRating] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
   const viewportHeight = useVisualViewport();
@@ -46,6 +47,31 @@ export default function Chat() {
     enabled: !!requestId,
     refetchInterval: 3000,
   });
+
+  // Auto-create Conversation if needed
+  useEffect(() => {
+    if (!request?.customer_email || !request?.professional_email) return;
+    base44.entities.Conversation.filter({
+      customer_email: request.customer_email,
+      professional_email: request.professional_email,
+    }).then(async (convs) => {
+      if (convs.length > 0) {
+        setConversationId(convs[0].id);
+      } else {
+        const conv = await base44.entities.Conversation.create({
+          customer_email: request.customer_email,
+          customer_name: request.customer_name || '',
+          professional_email: request.professional_email,
+          professional_name: request.professional_name || '',
+          request_id: requestId,
+          last_message_at: new Date().toISOString(),
+          unread_count_customer: 0,
+          unread_count_pro: 0,
+        });
+        setConversationId(conv.id);
+      }
+    }).catch(() => {});
+  }, [request?.customer_email, request?.professional_email]);
 
   useEffect(() => {
     if (!requestId) return;
@@ -102,6 +128,7 @@ export default function Chat() {
     setSending(true);
     await sendMutation.mutateAsync({
       request_id: requestId,
+      conversation_id: conversationId,
       sender_email: user.email,
       sender_name: user.full_name,
       sender_type: user.user_type || 'particulier',
@@ -119,6 +146,7 @@ export default function Chat() {
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     await sendMutation.mutateAsync({
       request_id: requestId,
+      conversation_id: conversationId,
       sender_email: user.email,
       sender_name: user.full_name,
       sender_type: user.user_type || 'particulier',

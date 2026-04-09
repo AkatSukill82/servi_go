@@ -110,20 +110,26 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.ProSubscription.update(sub.id, { status: 'active', auto_renew: true });
       await syncUserProfile(customerEmail, true);
 
-      // PaymentHistory record
-      await base44.asServiceRole.entities.PaymentHistory.create({
-        professional_email: customerEmail,
-        professional_name: sub.professional_name || '',
-        subscription_id: sub.id,
-        amount: (inv.amount_paid || 0) / 100,
-        status: 'paid',
-        payment_date: new Date(inv.created * 1000).toISOString(),
-        payment_method: 'stripe',
-        stripe_payment_intent_id: inv.payment_intent || '',
-        invoice_ref: inv.id,
-        period_start: inv.period_start ? new Date(inv.period_start * 1000).toISOString().split('T')[0] : '',
-        period_end: inv.period_end ? new Date(inv.period_end * 1000).toISOString().split('T')[0] : '',
-      }).catch(e => console.error('PaymentHistory create error:', e.message));
+      // PaymentHistory record — deduplicate by stripe_payment_intent_id
+      const paymentIntentId = inv.payment_intent || inv.id;
+      const existing = await base44.asServiceRole.entities.PaymentHistory.filter({ stripe_payment_intent_id: paymentIntentId }, '-created_date', 1).catch(() => []);
+      if (existing.length === 0) {
+        await base44.asServiceRole.entities.PaymentHistory.create({
+          professional_email: customerEmail,
+          professional_name: sub.professional_name || '',
+          subscription_id: sub.id,
+          amount: (inv.amount_paid || 0) / 100,
+          status: 'paid',
+          payment_date: new Date(inv.created * 1000).toISOString(),
+          payment_method: 'stripe',
+          stripe_payment_intent_id: paymentIntentId,
+          invoice_ref: inv.id,
+          period_start: inv.period_start ? new Date(inv.period_start * 1000).toISOString().split('T')[0] : '',
+          period_end: inv.period_end ? new Date(inv.period_end * 1000).toISOString().split('T')[0] : '',
+        }).catch(e => console.error('PaymentHistory create error:', e.message));
+      } else {
+        console.log(`PaymentHistory already exists for payment_intent ${paymentIntentId}, skipping.`);
+      }
 
       // Notification in-app
       await base44.asServiceRole.entities.Notification.create({
