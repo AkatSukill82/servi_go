@@ -133,20 +133,71 @@ function ReportsTab() {
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab() {
   const queryClient = useQueryClient();
-  const { data: allUsers = [] } = useQuery({ queryKey: ['adminUsers'], queryFn: () => base44.entities.User.list('-created_date', 500) });
-  const { data: allSubs = [] } = useQuery({ queryKey: ['adminSubs'], queryFn: () => base44.entities.ProSubscription.list('-created_date', 200) });
-  const { data: allRequests = [] } = useQuery({ queryKey: ['adminAllRequestsOv'], queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500) });
-  const { data: allDisputes = [] } = useQuery({ queryKey: ['adminDisputesOv'], queryFn: () => base44.entities.Dispute.list('-created_date', 100) });
+  const [repairingRequests, setRepairingRequests] = useState(false);
+  const [fixingContract, setFixingContract] = useState(false);
+  const [resettingRequest, setResettingRequest] = useState(false);
 
-  // Auto-expire past subscriptions
-  useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    allSubs.forEach(s => {
-      if (s.status === 'active' && s.renewal_date && s.renewal_date < today) {
-        base44.entities.ProSubscription.update(s.id, { status: 'expired' }).catch(() => {});
+  // Maintenance handlers
+  const handleRepairRequests = async () => {
+    setRepairingRequests(true);
+    try {
+      // Fix duplicates in tried_professionals
+      const pendingPros = await base44.entities.ServiceRequestV2.filter({ status: 'pending_pro' }, '-created_date', 200);
+      for (const req of pendingPros) {
+        if (req.tried_professionals?.length > 0) {
+          const dedup = [...new Set(req.tried_professionals)];
+          if (dedup.length !== req.tried_professionals.length) {
+            await base44.entities.ServiceRequestV2.update(req.id, { tried_professionals: dedup });
+          }
+        }
       }
-    });
-  }, [allSubs]);
+      // Cancel expired requests (>3 days old)
+      const expiredCutoff = new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0];
+      const allRequests = await base44.entities.ServiceRequestV2.list('-created_date', 300);
+      const expired = allRequests.filter(r => ['searching', 'pending_pro'].includes(r.status) && r.scheduled_date && r.scheduled_date < expiredCutoff);
+      for (const req of expired) {
+        await base44.entities.ServiceRequestV2.update(req.id, { status: 'cancelled', cancellation_reason: 'Expirée automatiquement' });
+      }
+      queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
+      toast.success(`Réparé: ${pendingPros.length} dédupliquées, ${expired.length} annulées`);
+    } catch (e) {
+      toast.error('Erreur: ' + e.message);
+    } finally {
+      setRepairingRequests(false);
+    }
+  };
+
+  const handleFixContract = async () => {
+    setFixingContract(true);
+    try {
+      await base44.entities.MissionContract.update('69ca435e1b17e5ad45411b0b', { request_id: '69ca434ee96d5155ac7c6613' });
+      queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
+      toast.success('Contrat mis à jour ✅');
+    } catch (e) {
+      toast.error('Erreur: ' + e.message);
+    } finally {
+      setFixingContract(false);
+    }
+  };
+
+  const handleResetRequest = async () => {
+    setResettingRequest(true);
+    try {
+      await base44.entities.ServiceRequestV2.update('69ca434ee96d5155ac7c6612', {
+        status: 'searching',
+        tried_professionals: ['guillaume.maes@pro.be'],
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+      });
+      queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
+      toast.success('Demande réinitialisée ✅');
+    } catch (e) {
+      toast.error('Erreur: ' + e.message);
+    } finally {
+      setResettingRequest(false);
+    }
+  };
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -230,130 +281,33 @@ function OverviewTab() {
           </div>
         ))}
       </div>
-    </div>
-  );
-}
 
-const DISPUTE_STATUS = {
-  open: { label: 'Ouvert', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  in_review: { label: 'En cours', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  resolved_customer: { label: 'Résolu (client)', color: 'bg-green-100 text-green-700 border-green-200' },
-  resolved_pro: { label: 'Résolu (pro)', color: 'bg-green-100 text-green-700 border-green-200' },
-  closed: { label: 'Fermé', color: 'bg-gray-100 text-gray-600 border-gray-200' },
-};
-
-// ─── Finance Tab ─────────────────────────────────────────────────────────────
-function FinanceTab() {
-  const [period, setPeriod] = useState('all');
-
-  const { data: requests = [] } = useQuery({
-    queryKey: ['adminAllRequests'],
-    queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500),
-  });
-
-  const stats = useMemo(() => {
-    const now = new Date();
-    let filtered = requests.filter(r => ['accepted', 'completed', 'in_progress'].includes(r.status));
-
-    if (period === 'week') {
-      const since = new Date(now - 7 * 86400000);
-      filtered = filtered.filter(r => r.created_date && new Date(r.created_date) >= since);
-    } else if (period === 'month') {
-      const since = new Date(now.getFullYear(), now.getMonth(), 1);
-      filtered = filtered.filter(r => r.created_date && new Date(r.created_date) >= since);
-    }
-
-    const ca = filtered.reduce((s, r) => s + (r.total_price || 0), 0);
-    const commission = filtered.reduce((s, r) => s + (r.commission || (r.base_price || 0) * 0.10), 0);
-    const tva = filtered.reduce((s, r) => {
-      const base = (r.base_price || 0) + (r.commission || (r.base_price || 0) * 0.10);
-      return s + base * 0.21;
-    }, 0);
-    const proRevenue = filtered.reduce((s, r) => s + (r.base_price || 0), 0);
-
-    return { ca, commission, tva, proRevenue, count: filtered.length };
-  }, [requests, period]);
-
-  // Last 6 months breakdown
-  const monthlyData = useMemo(() => {
-    const now = new Date();
-    return Array.from({ length: 6 }, (_, i) => {
-      const m = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
-      const mEnd = new Date(now.getFullYear(), now.getMonth() - 4 + i, 1);
-      const jobs = requests.filter(r =>
-        ['accepted', 'completed', 'in_progress'].includes(r.status) &&
-        r.created_date && new Date(r.created_date) >= m && new Date(r.created_date) < mEnd
-      );
-      return {
-        label: format(m, 'MMM', { locale: fr }),
-        ca: jobs.reduce((s, r) => s + (r.total_price || 0), 0),
-        commission: jobs.reduce((s, r) => s + (r.commission || (r.base_price || 0) * 0.10), 0),
-        count: jobs.length,
-      };
-    });
-  }, [requests]);
-
-  const maxCa = Math.max(...monthlyData.map(m => m.ca), 1);
-
-  return (
-    <div className="space-y-4">
-      {/* Period filter */}
-      <div className="flex gap-2">
-        {[['all', 'Tout'], ['week', '7 jours'], ['month', 'Ce mois']].map((item) => (
-          <button key={item[0]} onClick={() => setPeriod(item[0])}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${period === item[0] ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
-            {item[1]}
-          </button>
-        ))}
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: 'CA total TTC', value: `${stats.ca.toFixed(0)} €`, icon: TrendingUp, color: 'text-foreground' },
-          { label: 'Commissions (10%)', value: `${stats.commission.toFixed(0)} €`, icon: Euro, color: 'text-blue-600' },
-          { label: 'TVA collectée (21%)', value: `${stats.tva.toFixed(0)} €`, icon: BarChart2, color: 'text-orange-600' },
-          { label: 'Missions payées', value: stats.count, icon: CheckCircle, color: 'text-green-600' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card rounded-xl p-4 border border-border">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.8} />
-              <p className="text-xs text-muted-foreground font-medium">{label}</p>
-            </div>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Monthly bar chart */}
-      <div className="bg-card rounded-xl p-4 border border-border">
-        <p className="text-xs font-semibold text-muted-foreground mb-4">CA mensuel (6 derniers mois)</p>
-        <div className="flex items-end gap-2 h-32">
-          {monthlyData.map((m) => (
-            <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
-              <p className="text-[10px] text-muted-foreground">{m.ca > 0 ? `${m.ca.toFixed(0)}€` : ''}</p>
-              <div className="w-full bg-muted rounded-t-md" style={{ height: `${(m.ca / maxCa) * 80}px`, minHeight: m.ca > 0 ? 4 : 0 }} />
-              <p className="text-[10px] font-medium capitalize">{m.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Commission table */}
+      {/* Maintenance des données */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <div className="grid grid-cols-4 px-4 py-2.5 border-b border-border bg-muted/50">
-          {['Mois', 'CA', 'Comm.', 'Missions'].map(h => (
-            <p key={h} className="text-xs font-semibold text-muted-foreground uppercase tracking-wide text-right first:text-left">{h}</p>
-          ))}
+        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border bg-muted/50">🔧 Maintenance des données</p>
+        <div className="px-4 py-3 space-y-2">
+          <Button
+            onClick={handleRepairRequests}
+            disabled={repairingRequests}
+            className="w-full h-10 text-xs rounded-lg bg-amber-600 hover:bg-amber-700"
+          >
+            {repairingRequests ? 'Réparation...' : '🔨 Réparer les demandes bloquées'}
+          </Button>
+          <Button
+            onClick={handleFixContract}
+            disabled={fixingContract}
+            className="w-full h-10 text-xs rounded-lg bg-blue-600 hover:bg-blue-700"
+          >
+            {fixingContract ? 'Correction...' : '📋 Corriger le contrat Déménageur'}
+          </Button>
+          <Button
+            onClick={handleResetRequest}
+            disabled={resettingRequest}
+            className="w-full h-10 text-xs rounded-lg bg-green-600 hover:bg-green-700"
+          >
+            {resettingRequest ? 'Réinitialisation...' : '🔄 Réinitialiser demande Jardinier'}
+          </Button>
         </div>
-        {monthlyData.map((m, i) => (
-          <div key={i} className={`grid grid-cols-4 px-4 py-2.5 ${i < 5 ? 'border-b border-border/50' : ''}`}>
-            <p className="text-sm font-medium capitalize">{m.label}</p>
-            <p className="text-sm text-right">{m.ca.toFixed(0)} €</p>
-            <p className="text-sm text-right text-blue-600 font-medium">{m.commission.toFixed(0)} €</p>
-            <p className="text-sm text-right">{m.count}</p>
-          </div>
-        ))}
       </div>
     </div>
   );
