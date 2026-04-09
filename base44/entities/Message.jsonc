@@ -1,0 +1,90 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "description": "ID de la demande de service associ\u00e9e"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "ID de la Conversation associ\u00e9e"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Email de l'exp\u00e9diteur"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Email du destinataire"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "Nom de l'exp\u00e9diteur"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "particulier",
+        "professionnel"
+      ],
+      "description": "Type d'utilisateur exp\u00e9diteur"
+    },
+    "content": {
+      "type": "string",
+      "description": "Contenu du message texte"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "URL de la photo jointe (optionnel)"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "photo",
+        "system"
+      ],
+      "default": "text"
+    }
+  },
+  "required": [
+    "request_id",
+    "sender_email"
+  ],
+  "rls": {
+    "create": {
+      "data.sender_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.sender_email": "{{user.email}}"
+        },
+        {
+          "data.recipient_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "data.sender_email": "{{user.email}}"
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.sender_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

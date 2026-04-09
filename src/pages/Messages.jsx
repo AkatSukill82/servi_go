@@ -41,19 +41,36 @@ export default function Messages() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['myRequests', user?.email],
-    queryFn: () => base44.entities.ServiceRequestV2.filter(
-      { customer_email: user.email },
-      '-updated_date',
-      50
-    ),
+  const isPro = user?.user_type === 'professionnel';
+
+  // Load conversations — works for both client and pro
+  const { data: conversations = [], isLoading } = useQuery({
+    queryKey: ['conversations', user?.email],
+    queryFn: async () => {
+      if (isPro) {
+        return base44.entities.Conversation.filter({ professional_email: user.email }, '-last_message_at', 50);
+      }
+      return base44.entities.Conversation.filter({ customer_email: user.email }, '-last_message_at', 50);
+    },
     enabled: !!user?.email,
-    refetchInterval: 15000,
+    refetchInterval: 10000,
   });
 
-  // Only show requests that have a professional assigned (can chat)
-  const chats = requests.filter(r => r.professional_email);
+  // Fallback: also load requests for users who don't have Conversation records yet
+  const { data: requests = [] } = useQuery({
+    queryKey: ['myRequests', user?.email],
+    queryFn: () => {
+      if (isPro) return base44.entities.ServiceRequestV2.filter({ professional_email: user.email }, '-updated_date', 50);
+      return base44.entities.ServiceRequestV2.filter({ customer_email: user.email }, '-updated_date', 50);
+    },
+    enabled: !!user?.email && conversations.length === 0,
+  });
+
+  // If conversations exist, use them; otherwise fall back to requests
+  const useConversations = conversations.length > 0;
+  const chats = useConversations
+    ? conversations
+    : requests.filter(r => r.professional_email);
 
   return (
     <div className="min-h-full bg-background">
@@ -88,36 +105,60 @@ export default function Messages() {
         </div>
       ) : (
         <div className="space-y-2 px-4 pb-8">
-          {chats.map((req, i) => (
-            <motion.button
-              key={req.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }}
-              onClick={() => navigate(`/Chat?requestId=${req.id}`)}
-              className="w-full bg-card rounded-2xl border border-border p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
-            >
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
-                {(req.professional_name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-0.5">
-                  <p className="font-semibold text-sm truncate">{req.professional_name || 'Professionnel'}</p>
-                  {req.updated_date && (
-                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2 flex items-center gap-0.5">
-                      <Clock className="w-2.5 h-2.5" />
-                      {formatDistanceToNow(new Date(req.updated_date), { addSuffix: true, locale: fr })}
+          {chats.map((item, i) => {
+            // Support both Conversation and ServiceRequestV2 shapes
+            const isConv = useConversations;
+            const proName = isConv ? item.professional_name : item.professional_name;
+            const subtitle = isConv
+              ? (item.last_message_preview || 'Démarrer la conversation')
+              : item.category_name;
+            const timestamp = isConv ? item.last_message_at : item.updated_date;
+            const status = !isConv ? item.status : null;
+            const unread = isConv && item[isPro ? 'unread_count_pro' : 'unread_count_customer'];
+            const navigateTo = isConv
+              ? (item.request_id ? `/Chat?requestId=${item.request_id}` : `/Chat?conversationId=${item.id}`)
+              : `/Chat?requestId=${item.id}`;
+
+            return (
+              <motion.button
+                key={item.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                onClick={() => navigate(navigateTo)}
+                className="w-full bg-card rounded-2xl border border-border p-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+              >
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 font-bold text-primary text-sm">
+                    {(proName || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                  </div>
+                  {unread > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      {unread > 9 ? '9+' : unread}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{req.category_name}</p>
-                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 inline-block ${STATUS_COLOR[req.status] || 'bg-gray-100 text-gray-600'}`}>
-                  {STATUS_LABELS[req.status] || req.status}
-                </span>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-            </motion.button>
-          ))}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <p className="font-semibold text-sm truncate">{proName || 'Professionnel'}</p>
+                    {timestamp && (
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-2 flex items-center gap-0.5">
+                        <Clock className="w-2.5 h-2.5" />
+                        {formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: fr })}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+                  {status && (
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full mt-1 inline-block ${STATUS_COLOR[status] || 'bg-gray-100 text-gray-600'}`}>
+                      {STATUS_LABELS[status] || status}
+                    </span>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </motion.button>
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,0 +1,84 @@
+{
+  "name": "ProAvailability",
+  "type": "object",
+  "description": "Cr\u00e9neaux de disponibilit\u00e9 hebdomadaires du professionnel",
+  "properties": {
+    "professional_email": {
+      "type": "string"
+    },
+    "day_of_week": {
+      "type": "number",
+      "description": "0=Lundi, 1=Mardi, ... 6=Dimanche"
+    },
+    "day_label": {
+      "type": "string",
+      "description": "Ex: Lundi, Mardi..."
+    },
+    "slots": {
+      "type": "array",
+      "description": "Liste des cr\u00e9neaux disponibles ce jour",
+      "items": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "description": "Heure de d\u00e9but HH:MM"
+          },
+          "end": {
+            "type": "string",
+            "description": "Heure de fin HH:MM"
+          },
+          "available": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "is_day_off": {
+      "type": "boolean",
+      "default": false,
+      "description": "Jour de cong\u00e9 complet"
+    },
+    "exceptions": {
+      "type": "array",
+      "description": "Dates exceptionnelles bloqu\u00e9es",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "professional_email",
+    "day_of_week"
+  ],
+  "rls": {
+    "create": {
+      "data.professional_email": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "data.professional_email": "{{user.email}}"
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

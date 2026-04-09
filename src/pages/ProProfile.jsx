@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { maskIban } from '@/utils/formatters';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -519,6 +520,15 @@ export default function ProProfile() {
                   </div>
                   <CreditCard className={`w-4 h-4 ${isActive ? 'text-green-500' : 'text-red-400'}`} />
                 </div>
+                {user?.bank_iban && (
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                    <div>
+                      <p className="text-sm font-medium">IBAN</p>
+                      <p className="text-xs text-muted-foreground font-mono">{maskIban(user.bank_iban)}</p>
+                    </div>
+                    <Check className="w-4 h-4 text-green-500" />
+                  </div>
+                )}
               </div>
             </div>
 

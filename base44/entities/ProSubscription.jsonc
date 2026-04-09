@@ -1,0 +1,108 @@
+{
+  "name": "ProSubscription",
+  "type": "object",
+  "description": "Abonnement mensuel obligatoire pour les professionnels (10\u20ac/mois) pour recevoir des missions",
+  "properties": {
+    "professional_email": {
+      "type": "string",
+      "description": "Email du professionnel abonn\u00e9"
+    },
+    "professional_name": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "default": "monthly",
+      "description": "Type d'abonnement"
+    },
+    "price": {
+      "type": "number",
+      "default": 10,
+      "description": "Prix en euros"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "cancelled",
+        "trial",
+        "pending_payment"
+      ],
+      "default": "pending_payment"
+    },
+    "started_date": {
+      "type": "string",
+      "description": "Date de d\u00e9but (YYYY-MM-DD)"
+    },
+    "renewal_date": {
+      "type": "string",
+      "description": "Date de renouvellement (YYYY-MM-DD)"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "ID Stripe pour le renouvellement automatique"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "stripe",
+        "bank_transfer",
+        "cash"
+      ],
+      "default": "stripe"
+    },
+    "missions_received": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre total de missions re\u00e7ues depuis l'abonnement"
+    },
+    "trial_ends_date": {
+      "type": "string",
+      "description": "Date de fin de la p\u00e9riode d'essai gratuite (si applicable)"
+    },
+    "auto_renew": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "professional_email"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

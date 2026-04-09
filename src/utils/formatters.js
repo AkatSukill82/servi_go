@@ -41,6 +41,13 @@ export function formatPhoneBe(phone) {
   return phone;
 }
 
+/** Mask IBAN — show only last 4 chars: ****1234 */
+export function maskIban(iban) {
+  if (!iban) return '';
+  const clean = iban.replace(/\s/g, '');
+  return '****' + clean.slice(-4);
+}
+
 /** Display name from user object */
 export function getDisplayName(user) {
   if (!user) return '';
