@@ -35,8 +35,7 @@ export default function ProBottomNav() {
   const messageBadge = notifs.filter(n => MESSAGE_TYPES.includes(n.type)).length;
   const profileIncomplete = user && (!user.photo_url || !user.phone || user.eid_status !== 'verified');
 
-  // Missing: import React/useRef at top
-  const { useRef } = React;
+
 
   useEffect(() => {
     if (!user?.email || !notifs.length) return;

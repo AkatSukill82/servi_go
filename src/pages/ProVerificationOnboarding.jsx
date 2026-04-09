@@ -1,145 +1,294 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ShieldCheck, FileCheck, Loader2, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, CheckCircle } from 'lucide-react';
 import BceValidator from '@/components/bce/BceValidator';
+import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-const DOCS = [
-  { key: 'id_card_url', label: "Carte d'identité", hint: "Recto-verso (JPG, PNG ou PDF)", icon: '🪪' },
-  { key: 'insurance_url', label: "Attestation d'assurance RC", hint: "En cours de validité", icon: '📄' },
-  { key: 'onss_url', label: "Attestation ONSS / Indépendant", hint: "Numéro BCE/KBO obligatoire", icon: '📋' },
-];
+const TOTAL_STEPS = 5;
+
+function ProgressBar({ step }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-medium text-muted-foreground">Étape {step} sur {TOTAL_STEPS}</p>
+        <p className="text-xs text-muted-foreground">{Math.round((step / TOTAL_STEPS) * 100)}%</p>
+      </div>
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className="h-full bg-primary rounded-full transition-all duration-500"
+          style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function ProVerificationOnboarding() {
   const navigate = useNavigate();
-  const [uploaded, setUploaded] = useState({});
-  const [uploading, setUploading] = useState({});
+  const queryClient = useQueryClient();
+  const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+
+  // Step 1
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Step 2
+  const [categoryName, setCategoryName] = useState('');
+  const [basePrice, setBasePrice] = useState('');
+  const [hourlyRate, setHourlyRate] = useState('');
+  const [proDescription, setProDescription] = useState('');
+
+  // Step 3
   const [bceNumber, setBceNumber] = useState('');
 
-  const handleUpload = async (e, key) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(u => ({ ...u, [key]: true }));
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setUploaded(u => ({ ...u, [key]: file_url }));
-    setUploading(u => ({ ...u, [key]: false }));
-    toast.success('Document ajouté !');
-  };
+  // User data
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
-  const handleSubmit = async () => {
-    const anyUploaded = Object.keys(uploaded).length > 0;
-    if (!anyUploaded) {
-      navigate('/ProDashboard');
-      return;
+  const { data: categories = [] } = useQuery({
+    queryKey: ['serviceCategories'],
+    queryFn: () => base44.entities.ServiceCategory.list(),
+  });
+
+  const saveStep1 = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error('Prénom et nom requis');
+      return false;
     }
     setSaving(true);
     await base44.auth.updateMe({
-      ...uploaded,
-      ...(bceNumber ? { bce_number: bceNumber } : {}),
-      verification_status: 'pending',
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      full_name: `${firstName.trim()} ${lastName.trim()}`,
+      phone: phone.trim(),
     });
+    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     setSaving(false);
-    toast.success('Documents envoyés ! Vérification en cours (24-48h).');
+    return true;
+  };
+
+  const saveStep2 = async () => {
+    setSaving(true);
+    await base44.auth.updateMe({
+      category_name: categoryName,
+      base_price: Number(basePrice) || null,
+      hourly_rate: Number(hourlyRate) || null,
+      pro_description: proDescription.trim(),
+    });
+    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    setSaving(false);
+    return true;
+  };
+
+  const saveStep3 = async () => {
+    if (bceNumber) {
+      setSaving(true);
+      await base44.auth.updateMe({ bce_number: bceNumber });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      setSaving(false);
+    }
+    return true;
+  };
+
+  const startTrial = async () => {
+    setSaving(true);
+    const today = new Date();
+    const trialEnd = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    await base44.entities.ProSubscription.create({
+      professional_email: user.email,
+      professional_name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.full_name,
+      status: 'trial',
+      plan: 'monthly',
+      price: 10,
+      trial_ends_date: trialEnd,
+      started_date: today.toISOString().split('T')[0],
+    });
+    toast.success('Période d\'essai activée ! 🎉');
     navigate('/ProDashboard');
   };
 
-  const allUploaded = DOCS.every(d => uploaded[d.key]);
-  const anyUploaded = Object.keys(uploaded).length > 0;
+  const handleNext = async () => {
+    let ok = false;
+    if (step === 1) ok = await saveStep1();
+    else if (step === 2) ok = await saveStep2();
+    else if (step === 3) ok = await saveStep3();
+    else ok = true;
+    if (ok) setStep(s => s + 1);
+  };
+
+  const handleBack = () => {
+    if (step === 1) navigate(-1);
+    else setStep(s => s - 1);
+  };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm space-y-6"
-      >
-        {/* Header */}
-        <div className="text-center">
-          <div className="w-20 h-20 rounded-3xl bg-green-100 flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <ShieldCheck className="w-10 h-10 text-green-600" />
-          </div>
-          <h1 className="text-2xl font-bold">Vérifiez votre compte</h1>
-          <p className="text-muted-foreground text-sm mt-2">
-            Uploadez vos documents pour obtenir le badge <strong>Pro Vérifié ✓</strong> et gagner la confiance des clients.
-          </p>
-        </div>
+    <div className="min-h-screen bg-background flex flex-col px-5 py-8">
+      <div className="w-full max-w-sm mx-auto flex-1 flex flex-col">
 
-        {/* Numéro BCE — validé en live */}
-        <BceValidator value={bceNumber} onChange={setBceNumber} />
+        {/* Back button */}
+        <button onClick={handleBack} className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4 -ml-1">
+          <ArrowLeft className="w-4 h-4" /> Retour
+        </button>
 
-        {/* Documents */}
-        <div className="space-y-3">
-          {DOCS.map(({ key, label, hint, icon }) => {
-            const isUploaded = !!uploaded[key];
-            const isLoading = uploading[key];
-            return (
-              <div
-                key={key}
-                className={`flex items-center gap-3 p-4 rounded-2xl border transition-colors ${
-                  isUploaded ? 'bg-green-50 border-green-200' : 'bg-card border-border/60'
-                }`}
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl ${isUploaded ? 'bg-green-100' : 'bg-muted'}`}>
-                  {isLoading
-                    ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    : isUploaded
-                    ? <FileCheck className="w-5 h-5 text-green-600" />
-                    : icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold">{label}</p>
-                  <p className="text-xs text-muted-foreground">{isUploaded ? '✓ Document envoyé' : hint}</p>
-                </div>
-                {!isUploaded && (
-                  <label className="cursor-pointer shrink-0">
-                    <span className="text-xs font-semibold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 rounded-lg px-3 py-1.5 transition-colors">
-                      {isLoading ? '...' : 'Choisir'}
-                    </span>
-                    <input
-                      type="file"
-                      accept="image/*,application/pdf"
-                      className="hidden"
-                      onChange={e => handleUpload(e, key)}
-                      disabled={isLoading}
-                    />
-                  </label>
-                )}
+        <ProgressBar step={step} />
+
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold">Informations de base</h1>
+                <p className="text-sm text-muted-foreground mt-1">Dites-nous qui vous êtes</p>
               </div>
-            );
-          })}
-        </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Prénom *</Label>
+                  <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Jean" className="h-11 rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Nom *</Label>
+                  <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Dupont" className="h-11 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Téléphone</Label>
+                <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+32 470 12 34 56" className="h-11 rounded-xl" />
+              </div>
+            </motion.div>
+          )}
 
-        {/* Info */}
-        {allUploaded && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-center text-yellow-800">
-            🕐 Tous vos documents sont reçus. La vérification prend généralement 24-48h.
-          </div>
-        )}
+          {step === 2 && (
+            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold">Votre métier</h1>
+                <p className="text-sm text-muted-foreground mt-1">Décrivez votre activité professionnelle</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Catégorie de service</Label>
+                <Select value={categoryName} onValueChange={setCategoryName}>
+                  <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Choisissez votre métier" /></SelectTrigger>
+                  <SelectContent>
+                    {categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Prix de base €</Label>
+                  <Input type="number" value={basePrice} onChange={e => setBasePrice(e.target.value)} placeholder="80" className="h-11 rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Taux horaire €/h</Label>
+                  <Input type="number" value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} placeholder="45" className="h-11 rounded-xl" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Description de vos services</Label>
+                <Textarea value={proDescription} onChange={e => setProDescription(e.target.value)} placeholder="Décrivez vos compétences..." rows={3} className="rounded-xl resize-none" />
+              </div>
+            </motion.div>
+          )}
 
-        {/* Buttons */}
-        <div className="space-y-3">
-          <Button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="w-full h-14 rounded-xl text-base"
-          >
-            {saving
-              ? <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              : <ArrowRight className="w-5 h-5 mr-2" />}
-            {anyUploaded ? 'Envoyer et continuer' : 'Continuer sans vérifier'}
-          </Button>
-          <button
-            onClick={() => navigate('/ProDashboard')}
-            className="w-full text-center text-sm text-muted-foreground underline underline-offset-2"
-          >
-            Passer pour l'instant
-          </button>
+          {step === 3 && (
+            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold">Vérification BCE</h1>
+                <p className="text-sm text-muted-foreground mt-1">Renseignez votre numéro d'entreprise belge</p>
+              </div>
+              <BceValidator value={bceNumber} onChange={setBceNumber} />
+            </motion.div>
+          )}
+
+          {step === 4 && (
+            <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold">Disponibilités</h1>
+                <p className="text-sm text-muted-foreground mt-1">Configurez vos horaires de travail</p>
+              </div>
+              {user && <AvailabilityEditor userEmail={user.email} />}
+            </motion.div>
+          )}
+
+          {step === 5 && (
+            <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
+              <div>
+                <h1 className="text-2xl font-bold">Abonnement Pro</h1>
+                <p className="text-sm text-muted-foreground mt-1">Choisissez comment démarrer</p>
+              </div>
+              <div className="space-y-3">
+                {/* Monthly */}
+                <button onClick={() => navigate('/ProSubscription?plan=monthly')} className="w-full bg-card rounded-2xl border border-border p-4 text-left hover:border-primary/40 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold">Mensuel</p>
+                      <p className="text-xs text-muted-foreground">10 € / mois · Sans engagement</p>
+                    </div>
+                    <span className="text-2xl font-bold text-primary">10€</span>
+                  </div>
+                </button>
+                {/* Annual */}
+                <button onClick={() => navigate('/ProSubscription?plan=annual')} className="w-full bg-primary/5 rounded-2xl border border-primary/30 p-4 text-left">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">Annuel</p>
+                        <span className="text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">-17%</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">100 € / an · Économisez 20€</p>
+                    </div>
+                    <span className="text-2xl font-bold text-primary">100€</span>
+                  </div>
+                </button>
+              </div>
+              {/* Trial */}
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <p className="font-semibold text-green-800">Essai gratuit 14 jours</p>
+                </div>
+                <p className="text-xs text-green-700">Aucune carte bancaire requise. Accès complet pendant 14 jours.</p>
+                <Button onClick={startTrial} disabled={saving} className="w-full bg-green-600 hover:bg-green-700">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Commencer en essai gratuit
+                </Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Footer nav */}
+        <div className="pt-6 space-y-3">
+          {step < 5 && (
+            <Button onClick={handleNext} disabled={saving} className="w-full h-12 rounded-xl">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {saving ? 'Sauvegarde...' : 'Continuer'}
+              {!saving && <ArrowRight className="w-4 h-4 ml-2" />}
+            </Button>
+          )}
+          {(step === 3 || step === 4) && (
+            <button onClick={() => setStep(s => s + 1)} className="w-full text-center text-sm text-muted-foreground underline underline-offset-2">
+              Passer cette étape
+            </button>
+          )}
+          {step === 5 && (
+            <button onClick={() => navigate('/ProDashboard')} className="w-full text-center text-sm text-muted-foreground underline underline-offset-2">
+              Continuer sans abonnement
+            </button>
+          )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

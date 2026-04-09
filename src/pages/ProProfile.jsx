@@ -112,6 +112,21 @@ export default function ProProfile() {
     queryFn: () => base44.entities.ServiceCategory.list(),
   });
 
+  const { data: completedMissions = [] } = useQuery({
+    queryKey: ['proCompletedMissions', user?.email],
+    queryFn: () => base44.entities.ServiceRequestV2.filter({ professional_email: user?.email, status: 'completed' }, '-created_date', 200),
+    enabled: !!user?.email,
+  });
+
+  const { data: allReviews = [] } = useQuery({
+    queryKey: ['proAllReviews', user?.email],
+    queryFn: () => base44.entities.Review.filter({ professional_email: user?.email }, '-created_date', 100),
+    enabled: !!user?.email,
+  });
+
+  const avgRating = allReviews.length > 0 ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length).toFixed(1) : null;
+  const totalEarnings = completedMissions.reduce((sum, m) => sum + (m.estimated_price || 0), 0);
+
   useEffect(() => {
     if (user) {
       const rawHandle = (user.full_name || '').includes('@') ? user.full_name.split('@')[0] : user.full_name || '';
@@ -389,6 +404,22 @@ export default function ProProfile() {
         {/* ─── ONGLET ACTIVITÉ ─── */}
         {activeTab === 'activite' && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            {/* Statistiques rapides */}
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-[#534AB7]">{completedMissions.length}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Missions complétées</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-[#1D9E75]">{avgRating || '—'}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Note moyenne</p>
+              </div>
+              <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-4 text-center">
+                <p className="text-2xl font-bold text-blue-600">{totalEarnings.toFixed(0)}€</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Revenus estimés</p>
+              </div>
+            </div>
+
             <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2"><Briefcase className="w-4 h-4 text-[#534AB7]" />Mon métier</h3>
               <div className="space-y-1.5">

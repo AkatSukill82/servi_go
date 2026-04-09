@@ -48,12 +48,20 @@ export default function ProDashboard() {
   const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
 
   const { data: incomingRequests = [] } = useQuery({
-    queryKey: ['incomingRequests', proCategory],
+    queryKey: ['incomingRequests', proCategory, user?.email],
     queryFn: async () => {
-      if (!proCategory) return [];
-      return base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
+      if (!proCategory || !user?.email) return [];
+      // Query A: Open pool (searching)
+      const openPool = await base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date', 100);
+      // Query B: Specifically assigned to this pro (pending_pro)
+      const assigned = await base44.entities.ServiceRequestV2.filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date', 50);
+      // Merge and deduplicate by id, with assigned at the top
+      const merged = []
+        .concat(assigned.map(r => ({ ...r, _assigned: true })))
+        .concat(openPool.filter(r => !assigned.some(a => a.id === r.id)));
+      return merged;
     },
-    enabled: !!proCategory && hasActiveSubscription,
+    enabled: !!proCategory && !!user?.email && hasActiveSubscription,
     staleTime: 10000,
   });
 
@@ -328,12 +336,23 @@ export default function ProDashboard() {
           ) : (
             <div className="space-y-3">
               {incomingRequests.map((req, i) => (
-                <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border border-border">
+                <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className={`rounded-xl p-4 border ${req._assigned ? 'bg-blue-50 border-blue-200' : 'bg-card border-border'}`}>
+                  {req._assigned && (
+                    <div className="bg-blue-100 border border-blue-300 rounded-lg px-3 py-1.5 mb-3 text-xs font-semibold text-blue-700 inline-flex items-center gap-1">
+                      📌 Assignée à vous
+                    </div>
+                  )}
+                  {req._assigned && (
+                    <div className="bg-white/60 border border-blue-200 rounded-lg px-3 py-2 mb-3 text-xs text-blue-800 font-medium">
+                      ⏰ Cette demande vous attend depuis {Math.floor((Date.now() - new Date(req.created_date).getTime()) / 60000)} minutes — répondez vite !
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-sm">{req.category_name}</p>
                         {req.is_urgent && <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5">⚡ SOS</span>}
+                        {req._assigned && <span className="text-[10px] font-bold bg-blue-600 text-white rounded-full px-2 py-0.5">⏱️ En attente</span>}
                       </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
@@ -342,7 +361,7 @@ export default function ProDashboard() {
                       {req.scheduled_date && <p className="text-xs text-muted-foreground mt-0.5">📅 {req.scheduled_date}{req.scheduled_time ? ` à ${req.scheduled_time}` : ''}</p>}
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <p className="font-bold text-base text-primary">{(req.base_price || 0).toFixed(0)} €</p>
+                      <p className="font-bold text-base text-primary">{(req.estimated_price || req.base_price || 0).toFixed(0)} €</p>
                       <p className="text-[10px] text-muted-foreground">estimé</p>
                     </div>
                   </div>
@@ -368,7 +387,7 @@ export default function ProDashboard() {
           <div>
             <h2 className="text-sm font-semibold mb-3">Missions en cours</h2>
             <div className="space-y-3">
-              {activeJobs.map((job) => (
+              {activeJobs.map(job => (
                 <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
