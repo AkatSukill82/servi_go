@@ -36,6 +36,14 @@ const PRIORITY_CONFIG = {
   urgent: { label: 'Urgent', color: 'bg-red-100 text-red-700' },
 };
 
+const DISPUTE_STATUS = {
+  open: { label: 'Ouvert', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  in_review: { label: 'En cours', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  resolved_customer: { label: 'Résolu (client)', color: 'bg-green-100 text-green-700 border-green-200' },
+  resolved_pro: { label: 'Résolu (pro)', color: 'bg-green-100 text-green-700 border-green-200' },
+  closed: { label: 'Fermé', color: 'bg-gray-100 text-gray-600 border-gray-200' },
+};
+
 const REPORT_STATUS = [
   { value: 'all', label: 'Tous' },
   { value: 'pending', label: 'En attente' },
@@ -136,6 +144,23 @@ function OverviewTab() {
   const [repairingRequests, setRepairingRequests] = useState(false);
   const [fixingContract, setFixingContract] = useState(false);
   const [resettingRequest, setResettingRequest] = useState(false);
+
+  const { data: allSubs = [] } = useQuery({
+    queryKey: ['adminAllSubsOv'],
+    queryFn: () => base44.entities.ProSubscription.list('-created_date', 300),
+  });
+  const { data: allRequests = [] } = useQuery({
+    queryKey: ['adminAllRequestsOv'],
+    queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 300),
+  });
+  const { data: allDisputes = [] } = useQuery({
+    queryKey: ['adminDisputesOv'],
+    queryFn: () => base44.entities.Dispute.list('-created_date', 100),
+  });
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['adminAllUsersOv'],
+    queryFn: () => base44.entities.User.list('-created_date', 200),
+  });
 
   // Maintenance handlers
   const handleRepairRequests = async () => {
@@ -308,6 +333,17 @@ function OverviewTab() {
             {resettingRequest ? 'Réinitialisation...' : '🔄 Réinitialiser demande Jardinier'}
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Finance Tab ─────────────────────────────────────────────────────────────
+function FinanceTab() {
+  return (
+    <div className="space-y-4">
+      <div className="text-center py-12 text-muted-foreground">
+        <p className="text-sm">Onglet finances en développement</p>
       </div>
     </div>
   );
