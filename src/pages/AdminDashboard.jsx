@@ -151,7 +151,9 @@ function FinanceTab() {
 
   return (
     <div className="space-y-4">
-      {
+      {/* Period filter */}
+      <div className="flex gap-2">
+        {[['all', 'Tout'], ['week', '7 jours'], ['month', 'Ce mois']].map(([k, l]) => (
           <button key={k} onClick={() => setPeriod(k)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${period === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
             {l}

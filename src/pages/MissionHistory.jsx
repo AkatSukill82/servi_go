@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, CheckCircle, MessageCircle, Star, Search, XCircle, AlertCircle } from 'lucide-react';
+import { FileText, Clock, CheckCircle, MessageCircle, Star } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
