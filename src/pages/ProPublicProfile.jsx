@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Star, ShieldCheck, MapPin, Euro, Clock, ArrowLeft, Briefcase, MessageCircle } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Euro, Clock, Briefcase, MessageCircle, Flag, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import BackButton from '@/components/ui/BackButton';
+import { toast } from 'sonner';
 
 function StarRating({ rating, size = 'md' }) {
   const sz = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';
@@ -20,15 +20,84 @@ function StarRating({ rating, size = 'md' }) {
   );
 }
 
+const REPORT_REASONS = [
+  { value: 'comportement_agressif', label: 'Comportement agressif' },
+  { value: 'arnaque', label: 'Arnaque' },
+  { value: 'no_show', label: 'No-show' },
+  { value: 'travail_non_conforme', label: 'Travail non conforme' },
+  { value: 'fausse_identite', label: 'Fausse identité' },
+  { value: 'harcelement', label: 'Harcèlement' },
+  { value: 'danger_securite', label: 'Danger sécurité' },
+  { value: 'autre', label: 'Autre' },
+];
+
+function ReportModal({ pro, user, onClose }) {
+  const [reason, setReason] = useState('arnaque');
+  const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    await base44.entities.Report.create({
+      reported_by_email: user?.email || 'anonymous',
+      reported_by_type: user?.user_type || 'particulier',
+      reported_user_email: pro.email,
+      reported_user_name: pro.full_name || pro.email,
+      reported_user_type: 'professionnel',
+      reason,
+      description,
+      priority: 'medium',
+    });
+    toast.success('Signalement envoyé. Notre équipe examinera votre demande.');
+    onClose();
+    setSaving(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50">
+      <div className="bg-background rounded-t-2xl w-full max-w-lg p-6 space-y-4">
+        <h3 className="font-bold text-base">Signaler ce professionnel</h3>
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">Motif</p>
+          <select value={reason} onChange={e => setReason(e.target.value)}
+            className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring">
+            {REPORT_REASONS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-xs text-muted-foreground">Détails (optionnel)</p>
+          <textarea value={description} onChange={e => setDescription(e.target.value)}
+            rows={3} placeholder="Décrivez ce qui s'est passé..."
+            className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring" />
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onClose} className="flex-1 h-11 rounded-xl">Annuler</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="flex-1 h-11 rounded-xl bg-destructive hover:bg-destructive/90">
+            {saving ? 'Envoi...' : 'Signaler'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProPublicProfile() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('userId');
+  const proId = urlParams.get('proId') || urlParams.get('userId');
+  const proEmail = urlParams.get('proEmail');
+  const [showReport, setShowReport] = useState(false);
+
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
   const { data: pro } = useQuery({
-    queryKey: ['proPublic', userId],
-    queryFn: () => base44.entities.User.filter({ id: userId }).then(r => r[0] || null),
-    enabled: !!userId,
+    queryKey: ['proPublic', proId, proEmail],
+    queryFn: async () => {
+      if (proId) return base44.entities.User.filter({ id: proId }).then(r => r[0] || null);
+      if (proEmail) return base44.entities.User.filter({ email: proEmail }).then(r => r[0] || null);
+      return null;
+    },
+    enabled: !!(proId || proEmail),
   });
 
   const { data: reviews = [] } = useQuery({
@@ -54,11 +123,23 @@ export default function ProPublicProfile() {
 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
+  const { data: availability = [] } = useQuery({
+    queryKey: ['proAvailabilityPublic', pro?.email],
+    queryFn: () => base44.entities.ProAvailability.filter({ professional_email: pro.email }, 'day_of_week'),
+    enabled: !!pro?.email,
+  });
+
   const handleRequest = () => {
     const cat = categories.find(c => c.name === pro?.category_name);
-    if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${userId}`);
+    if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${pro.id}`);
     else navigate('/ServiceRequest');
   };
+
+  if (!pro && (proId || proEmail)) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
+    </div>
+  );
 
   if (!pro) return (
     <div className="flex items-center justify-center min-h-screen">
@@ -173,7 +254,39 @@ export default function ProPublicProfile() {
             <p className="text-sm text-muted-foreground">Pas encore d'avis pour ce professionnel</p>
           </div>
         )}
+
+        {/* Disponibilités */}
+        {availability.length > 0 && (
+          <div className="bg-card rounded-2xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-sm">Disponibilités</h3>
+            </div>
+            <div className="space-y-2">
+              {availability.map(day => (
+                <div key={day.id} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
+                  <p className="text-sm font-medium">{day.day_label || day.day_of_week}</p>
+                  {day.is_day_off
+                    ? <span className="text-xs text-muted-foreground">Repos</span>
+                    : <div className="flex flex-wrap gap-1 justify-end">
+                        {(day.slots || []).map((s, i) => (
+                          <span key={i} className="text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">{s.start}–{s.end}</span>
+                        ))}
+                      </div>
+                  }
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Signalement */}
+        <button onClick={() => setShowReport(true)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors mx-auto py-2">
+          <Flag className="w-3.5 h-3.5" /> Signaler ce professionnel
+        </button>
       </div>
+
+      {showReport && <ReportModal pro={pro} user={user} onClose={() => setShowReport(false)} />}
 
       {/* CTA fixe */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-5 py-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}>

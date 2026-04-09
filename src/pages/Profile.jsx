@@ -308,6 +308,9 @@ export default function Profile() {
               {!eidVerified && <span className="text-primary text-sm font-bold">→</span>}
             </button>
 
+            {/* Parrainages */}
+            <ReferralSection user={user} />
+
             {/* Actions */}
             <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between bg-white rounded-2xl border border-border/50 shadow-sm px-5 py-4">
@@ -337,9 +340,6 @@ export default function Profile() {
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
               </Button>
             </div>
-
-            {/* Referral section */}
-            <ReferralSection user={user} />
           </motion.div>
         )}
 

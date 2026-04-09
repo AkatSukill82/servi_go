@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, BarChart2, CreditCard, AlertCircle, Play, StopCircle, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { useState as _useState } from 'react';
 import ProStats from '@/components/pro/ProStats';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';

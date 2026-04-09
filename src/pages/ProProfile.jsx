@@ -22,7 +22,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import ProAvailabilityManager from '@/components/pro/ProAvailabilityManager';
+import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
+import ProAvailabilitySection from '@/components/pro/ProAvailabilitySection';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 
@@ -422,7 +423,7 @@ export default function ProProfile() {
 
             <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#534AB7]" />Mes disponibilités</h3>
-              {user?.email && <ProAvailabilityManager userEmail={user.email} />}
+              <ProAvailabilitySection userEmail={user?.email} />
             </div>
 
             <Button

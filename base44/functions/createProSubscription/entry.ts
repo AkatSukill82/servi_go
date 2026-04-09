@@ -12,31 +12,35 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const plan = body.plan === 'annual' ? 'annual' : 'monthly';
-    const isAnnual = plan === 'annual';
     const successUrl = body.successUrl || `${req.headers.get('origin')}/ProSubscription?success=true&plan=${plan}`;
     const cancelUrl = body.cancelUrl || `${req.headers.get('origin')}/ProSubscription`;
 
-    const lineItem = isAnnual
-      ? { price_data: { currency: 'eur', unit_amount: 10000, product_data: { name: 'ServiGo Pro — Abonnement Annuel', description: '~8,33€/mois · Économisez 17%' } } }
-      : { price_data: { currency: 'eur', unit_amount: 1000, product_data: { name: 'ServiGo Pro — Abonnement Mensuel', description: 'Accès illimité aux missions' } } };
+    const isAnnual = plan === 'annual';
+    const amount = isAnnual ? 10000 : 1000; // cents
+    const name = isAnnual ? 'ServiGo Pro — Abonnement Annuel' : 'ServiGo Pro — Abonnement Mensuel';
+    const description = isAnnual ? '~8.33€/mois · Économisez 17%' : null;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
       customer_email: user.email,
-      line_items: [{ ...lineItem, quantity: 1 }],
+      line_items: [{
+        price_data: {
+          currency: 'eur',
+          product_data: { name, ...(description ? { description } : {}) },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      }],
       success_url: successUrl,
       cancel_url: cancelUrl,
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
         professional_email: user.email,
         professional_name: user.full_name || '',
-        professional_id: user.id,
         plan,
       },
     });
-
-    console.log(`Checkout session created for ${user.email} plan=${plan} session=${session.id}`);
 
     // Create or update ProSubscription as pending_payment
     const existing = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: user.email }, '-created_date', 1);
