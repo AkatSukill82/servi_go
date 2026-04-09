@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useState, useEffect, useRef } from 'react';
-import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -49,9 +47,8 @@ export default function ProDashboard() {
 
   const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
 
-  // Query A: open pool (status='searching')
-  const { data: poolRequests = [] } = useQuery({
-    queryKey: ['poolRequests', proCategory],
+  const { data: incomingRequests = [] } = useQuery({
+    queryKey: ['incomingRequests', proCategory],
     queryFn: async () => {
       if (!proCategory) return [];
       return base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
@@ -60,42 +57,15 @@ export default function ProDashboard() {
     staleTime: 10000,
   });
 
-  // Query B: assigned to this pro (status='pending_pro')
-  const { data: assignedRequests = [] } = useQuery({
-    queryKey: ['assignedRequests', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      return base44.entities.ServiceRequestV2.filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date');
-    },
-    enabled: !!user?.email && hasActiveSubscription,
-    staleTime: 10000,
-  });
-
-  // Merge & deduplicate
-  const mergedIds = new Set();
-  const incomingRequests = [
-    ...assignedRequests.filter(r => { if (mergedIds.has(r.id)) return false; mergedIds.add(r.id); return true; }),
-    ...poolRequests.filter(r => { if (mergedIds.has(r.id)) return false; mergedIds.add(r.id); return true; }),
-  ];
-
-  // Timeout indicator for pending_pro
-  const getTimeSinceCreated = (createdDate) => {
-    if (!createdDate) return 0;
-    const created = new Date(createdDate);
-    const now = new Date();
-    return Math.floor((now - created) / 60000); // minutes
-  };
-
   useEffect(() => {
-    if (!proCategory || !user?.email) return;
+    if (!proCategory) return;
     const unsub = base44.entities.ServiceRequestV2.subscribe((event) => {
       if (event.type === 'create' || event.type === 'update' || event.type === 'delete') {
-        queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
-        queryClient.invalidateQueries({ queryKey: ['assignedRequests', user.email] });
+        queryClient.invalidateQueries({ queryKey: ['incomingRequests', proCategory] });
       }
     });
     return unsub;
-  }, [proCategory, user?.email, queryClient]);
+  }, [proCategory]);
 
   useEffect(() => {
     if (!incomingRequests?.length) return;
@@ -357,28 +327,22 @@ export default function ProDashboard() {
             </div>
           ) : (
             <div className="space-y-3">
-              {incomingRequests.map((req, i) => {
-               const isAssigned = assignedRequests.some(a => a.id === req.id);
-               const minutesSinceCreated = getTimeSinceCreated(req.created_date);
-               const isExpiring = isAssigned && minutesSinceCreated >= 2;
-               return (
-               <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border border-border">
-                 <div className="flex items-start justify-between mb-3">
-                   <div className="flex-1 min-w-0">
-                     <div className="flex items-center gap-2">
-                       {isAssigned && <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">📌 Assigné à vous</span>}
-                       <p className="font-semibold text-sm">{req.category_name}</p>
-                       {req.is_urgent && <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5">⚡ SOS</span>}
-                     </div>
+              {incomingRequests.map((req, i) => (
+                <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border border-border">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-sm">{req.category_name}</p>
+                        {req.is_urgent && <span className="text-[10px] font-bold bg-destructive text-white rounded-full px-2 py-0.5">⚡ SOS</span>}
+                      </div>
                       <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3 shrink-0" strokeWidth={1.8} />
                         <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
                       </p>
                       {req.scheduled_date && <p className="text-xs text-muted-foreground mt-0.5">📅 {req.scheduled_date}{req.scheduled_time ? ` à ${req.scheduled_time}` : ''}</p>}
-                      {isExpiring && <p className="text-xs text-red-600 font-semibold mt-1">⚠️ Cette demande vous attend depuis {minutesSinceCreated} minutes — répondez vite !</p>}
                     </div>
                     <div className="text-right shrink-0 ml-3">
-                      <p className="font-bold text-base text-primary">{(req.estimated_price || req.base_price || 0).toFixed(0)} €</p>
+                      <p className="font-bold text-base text-primary">{(req.base_price || 0).toFixed(0)} €</p>
                       <p className="text-[10px] text-muted-foreground">estimé</p>
                     </div>
                   </div>
@@ -394,8 +358,7 @@ export default function ProDashboard() {
                     <Check className="w-4 h-4" strokeWidth={2.2} /> Accepter cette mission
                   </button>
                 </motion.div>
-              );
-              })
+              ))}
             </div>
           )}
         </div>

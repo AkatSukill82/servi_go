@@ -11,7 +11,6 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Landing from './pages/Landing';
 import SelectUserType from './pages/SelectUserType';
 import Chat from './pages/Chat';
-import ProMessages from './pages/ProMessages';
 import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
@@ -22,6 +21,7 @@ import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Register from './pages/Register';
 import ProPublicProfile from './pages/ProPublicProfile';
+import ProMessages from './pages/ProMessages';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -64,13 +64,13 @@ const AuthenticatedApp = () => {
       <Route path="/Home" element={<AppLayout />} />
       <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Messages" element={<AppLayout />} />
-      <Route path="/ProMessages" element={<AppLayout />} />
       <Route path="/ProAgenda" element={<AppLayout />} />
       <Route path="/ProSubscription" element={<AppLayout />} />
       <Route path="/ServiceRequest" element={<AppLayout />} />
       <Route path="/Profile" element={<AppLayout />} />
       <Route path="/ProDashboard" element={<AppLayout />} />
       <Route path="/ProProfile" element={<AppLayout />} />
+      <Route path="/ProMessages" element={<AppLayout />} />
       <Route path="/Favorites" element={<AppLayout />} />
       <Route path="/Invoices" element={<AppLayout />} />
       <Route path="/Map" element={<AppLayout />} />
