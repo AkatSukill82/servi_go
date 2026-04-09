@@ -95,9 +95,9 @@ export default function ProSubscription() {
 
   const [billingLoading, setBillingLoading] = useState(false);
 
-  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
-    queryKey: ['stripeInvoices', user?.email],
-    queryFn: () => base44.functions.invoke('getStripeInvoices', {}).then(r => r.data?.invoices || []),
+  const { data: paymentHistory = [], isLoading: historyLoading } = useQuery({
+    queryKey: ['paymentHistory', user?.email],
+    queryFn: () => base44.entities.PaymentHistory.filter({ professional_email: user.email }, '-created_date', 24),
     enabled: !!user?.email && !!subscription,
     staleTime: 60000,
   });
@@ -252,43 +252,39 @@ export default function ProSubscription() {
               Mettre à jour ma carte de paiement
             </Button>
 
-            {/* Stripe invoice history */}
+            {/* PaymentHistory section */}
             <div className="bg-card rounded-2xl border border-border shadow-sm p-5">
               <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-muted-foreground" /> Factures
+                <Receipt className="w-4 h-4 text-muted-foreground" /> Historique des paiements
               </h3>
-              {invoicesLoading ? (
+              {historyLoading ? (
                 <div className="flex items-center justify-center py-6">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                 </div>
-              ) : invoicesData?.length > 0 ? (
+              ) : paymentHistory.length > 0 ? (
                 <div className="space-y-2">
-                  {invoicesData.map(inv => (
-                    <div key={inv.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                  {paymentHistory.map(p => (
+                    <div key={p.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                       <div>
-                        <p className="text-sm font-medium">{inv.amount.toFixed(2)} {inv.currency}</p>
-                        <p className="text-xs text-muted-foreground">{inv.date}{inv.period_start ? ` · ${inv.period_start} → ${inv.period_end}` : ''}</p>
+                        <p className="text-sm font-medium">{(p.amount || 0).toFixed(2)} €</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.payment_date ? format(new Date(p.payment_date), 'dd MMM yyyy', { locale: fr }) : '—'}
+                          {p.invoice_ref ? ` · ${p.invoice_ref.slice(0, 12)}…` : ''}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          inv.status === 'paid' ? 'bg-green-50 text-green-700' :
-                          inv.status === 'open' ? 'bg-orange-50 text-orange-600' :
-                          'bg-gray-50 text-gray-500'
-                        }`}>
-                          {inv.status === 'paid' ? 'Payée' : inv.status === 'open' ? 'En attente' : inv.status}
-                        </span>
-                        {inv.pdf_url && (
-                          <a href={inv.pdf_url} target="_blank" rel="noopener noreferrer"
-                            className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors">
-                            <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                          </a>
-                        )}
-                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        p.status === 'paid' ? 'bg-green-50 text-green-700' :
+                        p.status === 'failed' ? 'bg-red-50 text-red-600' :
+                        p.status === 'refunded' ? 'bg-orange-50 text-orange-600' :
+                        'bg-gray-50 text-gray-500'
+                      }`}>
+                        {p.status === 'paid' ? 'Payé' : p.status === 'failed' ? 'Échoué' : p.status === 'refunded' ? 'Remboursé' : p.status}
+                      </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Aucune facture disponible</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Aucun historique de paiement</p>
               )}
             </div>
 
