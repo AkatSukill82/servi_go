@@ -23,7 +23,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
-import ProAvailabilitySection from '@/components/pro/ProAvailabilitySection';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 
@@ -423,7 +422,7 @@ export default function ProProfile() {
 
             <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
               <h3 className="font-semibold text-sm flex items-center gap-2"><CalendarDays className="w-4 h-4 text-[#534AB7]" />Mes disponibilités</h3>
-              <ProAvailabilitySection userEmail={user?.email} />
+              <AvailabilityEditor slots={form.availability_slots} onChange={slots => setForm(f => ({ ...f, availability_slots: slots }))} />
             </div>
 
             <Button
