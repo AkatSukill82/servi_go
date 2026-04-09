@@ -368,7 +368,7 @@ export default function ProDashboard() {
           <div>
             <h2 className="text-sm font-semibold mb-3">Missions en cours</h2>
             <div className="space-y-3">
-              {activeJobs.map(job => (
+              {activeJobs.map((job) => (
                 <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>

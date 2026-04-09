@@ -363,7 +363,7 @@ export default function ProAgenda() {
         </>
       ) : (
         /* List view */
-        <div className="space-y-3">
+        <div className="space-y-6">
           {upcomingList.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Calendar className="w-10 h-10 mx-auto mb-3 opacity-30" />
@@ -371,17 +371,42 @@ export default function ProAgenda() {
               <p className="text-xs mt-1">Les nouvelles demandes apparaîtront ici automatiquement.</p>
             </div>
           ) : (
-            upcomingList.map(req => (
-              <AppointmentCard
-                key={req.id}
-                req={req}
-                user={user}
-                onAccept={r => acceptMutation.mutate(r)}
-                onDecline={r => setDecliningReq(r)}
-                accepting={acceptingId === req.id && acceptMutation.isPending}
-                declining={decliningReq?.id === req.id && declineMutation.isPending}
-              />
-            ))
+            <>
+              {/* Scheduled appointments */}
+              <div className="space-y-3">
+                {upcomingList.filter(r => r.scheduled_date).map(req => (
+                  <AppointmentCard
+                    key={req.id}
+                    req={req}
+                    user={user}
+                    onAccept={r => acceptMutation.mutate(r)}
+                    onDecline={r => setDecliningReq(r)}
+                    accepting={acceptingId === req.id && acceptMutation.isPending}
+                    declining={decliningReq?.id === req.id && declineMutation.isPending}
+                  />
+                ))}
+              </div>
+
+              {/* Unscheduled appointments */}
+              {upcomingList.filter(r => !r.scheduled_date).length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">📋 Demandes sans date précise</p>
+                  <div className="space-y-3">
+                    {upcomingList.filter(r => !r.scheduled_date).map(req => (
+                      <AppointmentCard
+                        key={req.id}
+                        req={req}
+                        user={user}
+                        onAccept={r => acceptMutation.mutate(r)}
+                        onDecline={r => setDecliningReq(r)}
+                        accepting={acceptingId === req.id && acceptMutation.isPending}
+                        declining={decliningReq?.id === req.id && declineMutation.isPending}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
