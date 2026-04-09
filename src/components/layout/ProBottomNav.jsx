@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -35,11 +36,14 @@ export default function ProBottomNav() {
   const messageBadge = notifs.filter(n => MESSAGE_TYPES.includes(n.type)).length;
   const profileIncomplete = user && (!user.photo_url || !user.phone || user.eid_status !== 'verified');
 
+  // Missing: import React/useRef at top
+  const { useRef } = React;
+
   useEffect(() => {
     if (!user?.email || !notifs.length) return;
     const toMark = notifs.filter(n => {
       if (['/ProDashboard'].includes(location.pathname)) return MISSION_TYPES.includes(n.type);
-      if (['/Invoices'].includes(location.pathname)) return MESSAGE_TYPES.includes(n.type);
+      if (['/ProMessages'].includes(location.pathname)) return MESSAGE_TYPES.includes(n.type);
       return false;
     });
     if (!toMark.length) return;
@@ -50,7 +54,7 @@ export default function ProBottomNav() {
   const navItems = [
     { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard', badge: missionBadge },
     { path: '/ProAgenda', icon: CalendarDays, label: 'Agenda', badge: 0 },
-    { path: '/Invoices', icon: MessageCircle, label: 'Messages', badge: messageBadge },
+    { path: '/ProMessages', icon: MessageCircle, label: 'Messages', badge: messageBadge },
     { path: '/ProProfile', icon: User, label: 'Profil', badge: profileIncomplete ? 1 : 0, badgeColor: 'bg-amber-500' },
   ];
 

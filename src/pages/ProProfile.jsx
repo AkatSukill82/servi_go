@@ -25,7 +25,6 @@ import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import DocumentsTab from '@/components/documents/DocumentsTab';
-import ProAvailabilitySection from '@/components/pro/ProAvailabilitySection';
 
 const TABS = [
   { key: 'infos', label: 'Mes infos', icon: User },
@@ -421,7 +420,7 @@ export default function ProProfile() {
               </div>
             </div>
 
-            <ProAvailabilitySection userEmail={user?.email} />
+            <AvailabilityEditor userEmail={user?.email} />
 
             <Button
               onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}

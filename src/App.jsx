@@ -11,6 +11,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Landing from './pages/Landing';
 import SelectUserType from './pages/SelectUserType';
 import Chat from './pages/Chat';
+import ProMessages from './pages/ProMessages';
 import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
@@ -63,6 +64,7 @@ const AuthenticatedApp = () => {
       <Route path="/Home" element={<AppLayout />} />
       <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Messages" element={<AppLayout />} />
+      <Route path="/ProMessages" element={<AppLayout />} />
       <Route path="/ProAgenda" element={<AppLayout />} />
       <Route path="/ProSubscription" element={<AppLayout />} />
       <Route path="/ServiceRequest" element={<AppLayout />} />
