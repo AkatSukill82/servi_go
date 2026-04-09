@@ -15,6 +15,7 @@ import { Camera, Save, LogOut, User, Trash2, Receipt, FileText, Shield, ShieldCh
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
+import ReferralSection from '@/components/profile/ReferralSection';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
 const TABS = [
@@ -336,6 +337,9 @@ export default function Profile() {
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
               </Button>
             </div>
+
+            {/* Referral section */}
+            <ReferralSection user={user} />
           </motion.div>
         )}
 

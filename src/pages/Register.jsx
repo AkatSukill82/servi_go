@@ -481,6 +481,33 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
       ...docs,
     });
     await base44.auth.updateMe({ eid_status: 'pending' });
+
+    if (userType === 'professionnel') {
+      // Create pending subscription
+      await base44.entities.ProSubscription.create({
+        professional_email: userEmail,
+        professional_name: userName,
+        plan: 'monthly',
+        price: 10,
+        status: 'pending_payment',
+        payment_method: 'stripe',
+        auto_renew: true,
+        missions_received: 0,
+      }).catch(() => {});
+
+      // Create default weekly availability
+      const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+      await Promise.all(DAYS.map((day, i) =>
+        base44.entities.ProAvailability.create({
+          professional_email: userEmail,
+          day_of_week: i,
+          day_label: day,
+          is_day_off: i >= 5,
+          slots: i < 5 ? [{ start: '08:00', end: '18:00', available: true }] : [],
+        }).catch(() => {})
+      ));
+    }
+
     setSaving(false);
     onNext();
   };

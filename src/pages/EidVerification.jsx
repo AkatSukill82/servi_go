@@ -103,6 +103,15 @@ export default function EidVerification() {
       insurance_url: urls.insurance_url || null,
     });
     await base44.auth.updateMe({ eid_status: 'pending_review' });
+    // Notify admin
+    await base44.entities.Notification.create({
+      recipient_email: 'support@servigo.be',
+      recipient_type: 'admin',
+      type: 'new_mission',
+      title: '🪪 Nouvelle vérification d\'identité',
+      body: `${user.full_name || user.email} (${user.user_type}) a soumis ses documents eID.`,
+      action_url: '/AdminVerification',
+    }).catch(() => {});
     queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     queryClient.invalidateQueries({ queryKey: ['identityVerif', user.email] });
     setSubmitting(false);

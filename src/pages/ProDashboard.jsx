@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { motion } from 'framer-motion';
+import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, BarChart2, CreditCard, AlertCircle, Play, StopCircle, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { motion } from 'framer-motion';
-import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, BarChart2, CreditCard, AlertCircle, Play, StopCircle } from 'lucide-react';
+import { useState as _useState } from 'react';
 import ProStats from '@/components/pro/ProStats';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -103,20 +104,20 @@ export default function ProDashboard() {
         contract_number: contractNumber,
         customer_email: request.customer_email,
         customer_name: request.customer_name,
-        customer_address: request.customer_address,
         customer_phone: request.customer_phone || '',
+        customer_address: request.customer_address,
         professional_email: user.email,
         professional_name: user.full_name,
         professional_phone: user.phone,
         professional_bce: user.bce_number,
         category_name: request.category_name,
-        scheduled_date: request.scheduled_date,
-        scheduled_time: request.scheduled_time,
-        agreed_price: request.estimated_price || request.base_price || 0,
-        service_description: request.answers?.length
+        service_description: request.answers?.length > 0
           ? request.answers.map(a => `${a.question}: ${a.answer}`).join(' | ')
           : request.category_name,
+        scheduled_date: request.scheduled_date,
+        scheduled_time: request.scheduled_time,
         estimated_duration_hours: 2,
+        agreed_price: request.estimated_price || 0,
         cancellation_policy: 'free_24h',
         payment_terms: 'after_completion',
         status: 'sent_to_customer',
@@ -169,10 +170,14 @@ export default function ProDashboard() {
         });
       }
     },
-    onSuccess: (_, { status, job }) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
       toast.success('Statut mis à jour !');
-      if (status === 'completed' && job) setShowProReviewModal(job);
+      if (variables.status === 'completed' && variables.job) {
+        setShowProReviewModal(variables.job);
+        setProRating(5);
+        setProComment('');
+      }
     },
   });
 
@@ -197,38 +202,6 @@ export default function ProDashboard() {
 
   return (
     <div className="px-5 pt-7 pb-4 space-y-5">
-
-      {/* Pro Review Modal */}
-      <Dialog open={!!showProReviewModal} onOpenChange={(open) => { if (!open) { setShowProReviewModal(null); setProRating(5); setProComment(''); } }}>
-        <DialogContent className="max-w-sm mx-auto rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Évaluer votre client</DialogTitle>
-          </DialogHeader>
-          {showProReviewModal && (
-            <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">Mission terminée avec <span className="font-semibold text-foreground">{showProReviewModal.customer_name || showProReviewModal.customer_first_name || 'Client'}</span></p>
-              <div>
-                <p className="text-sm font-medium mb-2">Note</p>
-                <div className="flex gap-2">
-                  {[1,2,3,4,5].map(s => (
-                    <button key={s} onClick={() => setProRating(s)} className="p-1">
-                      <Star className={`w-7 h-7 ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-muted-foreground'}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-1.5">Commentaire (optionnel)</p>
-                <Textarea value={proComment} onChange={e => setProComment(e.target.value)} placeholder="Décrivez votre expérience avec ce client..." className="rounded-xl resize-none" rows={3} />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => { setShowProReviewModal(null); setProRating(5); setProComment(''); }}>Passer</Button>
-                <Button className="flex-1 h-11 rounded-xl" onClick={() => submitProReview(showProReviewModal)}>Soumettre mon avis</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Upcoming mission reminder */}
       {upcomingJob && (
@@ -463,6 +436,55 @@ export default function ProDashboard() {
           </div>
         )}
       </>}
+      {/* ProReview modal */}
+      <Dialog open={!!showProReviewModal} onOpenChange={(open) => { if (!open) setShowProReviewModal(null); }}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Évaluez votre client</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">{showProReviewModal?.customer_first_name ? `${showProReviewModal.customer_first_name} ${showProReviewModal.customer_last_name || ''}`.trim() : (showProReviewModal?.customer_name || 'Client')}</p>
+            <div className="flex gap-1 justify-center">
+              {[1,2,3,4,5].map(s => (
+                <button key={s} onClick={() => setProRating(s)} className="p-1">
+                  <Star className={`w-8 h-8 transition-colors ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+                </button>
+              ))}
+            </div>
+            <Textarea
+              value={proComment}
+              onChange={e => setProComment(e.target.value)}
+              placeholder="Laissez un commentaire sur ce client (optionnel)..."
+              className="rounded-xl resize-none"
+              rows={3}
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowProReviewModal(null)}>Passer</Button>
+              <Button
+                className="flex-1 rounded-xl"
+                onClick={async () => {
+                  const job = showProReviewModal;
+                  await base44.entities.ProReview.create({
+                    request_id: job.id,
+                    professional_email: user.email,
+                    professional_name: user.full_name,
+                    customer_email: job.customer_email,
+                    customer_name: job.customer_name || `${job.customer_first_name || ''} ${job.customer_last_name || ''}`.trim(),
+                    rating: proRating,
+                    comment: proComment,
+                    category_name: job.category_name,
+                    is_visible: true,
+                  });
+                  setShowProReviewModal(null);
+                  toast.success('Avis envoyé !');
+                }}
+              >
+                Soumettre mon avis
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

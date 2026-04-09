@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag } from 'lucide-react';
 import { formatPrice, formatDateFr } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ const TABS = [
   { key: 'finance', label: 'Finances', icon: Euro },
   { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
   { key: 'blacklist', label: 'Blacklist', icon: Ban },
+  { key: 'reports', label: 'Signalements', icon: Flag },
 ];
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
@@ -108,21 +109,6 @@ function FinanceTab() {
     queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 500),
   });
 
-  const { data: allPayments = [] } = useQuery({
-    queryKey: ['adminPaymentHistory'],
-    queryFn: () => base44.entities.PaymentHistory.list('-created_date', 100),
-  });
-
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const paidPayments = allPayments.filter(p => p.status === 'paid');
-  const totalRevenueMensuel = paidPayments
-    .filter(p => p.payment_date && new Date(p.payment_date) >= monthStart)
-    .reduce((s, p) => s + (p.amount || 0), 0);
-  const totalRevenueAllTime = paidPayments.reduce((s, p) => s + (p.amount || 0), 0);
-  const recentPayments = allPayments.slice(0, 10);
-
   const stats = useMemo(() => {
     const now = new Date();
     let filtered = requests.filter(r => ['accepted', 'completed', 'in_progress'].includes(r.status));
@@ -211,55 +197,6 @@ function FinanceTab() {
         </div>
       </div>
 
-      {/* Subscription revenue from PaymentHistory */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-1.5 mb-1">
-            <Euro className="w-3.5 h-3.5 text-green-600" strokeWidth={1.8} />
-            <p className="text-xs text-muted-foreground font-medium">Abonnements ce mois</p>
-          </div>
-          <p className="text-2xl font-bold tracking-tight">{totalRevenueMensuel.toFixed(0)} €</p>
-        </div>
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <div className="flex items-center gap-1.5 mb-1">
-            <TrendingUp className="w-3.5 h-3.5 text-blue-600" strokeWidth={1.8} />
-            <p className="text-xs text-muted-foreground font-medium">Abonnements total</p>
-          </div>
-          <p className="text-2xl font-bold tracking-tight">{totalRevenueAllTime.toFixed(0)} €</p>
-        </div>
-      </div>
-
-      {/* Recent payments */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border">Derniers paiements d'abonnement</p>
-        {recentPayments.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Aucun paiement</p>
-        ) : (
-          <div className="divide-y divide-border/50">
-            {recentPayments.map((p, i) => (
-              <div key={p.id || i} className="flex items-center justify-between px-4 py-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{p.professional_name || p.professional_email}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {p.payment_date ? format(new Date(p.payment_date), 'dd MMM yyyy', { locale: fr }) : '—'}
-                    {p.invoice_ref ? ` · ${p.invoice_ref.slice(-8)}` : ''}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <p className="text-sm font-semibold">{(p.amount || 0).toFixed(2)} €</p>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    p.status === 'paid' ? 'bg-green-100 text-green-700' :
-                    p.status === 'failed' ? 'bg-red-100 text-red-700' :
-                    p.status === 'refunded' ? 'bg-orange-100 text-orange-700' :
-                    'bg-gray-100 text-gray-500'
-                  }`}>{p.status === 'paid' ? 'Payé' : p.status === 'failed' ? 'Échoué' : p.status === 'refunded' ? 'Remboursé' : p.status}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* Commission table */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="grid grid-cols-4 px-4 py-2.5 border-b border-border bg-muted/50">
@@ -276,6 +213,126 @@ function FinanceTab() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Disputes Tab ─────────────────────────────────────────────────────────────
+function DisputesTab() {
+  const queryClient = useQueryClient();
+  const [expanded, setExpanded] = useState(null);
+  const [adminNote, setAdminNote] = useState({});
+
+  const { data: disputes = [], isLoading } = useQuery({
+    queryKey: ['adminDisputes'],
+    queryFn: () => base44.entities.Dispute.list('-created_date', 100),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data, dispute }) => {
+      await base44.entities.Dispute.update(id, data);
+      const isResolved = data.status?.startsWith('resolved');
+      if (isResolved && dispute) {
+        const inFavorOf = data.status === 'resolved_customer' ? 'client' : 'professionnel';
+        const msg = `Votre litige a été résolu en faveur du ${inFavorOf}. ${data.admin_note ? 'Note : ' + data.admin_note : ''}`;
+        await Promise.all([
+          dispute.customer_email && base44.entities.Notification.create({
+            recipient_email: dispute.customer_email, recipient_type: 'particulier',
+            type: 'dispute_resolved', title: 'Litige résolu', body: msg,
+            request_id: dispute.request_id, action_url: `/Chat?requestId=${dispute.request_id}`,
+          }),
+          dispute.professional_email && base44.entities.Notification.create({
+            recipient_email: dispute.professional_email, recipient_type: 'professionnel',
+            type: 'dispute_resolved', title: 'Litige résolu', body: msg,
+            request_id: dispute.request_id, action_url: `/Chat?requestId=${dispute.request_id}`,
+          }),
+        ].filter(Boolean));
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminDisputes'] });
+      toast.success('Litige mis à jour');
+    },
+  });
+
+  const openCount = disputes.filter(d => d.status === 'open' || d.status === 'in_review').length;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <p className="text-sm text-muted-foreground">{disputes.length} litige{disputes.length !== 1 ? 's' : ''}</p>
+        {openCount > 0 && <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200 text-xs">{openCount} ouvert{openCount !== 1 ? 's' : ''}</Badge>}
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
+      ) : disputes.length === 0 ? (
+        <div className="text-center py-14 text-muted-foreground">
+          <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Aucun litige en cours</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {disputes.map(d => {
+            const s = DISPUTE_STATUS[d.status] || DISPUTE_STATUS.open;
+            const isOpen = expanded === d.id;
+            return (
+              <motion.div key={d.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-xl border border-border overflow-hidden">
+                <button onClick={() => setExpanded(isOpen ? null : d.id)}
+                  className="w-full text-left p-4 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm truncate">{d.reason}</p>
+                      <Badge className={`${s.color} border text-xs shrink-0`}>{s.label}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{d.customer_name} vs {d.professional_name}</p>
+                    {d.amount_disputed > 0 && <p className="text-xs text-muted-foreground">{d.amount_disputed} € en litige</p>}
+                  </div>
+                  {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />}
+                </button>
+
+                {isOpen && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
+                    {d.description && <p className="text-sm text-muted-foreground">{d.description}</p>}
+
+                    {/* Note admin */}
+                    <textarea
+                      rows={2}
+                      value={adminNote[d.id] ?? d.admin_note ?? ''}
+                      onChange={e => setAdminNote(n => ({ ...n, [d.id]: e.target.value }))}
+                      placeholder="Note interne (visible admin uniquement)..."
+                      className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-muted/40 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+
+                    {/* Status actions */}
+                    <div className="flex flex-wrap gap-2">
+                      {d.status !== 'in_review' && (
+                        <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'in_review', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">
+                          Prendre en charge
+                        </button>
+                      )}
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_customer', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
+                        Résolu → Client
+                      </button>
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_pro', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
+                        Résolu → Pro
+                      </button>
+                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'closed', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">
+                        Fermer
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -388,6 +445,126 @@ function BlacklistTab() {
   );
 }
 
+// ─── Reports Tab ─────────────────────────────────────────────────────────────
+const REASON_LABELS = {
+  comportement_agressif: 'Comportement agressif',
+  arnaque: 'Arnaque',
+  no_show: 'No-show',
+  travail_non_conforme: 'Travail non conforme',
+  fausse_identite: 'Fausse identité',
+  harcelement: 'Harcèlement',
+  danger_securite: 'Danger sécurité',
+  autre: 'Autre',
+};
+
+const REPORT_STATUS = {
+  pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+  under_review: { label: 'En examen', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  resolved_warning: { label: 'Avertissement', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+  resolved_banned: { label: 'Banni', color: 'bg-red-100 text-red-700 border-red-200' },
+  dismissed: { label: 'Rejeté', color: 'bg-gray-100 text-gray-500 border-gray-200' },
+};
+
+const PRIORITY_BADGE = {
+  low: 'bg-gray-100 text-gray-500',
+  medium: 'bg-yellow-100 text-yellow-700',
+  high: 'bg-orange-100 text-orange-700',
+  urgent: 'bg-red-100 text-red-700',
+};
+
+function ReportsTab() {
+  const queryClient = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const { data: reports = [], isLoading } = useQuery({
+    queryKey: ['adminReports'],
+    queryFn: () => base44.entities.Report.list('-created_date', 200),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data, report }) => {
+      await base44.entities.Report.update(id, data);
+      if (data.user_suspended && report?.reported_user_email) {
+        const users = await base44.entities.User.filter({ email: report.reported_user_email });
+        if (users[0]) await base44.entities.User.update(users[0].id, { is_blacklisted: true, blacklist_reason: `Signalement: ${REASON_LABELS[report.reason] || report.reason}` });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminReports'] });
+      toast.success('Signalement mis à jour');
+    },
+  });
+
+  const filtered = statusFilter === 'all' ? reports : reports.filter(r => r.status === statusFilter);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 flex-wrap">
+        {[['all', 'Tous'], ['pending', 'En attente'], ['under_review', 'En examen'], ['resolved_warning', 'Avertis'], ['resolved_banned', 'Bannis'], ['dismissed', 'Rejetés']].map(([k, l]) => (
+          <button key={k} onClick={() => setStatusFilter(k)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusFilter === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
+            {l}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-sm text-muted-foreground">{filtered.length} signalement{filtered.length !== 1 ? 's' : ''}</p>
+
+      {isLoading ? (
+        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-14 text-muted-foreground">
+          <Flag className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">Aucun signalement</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(r => {
+            const s = REPORT_STATUS[r.status] || REPORT_STATUS.pending;
+            const pCls = PRIORITY_BADGE[r.priority] || PRIORITY_BADGE.medium;
+            return (
+              <div key={r.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm truncate">{r.reported_user_name || r.reported_user_email}</p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${s.color}`}>{s.label}</span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pCls}`}>{r.priority || 'medium'}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{r.reported_user_email} · {r.reported_user_type || 'user'}</p>
+                    <p className="text-xs font-medium text-foreground mt-1">{REASON_LABELS[r.reason] || r.reason}</p>
+                    {r.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.description}</p>}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {r.status !== 'under_review' && (
+                    <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'under_review' }, report: r })}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">
+                      En examen
+                    </button>
+                  )}
+                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'resolved_warning', user_suspended: false }, report: r })}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-orange-200 text-orange-700 bg-orange-50 font-medium">
+                    Avertissement
+                  </button>
+                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'resolved_banned', user_suspended: true }, report: r })}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-red-50 font-medium">
+                    Bannir
+                  </button>
+                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'dismissed' }, report: r })}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">
+                    Rejeter
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
@@ -467,6 +644,12 @@ export default function AdminDashboard() {
     enabled: currentUser?.role === 'admin',
   });
 
+  const { data: pendingReports = [] } = useQuery({
+    queryKey: ['adminPendingReports'],
+    queryFn: () => base44.entities.Report.filter({ status: 'pending' }, '-created_date', 50),
+    enabled: currentUser?.role === 'admin',
+  });
+
   if (currentUser && currentUser.role !== 'admin') {
     return (
       <div className="fixed inset-0 flex items-center justify-center text-center px-6">
@@ -497,6 +680,9 @@ export default function AdminDashboard() {
             {key === 'disputes' && openDisputes > 0 && (
               <span className="text-xs font-bold bg-yellow-500 text-white rounded-full px-1.5">{openDisputes}</span>
             )}
+            {key === 'reports' && pendingReports.length > 0 && (
+              <span className="text-xs font-bold bg-red-500 text-white rounded-full px-1.5">{pendingReports.length}</span>
+            )}
           </button>
         ))}
       </div>
@@ -505,6 +691,7 @@ export default function AdminDashboard() {
       {tab === 'finance' && <FinanceTab />}
       {tab === 'disputes' && <DisputesTab />}
       {tab === 'blacklist' && <BlacklistTab />}
+      {tab === 'reports' && <ReportsTab />}
     </div>
     </div>
   );
