@@ -48,7 +48,8 @@ export default function Home() {
       { customer_email: user.email, status: 'accepted' }, '-created_date', 1
     ).then((r) => r[0] || null),
     enabled: !!user?.email && user?.user_type === 'particulier',
-    refetchInterval: 5000
+    refetchInterval: 20000,
+    staleTime: 20000,
   });
 
   const { data: unfinishedRequest } = useQuery({
@@ -57,7 +58,8 @@ export default function Home() {
       { customer_email: user.email }, '-created_date', 10
     ).then(r => r.find(req => ['searching', 'pending_pro'].includes(req.status)) || null),
     enabled: !!user?.email && user?.user_type === 'particulier',
-    refetchInterval: 15000
+    refetchInterval: 45000,
+    staleTime: 45000,
   });
 
   const [dismissedId, setDismissedId] = useState(null);

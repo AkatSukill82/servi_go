@@ -2,46 +2,60 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
+    const base44 = createClientFromRequest(req);
     const { bce_number } = await req.json();
 
+    if (!bce_number) {
+      return Response.json({ valid: false, error: 'Numéro BCE manquant' });
+    }
+
     // 1. Extract digits
-    const digits = (bce_number || '').replace(/\D/g, '');
-    let padded = digits;
-    if (digits.length === 9) padded = '0' + digits;
-    if (padded.length !== 10) {
-      return Response.json({ valid: false, error: 'Numéro BCE invalide (doit contenir 9 ou 10 chiffres)' });
+    let digits = bce_number.replace(/\D/g, '');
+
+    // Pad to 10 if 9 digits provided (prefix with 0)
+    if (digits.length === 9) digits = '0' + digits;
+
+    if (digits.length !== 10) {
+      return Response.json({ valid: false, error: 'Numéro BCE invalide (9 ou 10 chiffres requis)' });
     }
 
     // 2. Validate modulo-97 checksum
-    const base = BigInt(padded.slice(0, 8));
-    const checkDigits = parseInt(padded.slice(8), 10);
-    const remainder = Number(base % 97n);
-    const expected = remainder === 0 ? 97 : 97 - remainder;
-    if (expected !== checkDigits) {
+    const num = BigInt(digits.slice(0, 8));
+    const remainder = Number(num % 97n);
+    const expectedCheck = remainder === 0 ? 97 : 97 - remainder;
+    const actualCheck = parseInt(digits.slice(8), 10);
+
+    if (expectedCheck !== actualCheck) {
       return Response.json({ valid: false, error: 'Numéro BCE invalide (checksum incorrect)' });
     }
 
-    // 3. Format
-    const formatted = `${padded.slice(0, 4)}.${padded.slice(4, 7)}.${padded.slice(7, 10)}`;
+    // 3. Format as XXXX.XXX.XXX
+    const formatted = `${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7, 10)}`;
 
-    // 4. Try KBO public lookup
+    // 4. Try KBO public scrape
     try {
-      const url = `https://kbopub.economie.fgov.be/kbopub/zoeknummerform.html?nummer=${padded}&actionLu=Zoek`;
-      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
-      const html = await res.text();
+      const url = `https://kbopub.economie.fgov.be/kbopub/zoeknummerform.html?nummer=${digits}&actionLu=Zoek`;
+      const response = await fetch(url, {
+        signal: AbortSignal.timeout(8000),
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      });
 
-      if (html.includes(formatted)) {
-        // Extract company name from h2 tag
-        const h2Match = html.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i);
-        const name = h2Match
-          ? h2Match[1].replace(/<[^>]+>/g, '').trim()
-          : null;
+      if (response.ok) {
+        const html = await response.text();
 
-        return Response.json({
-          valid: true,
-          formatted,
-          company: { name, status: 'Active', address: null, activity: null },
-        });
+        if (html.includes(formatted)) {
+          // Extract company name from h2 tag
+          const h2Match = html.match(/<h2[^>]*>([^<]+)<\/h2>/i);
+          const companyName = h2Match ? h2Match[1].trim() : null;
+
+          return Response.json({
+            valid: true,
+            formatted,
+            company: companyName
+              ? { name: companyName, status: 'Active', address: null, activity: null }
+              : null,
+          });
+        }
       }
     } catch (fetchErr) {
       console.warn('KBO fetch failed:', fetchErr.message);
