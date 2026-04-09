@@ -86,73 +86,164 @@ Deno.serve(async (req) => {
     console.log(`Subscription activated for ${proEmail}`);
   }
 
-  if (event.type === 'customer.subscription.deleted' || event.type === 'invoice.payment_failed') {
-    const obj = event.data.object;
-    // Resolve email: try customer email from Stripe
-    let customerEmail = obj.customer_email || obj.metadata?.professional_email;
-    if (!customerEmail && obj.customer) {
+  // Helper: resolve customer email from Stripe object
+  async function resolveEmail(obj) {
+    let email = obj.customer_email || obj.metadata?.professional_email;
+    if (!email && obj.customer) {
       try {
         const customer = await stripe.customers.retrieve(obj.customer);
-        customerEmail = customer.email;
+        email = customer.email;
       } catch (e) { console.error('Customer lookup error:', e.message); }
     }
-    if (!customerEmail) return Response.json({ received: true });
-
-    const newStatus = event.type === 'customer.subscription.deleted' ? 'cancelled' : 'expired';
-    const subs = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: customerEmail }, '-created_date', 1);
-    if (subs.length > 0) {
-      await base44.asServiceRole.entities.ProSubscription.update(subs[0].id, { status: newStatus, auto_renew: false });
-    }
-    // Sync user profile
-    await syncUserProfile(customerEmail, false);
-    console.log(`Subscription ${newStatus} for ${customerEmail}`);
+    return email;
   }
 
-  // invoice.paid — log payment history
-  if (event.type === 'invoice.paid') {
+  // invoice.payment_succeeded → activate + PaymentHistory + notification
+  if (event.type === 'invoice.payment_succeeded' || event.type === 'invoice.paid') {
     const inv = event.data.object;
-    let customerEmail = inv.customer_email;
-    if (!customerEmail && inv.customer) {
-      try {
-        const customer = await stripe.customers.retrieve(inv.customer);
-        customerEmail = customer.email;
-      } catch (e) { console.error('Customer lookup error:', e.message); }
-    }
+    const customerEmail = await resolveEmail(inv);
     if (!customerEmail) return Response.json({ received: true });
+
     const subs = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: customerEmail }, '-created_date', 1);
     if (subs.length > 0) {
       const sub = subs[0];
-      const history = sub.payment_history || [];
-      const newEntry = {
-        date: new Date(inv.created * 1000).toISOString().split('T')[0],
-        amount: (inv.amount_paid / 100),
+      await base44.asServiceRole.entities.ProSubscription.update(sub.id, { status: 'active', auto_renew: true });
+      await syncUserProfile(customerEmail, true);
+
+      // PaymentHistory record
+      await base44.asServiceRole.entities.PaymentHistory.create({
+        professional_email: customerEmail,
+        professional_name: sub.professional_name || '',
+        subscription_id: sub.id,
+        amount: (inv.amount_paid || 0) / 100,
         status: 'paid',
+        payment_date: new Date(inv.created * 1000).toISOString(),
+        payment_method: 'stripe',
+        stripe_payment_intent_id: inv.payment_intent || '',
         invoice_ref: inv.id,
-      };
-      // Avoid duplicates
-      if (!history.find(h => h.invoice_ref === inv.id)) {
-        await base44.asServiceRole.entities.ProSubscription.update(sub.id, {
-          payment_history: [newEntry, ...history].slice(0, 24),
-        });
-      }
+        period_start: inv.period_start ? new Date(inv.period_start * 1000).toISOString().split('T')[0] : '',
+        period_end: inv.period_end ? new Date(inv.period_end * 1000).toISOString().split('T')[0] : '',
+      }).catch(e => console.error('PaymentHistory create error:', e.message));
+
+      // Notification in-app
+      await base44.asServiceRole.entities.Notification.create({
+        recipient_email: customerEmail,
+        recipient_type: 'professionnel',
+        type: 'payment_received',
+        title: '✅ Paiement reçu',
+        body: `Abonnement ServiGo Pro renouvelé — ${((inv.amount_paid || 0) / 100).toFixed(2)}€`,
+        action_url: '/ProSubscription',
+      }).catch(() => {});
     }
-    console.log(`Invoice paid logged for ${customerEmail}`);
+    console.log(`Invoice paid / subscription active for ${customerEmail}`);
   }
 
-  // customer.subscription.updated — handle status changes (past_due, paused, etc.)
+  // invoice.payment_failed → expire + PaymentHistory + email + notification
+  if (event.type === 'invoice.payment_failed' || event.type === 'payment_intent.payment_failed') {
+    const obj = event.data.object;
+    const customerEmail = await resolveEmail(obj);
+    if (!customerEmail) return Response.json({ received: true });
+
+    const subs = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: customerEmail }, '-created_date', 1);
+    if (subs.length > 0) {
+      const sub = subs[0];
+      await base44.asServiceRole.entities.ProSubscription.update(sub.id, { status: 'expired' });
+      await syncUserProfile(customerEmail, false);
+
+      // PaymentHistory record
+      await base44.asServiceRole.entities.PaymentHistory.create({
+        professional_email: customerEmail,
+        professional_name: sub.professional_name || '',
+        subscription_id: sub.id,
+        amount: (obj.amount || obj.amount_due || 0) / 100,
+        status: 'failed',
+        payment_date: new Date().toISOString(),
+        payment_method: 'stripe',
+        failure_reason: obj.last_payment_error?.message || obj.failure_message || 'Paiement refusé',
+      }).catch(e => console.error('PaymentHistory create error:', e.message));
+
+      // Email to pro
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: customerEmail,
+        subject: '⚠️ Échec de paiement — Abonnement ServiGo Pro',
+        body: `Bonjour,\n\nLe renouvellement de votre abonnement ServiGo Pro a échoué. Votre accès aux missions est suspendu.\n\nMettez à jour votre moyen de paiement dès que possible pour continuer à recevoir des missions.\n\nL'équipe ServiGo`,
+      }).catch(() => {});
+
+      // Notification in-app
+      await base44.asServiceRole.entities.Notification.create({
+        recipient_email: customerEmail,
+        recipient_type: 'professionnel',
+        type: 'payment_failed',
+        title: '⚠️ Échec de paiement',
+        body: 'Votre abonnement est suspendu. Mettez à jour votre moyen de paiement.',
+        action_url: '/ProSubscription',
+      }).catch(() => {});
+    }
+    console.log(`Payment failed for ${customerEmail}`);
+  }
+
+  // customer.subscription.deleted → cancelled + notification
+  if (event.type === 'customer.subscription.deleted') {
+    const stripeSub = event.data.object;
+    const customerEmail = await resolveEmail(stripeSub);
+    if (!customerEmail) return Response.json({ received: true });
+
+    const subs = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: customerEmail }, '-created_date', 1);
+    if (subs.length > 0) {
+      await base44.asServiceRole.entities.ProSubscription.update(subs[0].id, { status: 'cancelled', auto_renew: false });
+    }
+    await syncUserProfile(customerEmail, false);
+
+    await base44.asServiceRole.entities.Notification.create({
+      recipient_email: customerEmail,
+      recipient_type: 'professionnel',
+      type: 'subscription_expired',
+      title: 'Abonnement annulé',
+      body: 'Votre abonnement ServiGo Pro a été annulé. Réabonnez-vous pour recevoir des missions.',
+      action_url: '/ProSubscription',
+    }).catch(() => {});
+
+    console.log(`Subscription cancelled for ${customerEmail}`);
+  }
+
+  // charge.refunded → PaymentHistory refund + notify admin
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object;
+    const customerEmail = await resolveEmail(charge);
+    const refundAmount = (charge.amount_refunded || 0) / 100;
+
+    if (customerEmail) {
+      await base44.asServiceRole.entities.PaymentHistory.create({
+        professional_email: customerEmail,
+        amount: refundAmount,
+        status: 'refunded',
+        payment_date: new Date().toISOString(),
+        payment_method: 'stripe',
+        invoice_ref: charge.id,
+      }).catch(e => console.error('PaymentHistory refund error:', e.message));
+    }
+
+    // Notify admin (broadcast)
+    await base44.asServiceRole.entities.Notification.create({
+      recipient_email: 'admin',
+      recipient_type: 'admin',
+      type: 'payment_received',
+      title: `💸 Remboursement — ${refundAmount}€`,
+      body: `Client: ${customerEmail || 'inconnu'} — Charge: ${charge.id}`,
+      action_url: '/AdminDashboard',
+    }).catch(() => {});
+
+    console.log(`Charge refunded: ${refundAmount}€ for ${customerEmail || 'unknown'}`);
+  }
+
+  // customer.subscription.updated — handle status changes
   if (event.type === 'customer.subscription.updated') {
     const stripeSub = event.data.object;
-    let customerEmail = stripeSub.customer_email;
-    if (!customerEmail && stripeSub.customer) {
-      try {
-        const customer = await stripe.customers.retrieve(stripeSub.customer);
-        customerEmail = customer.email;
-      } catch (e) { console.error('Customer lookup error:', e.message); }
-    }
+    const customerEmail = await resolveEmail(stripeSub);
     if (!customerEmail) return Response.json({ received: true });
     const subs = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: customerEmail }, '-created_date', 1);
     if (subs.length > 0) {
-      const stripeStatus = stripeSub.status; // active, past_due, canceled, paused, etc.
+      const stripeStatus = stripeSub.status;
       const mappedStatus = stripeStatus === 'active' ? 'active' : stripeStatus === 'canceled' ? 'cancelled' : 'expired';
       const renewalDate = stripeSub.current_period_end
         ? new Date(stripeSub.current_period_end * 1000).toISOString().split('T')[0]
