@@ -74,12 +74,18 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
       const isCust = userType === 'particulier';
       const field = isCust ? 'signature_customer' : 'signature_pro';
       const dateField = isCust ? 'signature_customer_date' : 'signature_pro_date';
+      const ipField = isCust ? 'customer_ip' : 'pro_ip';
       const otherSigned = isCust ? contract.signature_pro : contract.signature_customer;
       const newStatus = otherSigned ? 'signed_both' : (isCust ? 'signed_customer' : 'sent_to_customer');
+
+      // Fetch user IP
+      const ipRes = await fetch('https://api.ipify.org?format=json').catch(() => ({ json: async () => ({ ip: null }) }));
+      const { ip } = await ipRes.json();
 
       await base44.entities.MissionContract.update(contract.id, {
         [field]: dataUrl,
         [dateField]: new Date().toISOString(),
+        [ipField]: ip,
         status: newStatus,
       });
 
@@ -124,19 +130,31 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
 
   return (
     <>
-      <div className={`mx-4 my-2 rounded-2xl border p-4 ${bothSigned ? 'bg-green-50 border-green-200' : 'bg-primary/5 border-primary/20'}`}>
-        <div className="flex items-center justify-between mb-3">
+      <div className={`mx-4 my-2 rounded-2xl border p-4 space-y-3 ${bothSigned ? 'bg-green-50 border-green-200' : 'bg-primary/5 border-primary/20'}`}>
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className={`w-4 h-4 ${bothSigned ? 'text-brand-green' : 'text-primary'}`} />
             <p className="text-sm font-semibold">{contract.contract_number}</p>
           </div>
           {bothSigned
-            ? <span className="text-[10px] font-bold text-brand-green bg-green-100 px-2 py-0.5 rounded-full">✓ Signé</span>
+            ? <span className="text-[10px] font-bold text-brand-green bg-green-100 px-2 py-0.5 rounded-full flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Signé</span>
             : <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">En attente</span>
           }
         </div>
 
-        <div className="flex items-center gap-4 text-xs mb-3">
+        {/* Contract details */}
+        {contract.service_description && (
+          <div className="text-xs space-y-1 bg-background/50 rounded-lg p-2.5">
+            <p className="font-medium text-foreground">{contract.service_description}</p>
+            {contract.agreed_price > 0 && <p className="text-muted-foreground">💰 Prix convenu: <span className="font-semibold text-foreground">{contract.agreed_price} €</span></p>}
+            {contract.scheduled_date && <p className="text-muted-foreground">📅 {contract.scheduled_date}{contract.scheduled_time ? ` à ${contract.scheduled_time}` : ''}</p>}
+            {contract.estimated_duration_hours && <p className="text-muted-foreground">⏱️ Durée estimée: {contract.estimated_duration_hours}h</p>}
+            {contract.special_conditions && <p className="text-muted-foreground italic">📝 {contract.special_conditions}</p>}
+          </div>
+        )}
+
+        {/* Signing status */}
+        <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1">
             {contract.signature_customer ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
             <span className="text-muted-foreground">Client</span>
@@ -145,10 +163,14 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
             {contract.signature_pro ? <CheckCircle className="w-3 h-3 text-brand-green" /> : <Clock className="w-3 h-3 text-muted-foreground" />}
             <span className="text-muted-foreground">Pro</span>
           </div>
-          {userType === 'professionnel' && contract.agreed_price > 0 && (
-            <span className="ml-auto font-bold text-foreground text-sm">{contract.agreed_price} €</span>
-          )}
         </div>
+
+        {bothSigned && (
+          <div className="bg-green-100 border border-green-300 rounded-lg px-3 py-2 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-brand-green shrink-0" />
+            <p className="text-xs font-semibold text-green-700">Contrat signé par les deux parties ✅</p>
+          </div>
+        )}
 
         {!mySigned && (
           <Button onClick={() => setShowSign(true)} size="sm" className="w-full rounded-xl h-9 text-xs">

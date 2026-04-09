@@ -17,13 +17,13 @@ export default function ProStats({ userEmail }) {
 
   const { data: allJobs = [] } = useQuery({
     queryKey: ['proAllJobs', userEmail],
-    queryFn: () => base44.entities.ServiceRequest.filter({ professional_email: userEmail }, '-created_date', 200),
+    queryFn: () => base44.entities.ServiceRequestV2.filter({ professional_email: userEmail }, '-created_date', 200),
     enabled: !!userEmail,
   });
 
   const { data: allReceived = [] } = useQuery({
     queryKey: ['proAllReceived', userEmail],
-    queryFn: () => base44.entities.ServiceRequest.filter({ customer_email: userEmail }),
+    queryFn: () => base44.entities.ServiceRequestV2.filter({ customer_email: userEmail }),
     enabled: false, // not needed
   });
 
