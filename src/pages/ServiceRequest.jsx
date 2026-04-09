@@ -103,21 +103,30 @@ export default function ServiceRequest() {
       scheduled_time: scheduledTime || null,
       status: 'searching',
       is_urgent: isUrgent,
-      base_price: basePrice,
+      estimated_price: basePrice,
       tried_professionals: [],
     });
 
     setRequestId(newRequest.id);
 
-    // Notify all pros of the new mission (via notification entity)
-    await base44.entities.Notification.create({
-      recipient_email: 'broadcast',
-      recipient_type: 'professionnel',
-      type: 'new_mission',
-      title: `Nouvelle mission : ${category.name}`,
-      body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
-      request_id: newRequest.id,
-    }).catch(() => {});
+    // Notify matching pros individually
+    const matchingPros = await base44.entities.User.filter({
+      user_type: 'professionnel',
+      category_name: category.name,
+      available: true,
+      verification_status: 'verified',
+    }, '-created_date', 100).catch(() => []);
+    await Promise.all(matchingPros.map(pro =>
+      base44.entities.Notification.create({
+        recipient_email: pro.email,
+        recipient_type: 'professionnel',
+        type: 'new_mission',
+        title: `Nouvelle mission : ${category.name}`,
+        body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
+        request_id: newRequest.id,
+        action_url: '/ProDashboard',
+      }).catch(() => {})
+    ));
 
     setStep(STEPS.CONFIRMED);
   };
