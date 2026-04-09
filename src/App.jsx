@@ -61,6 +61,8 @@ const AuthenticatedApp = () => {
 
       {/* App pages with shared layout (tabs persistants) */}
       <Route path="/Home" element={<AppLayout />} />
+      <Route path="/MissionHistory" element={<AppLayout />} />
+      <Route path="/Messages" element={<AppLayout />} />
       <Route path="/ProAgenda" element={<AppLayout />} />
       <Route path="/ProSubscription" element={<AppLayout />} />
       <Route path="/ServiceRequest" element={<AppLayout />} />
@@ -70,7 +72,6 @@ const AuthenticatedApp = () => {
       <Route path="/Favorites" element={<AppLayout />} />
       <Route path="/Invoices" element={<AppLayout />} />
       <Route path="/Map" element={<AppLayout />} />
-      <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Emergency" element={<AppLayout />} />
 
       {/* Full screen pages (no layout) */}

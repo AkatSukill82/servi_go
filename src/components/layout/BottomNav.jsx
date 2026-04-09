@@ -49,7 +49,7 @@ export default function BottomNav() {
   const navItems = [
     { path: '/Home', icon: Home, label: 'Accueil', badge: 0 },
     { path: '/MissionHistory', icon: ClipboardList, label: 'Demandes', badge: missionBadge },
-    { path: '/MissionHistory', icon: MessageCircle, label: 'Messages', badge: messageBadge, key: '/Messages' },
+    { path: '/Messages', icon: MessageCircle, label: 'Messages', badge: messageBadge },
     { path: '/Profile', icon: User, label: 'Profil', badge: profileIncomplete ? 1 : 0, badgeColor: 'bg-amber-500' },
   ];
 
