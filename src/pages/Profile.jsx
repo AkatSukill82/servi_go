@@ -421,7 +421,7 @@ export default function Profile() {
               </div>
               <Button
                 variant="outline"
-                onClick={() => base44.auth.logout()}
+                onClick={() => base44.auth.logout('/Home')}
                 className="w-full h-12 rounded-xl text-sm text-muted-foreground"
               >
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
