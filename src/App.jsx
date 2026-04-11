@@ -8,7 +8,6 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 // Pages
-import Landing from './pages/Landing';
 import SelectUserType from './pages/SelectUserType';
 import Chat from './pages/Chat';
 import TrackingMap from './pages/TrackingMap';
@@ -25,6 +24,14 @@ import ProMessages from './pages/ProMessages';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
+
+// Redirect to external URL
+function ExternalRedirect({ to }) {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+  return null;
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -48,8 +55,10 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+      {/* Root → redirect to external site */}
+      <Route path="/" element={<ExternalRedirect to="https://servi-go-pro.base44.app" />} />
+
       {/* Public pages (no layout) */}
-      <Route path="/" element={<Landing />} />
       <Route path="/SelectUserType" element={<SelectUserType />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />

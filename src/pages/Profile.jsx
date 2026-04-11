@@ -482,7 +482,7 @@ export default function Profile() {
                     onClick={async () => {
                       await base44.auth.updateMe({ account_deleted: true, user_type: null });
                       toast.success('Compte supprimé.');
-                      base44.auth.logout('/Landing');
+                      base44.auth.logout();
                     }}
                   >
                     Supprimer définitivement
