@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Camera, Save, LogOut, User, Trash2, Receipt, Shield, ShieldCheck, MapPin, Pencil, Check, Copy, Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
 import { useDarkMode } from '@/hooks/useDarkMode';
@@ -131,6 +132,7 @@ function getInitials(user) {
 export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [dark, setDark] = useDarkMode();
   const [tab, setTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
@@ -421,7 +423,7 @@ export default function Profile() {
               </div>
               <Button
                 variant="outline"
-                onClick={() => base44.auth.logout('/Home')}
+                onClick={() => logout()}
                 className="w-full h-12 rounded-xl text-sm text-muted-foreground"
               >
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
@@ -482,7 +484,7 @@ export default function Profile() {
                     onClick={async () => {
                       await base44.auth.updateMe({ account_deleted: true, user_type: null });
                       toast.success('Compte supprimé.');
-                      base44.auth.logout();
+                      logout();
                     }}
                   >
                     Supprimer définitivement

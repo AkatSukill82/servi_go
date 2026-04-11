@@ -20,6 +20,7 @@ import {
   Trash2, Check, Shield, User, CheckCircle, Clock, Upload, AlertTriangle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
@@ -87,6 +88,7 @@ function ProfileCompletion({ user }) {
 export default function ProProfile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [dark, setDark] = useDarkMode();
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
@@ -395,7 +397,7 @@ export default function ProProfile() {
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
               <Headphones className="w-4 h-4 mr-2" /> Contacter le support
             </Button>
-            <Button variant="outline" onClick={() => base44.auth.logout('/Home')} className="w-full h-12 rounded-xl text-sm text-muted-foreground">
+            <Button variant="outline" onClick={() => logout()} className="w-full h-12 rounded-xl text-sm text-muted-foreground">
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
             </Button>
           </motion.div>
@@ -579,7 +581,7 @@ export default function ProProfile() {
                     className="bg-destructive hover:bg-destructive/90"
                     onClick={async () => {
                       await base44.auth.updateMe({ account_deleted: true, user_type: null });
-                      base44.auth.logout('/Home');
+                      logout();
                     }}
                   >
                     Supprimer définitivement
