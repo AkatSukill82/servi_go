@@ -667,15 +667,21 @@ export default function Register() {
     setSaving(true);
     setPersonalData(data);
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(' ');
+    // Convert DD/MM/YYYY to YYYY-MM-DD before saving
+    const toISODate = (ddmmyyyy) => {
+      if (!ddmmyyyy) return '';
+      const parts = ddmmyyyy.split('/');
+      if (parts.length !== 3) return ddmmyyyy;
+      const [d, m, y] = parts;
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    };
     try {
       await saveMutation.mutateAsync({
         user_type: userType,
         first_name: data.first_name,
         last_name: data.last_name,
         full_name: fullName,
-        birth_date: data.birth_date,
-        address: data.address,
-        phone: data.phone,
+        birth_date: toISODate(data.birth_date),
         ...(userType === 'professionnel' ? {
           category_name: data.category_name,
           bce_number: data.bce_number,
