@@ -195,6 +195,7 @@ function StepTypeChoice({ onSelect }) {
 
 // ─── STEP 1: Informations personnelles ────────────────────────────────────────
 function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = false }) {
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [form, setForm] = useState({
     first_name: initialData.first_name || '',
     last_name: initialData.last_name || '',
@@ -385,10 +386,26 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
             </div>
           </div>
         )}
+        <div className="flex items-start gap-3 p-4 bg-white border border-[#E5E7EB] rounded-xl">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={termsAccepted}
+            onChange={e => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 w-4 h-4 accent-[#534AB7] shrink-0 cursor-pointer"
+          />
+          <label htmlFor="terms" className="text-xs text-[#374151] leading-relaxed cursor-pointer">
+            J'accepte les{' '}
+            <a href="/cgu" target="_blank" rel="noopener noreferrer" className="text-[#534AB7] underline font-semibold">Conditions Générales d'Utilisation</a>
+            {' '}et la{' '}
+            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-[#534AB7] underline font-semibold">Politique de Confidentialité</a>
+            {' '}de ServiGo
+          </label>
+        </div>
         <button
           onClick={handleSubmit}
-          disabled={isSaving}
-          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer disabled:opacity-60"
+          disabled={isSaving || !termsAccepted}
+          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isSaving ? <><Loader2 className="inline w-4 h-4 mr-2 animate-spin" />Enregistrement...</> : <>Continuer <ChevronRight className="inline w-5 h-5 ml-1" /></>}
         </button>
@@ -729,6 +746,15 @@ export default function Register() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Footer légal */}
+      <div className="w-full py-4 px-5 flex items-center justify-center gap-3 text-xs text-[#9CA3AF]">
+        <a href="/cgu" target="_blank" rel="noopener noreferrer" className="hover:text-[#534AB7] underline">CGU</a>
+        <span>·</span>
+        <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-[#534AB7] underline">Confidentialité</a>
+        <span>·</span>
+        <span>© 2026 ServiGo</span>
+      </div>
     </div>
   );
 }

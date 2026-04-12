@@ -21,6 +21,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import Register from './pages/Register';
 import ProPublicProfile from './pages/ProPublicProfile';
 import ProMessages from './pages/ProMessages';
+import CGUFull from './pages/CGUFull';
+import Confidentialite from './pages/Confidentialite';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -84,6 +86,10 @@ const AuthenticatedApp = () => {
       <Route path="/Invoices" element={<AppLayout />} />
       <Route path="/Map" element={<AppLayout />} />
       <Route path="/Emergency" element={<AppLayout />} />
+
+      {/* Legal pages */}
+      <Route path="/cgu" element={<CGUFull />} />
+      <Route path="/confidentialite" element={<Confidentialite />} />
 
       {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />
