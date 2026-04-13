@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '@/hooks/useI18n';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
 import { Search, Zap, AlertCircle, X, CheckCircle } from 'lucide-react';
-import InlineSearchResults from '@/components/search/InlineSearchResults';
+
 import { useMutation, useQueryClient as useQC } from '@tanstack/react-query';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,11 @@ export default function Home() {
 
   const [viewingPro, setViewingPro] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeQuery, setActiveQuery] = useState(null);
+  const [showResults, setShowResults] = useState(false);
+  const [pros, setPros] = useState([]);
+  const [selectedProId, setSelectedProId] = useState(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef({});
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -109,6 +113,66 @@ export default function Home() {
   const filtered = categories;
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
+
+  const handleSearch = async () => {
+    const data = await base44.entities.Professional.list('-rating', 200);
+    const filtered = searchQuery.trim() === ''
+      ? data
+      : data.filter(p =>
+          p.category_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.name?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    setPros(filtered);
+    setShowResults(true);
+    setSelectedProId(null);
+  };
+
+  useEffect(() => {
+    if (!showResults) return;
+    const initMap = () => {
+      const L = window.L;
+      if (!L) return;
+      const container = document.getElementById('servigo-map');
+      if (!container) return;
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+      const map = L.map('servigo-map').setView([50.85, 4.35], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+      const bounds = [];
+      markersRef.current = {};
+      pros.forEach(pro => {
+        if (!pro.latitude || !pro.longitude) return;
+        const marker = L.marker([pro.latitude, pro.longitude])
+          .addTo(map)
+          .bindPopup(`<b>${pro.name}</b><br>${'★'.repeat(Math.round(pro.rating||0))} (${pro.reviews_count||0} avis)<br>À partir de ${pro.base_price}€`);
+        markersRef.current[pro.id] = marker;
+        bounds.push([pro.latitude, pro.longitude]);
+      });
+      if (bounds.length > 1) map.fitBounds(bounds, { padding: [30, 30] });
+      else if (bounds.length === 1) map.setView(bounds[0], 13);
+      mapRef.current = map;
+    };
+    if (window.L) {
+      setTimeout(initMap, 100);
+    } else {
+      if (!document.getElementById('leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.onload = () => setTimeout(initMap, 100);
+      document.head.appendChild(script);
+    }
+  }, [showResults, pros]);
+
+  useEffect(() => {
+    if (!selectedProId || !mapRef.current) return;
+    const marker = markersRef.current[selectedProId];
+    if (marker) { mapRef.current.setView(marker.getLatLng(), 14); marker.openPopup(); }
+  }, [selectedProId]);
   const firstName = (() => {
     if (user?.first_name) return user.first_name;
     const handle = (user?.full_name || '').includes('@') ? (user.full_name.split('@')[0]) : (user?.full_name || '');
@@ -139,14 +203,14 @@ export default function Home() {
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && setActiveQuery(searchQuery)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Plombier, électricien, jardinier..."
               className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:border-transparent"
               style={{ '--tw-ring-color': '#FF6B35' }}
             />
           </div>
           <button
-            onClick={() => setActiveQuery(searchQuery)}
+            onClick={handleSearch}
             className="h-12 px-5 rounded-xl text-sm font-semibold text-white shrink-0"
             style={{ backgroundColor: '#FF6B35' }}
           >
@@ -256,18 +320,62 @@ export default function Home() {
 
 
         {/* Inline search results */}
-        {activeQuery !== null && (
-          <InlineSearchResults query={activeQuery} />
+        {showResults && (
+          <div style={{ marginTop: '16px' }}>
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+              {pros.length} professionnel{pros.length > 1 ? 's' : ''} trouvé{pros.length > 1 ? 's' : ''}
+              {searchQuery.trim() && <span> pour « {searchQuery} »</span>}
+            </p>
+            <div style={{ display: 'flex', gap: '12px', flexDirection: typeof window !== 'undefined' && window.innerWidth < 768 ? 'column' : 'row' }}>
+              <div id="servigo-map" style={{ flex: '0 0 60%', height: typeof window !== 'undefined' && window.innerWidth < 768 ? '250px' : '500px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #eee' }} />
+              <div style={{ flex: '1', maxHeight: typeof window !== 'undefined' && window.innerWidth < 768 ? '400px' : '500px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {pros.length === 0 && (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
+                    <p style={{ fontSize: '24px' }}>🔍</p>
+                    <p>Aucun professionnel trouvé</p>
+                  </div>
+                )}
+                {pros.map(pro => (
+                  <div
+                    key={pro.id}
+                    onClick={() => setSelectedProId(pro.id)}
+                    style={{
+                      display: 'flex', gap: '10px', alignItems: 'center',
+                      padding: '10px 12px', borderRadius: '10px',
+                      border: selectedProId === pro.id ? '2px solid #FF6B35' : '1px solid #eee',
+                      background: selectedProId === pro.id ? '#FFF5F0' : '#fff',
+                      cursor: 'pointer', flexShrink: 0,
+                    }}
+                  >
+                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '18px' }}>
+                      {pro.photo_url
+                        ? <img src={pro.photo_url} alt={pro.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : (pro.name?.[0] || '?')}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '14px' }}>{pro.name}</div>
+                      <div style={{ fontSize: '12px', color: '#888' }}>{pro.category_name}</div>
+                      <div style={{ fontSize: '12px', color: '#FF6B35' }}>
+                        {'★'.repeat(Math.round(pro.rating || 0))}{'☆'.repeat(5 - Math.round(pro.rating || 0))} ({pro.reviews_count || 0} avis)
+                      </div>
+                      {pro.base_price > 0 && <div style={{ fontSize: '12px', color: '#333' }}>À partir de {pro.base_price}€</div>}
+                    </div>
+                    {pro.available && <span style={{ fontSize: '10px', background: '#e6f9f0', color: '#00B894', padding: '2px 6px', borderRadius: '8px', flexShrink: 0 }}>Dispo</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
 
-        {activeQuery === null && (
+        {!showResults && (
         <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
           {t('home_our_services')}
         </p>
         )}
 
         {/* Grid — only shown when not searching */}
-        {activeQuery === null && isLoading ? (
+        {!showResults && isLoading ? (
           <div className="grid grid-cols-2 gap-3">
             {Array(6).fill(0).map((_, i) => (
               <div key={i} className="bg-card rounded-xl p-4 border border-border">
@@ -277,7 +385,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-        ) : activeQuery === null ? (
+        ) : !showResults ? (
           <div className="grid grid-cols-2 gap-3">
             {filtered.map((category, index) => (
               <ServiceCard
@@ -290,7 +398,7 @@ export default function Home() {
           </div>
         ) : null}
 
-        {activeQuery === null && !isLoading && filtered.length === 0 && (
+        {!showResults && !isLoading && filtered.length === 0 && (
           <div className="text-center py-16">
             <p className="text-sm text-muted-foreground">{t('home_no_service')}</p>
           </div>
