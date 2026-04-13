@@ -126,7 +126,7 @@ export default function Home() {
 
         {/* Header */}
         <div className="mb-5">
-          <h1 className="text-xl font-bold text-foreground leading-snug">
+          <h1 className="text-xl font-bold text-foreground leading-snug truncate">
             {firstName ? `${t('home_greeting')}, ${firstName}` : t('home_greeting')} 👋
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('home_subtitle')}</p>
