@@ -4,7 +4,7 @@ import { useI18n } from '@/hooks/useI18n';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
 import { Search, Zap, AlertCircle, X, CheckCircle } from 'lucide-react';
-import SearchResultsView from '@/components/search/SearchResultsView';
+import InlineSearchResults from '@/components/search/InlineSearchResults';
 import { useMutation, useQueryClient as useQC } from '@tanstack/react-query';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,7 @@ export default function Home() {
 
   const [viewingPro, setViewingPro] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showResults, setShowResults] = useState(false);
+  const [activeQuery, setActiveQuery] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -139,14 +139,14 @@ export default function Home() {
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && setShowResults(true)}
+              onKeyDown={e => e.key === 'Enter' && setActiveQuery(searchQuery)}
               placeholder="Plombier, électricien, jardinier..."
               className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:border-transparent"
               style={{ '--tw-ring-color': '#FF6B35' }}
             />
           </div>
           <button
-            onClick={() => setShowResults(true)}
+            onClick={() => setActiveQuery(searchQuery)}
             className="h-12 px-5 rounded-xl text-sm font-semibold text-white shrink-0"
             style={{ backgroundColor: '#FF6B35' }}
           >
@@ -255,12 +255,19 @@ export default function Home() {
 
 
 
+        {/* Inline search results */}
+        {activeQuery !== null && (
+          <InlineSearchResults query={activeQuery} />
+        )}
+
+        {activeQuery === null && (
         <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-4">
           {t('home_our_services')}
         </p>
+        )}
 
-        {/* Grid */}
-        {isLoading ? (
+        {/* Grid — only shown when not searching */}
+        {activeQuery === null && isLoading ? (
           <div className="grid grid-cols-2 gap-3">
             {Array(6).fill(0).map((_, i) => (
               <div key={i} className="bg-card rounded-xl p-4 border border-border">
@@ -270,7 +277,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : activeQuery === null ? (
           <div className="grid grid-cols-2 gap-3">
             {filtered.map((category, index) => (
               <ServiceCard
@@ -281,21 +288,14 @@ export default function Home() {
               />
             ))}
           </div>
-        )}
+        ) : null}
 
-        {!isLoading && filtered.length === 0 && (
+        {activeQuery === null && !isLoading && filtered.length === 0 && (
           <div className="text-center py-16">
             <p className="text-sm text-muted-foreground">{t('home_no_service')}</p>
           </div>
         )}
       </div>
-
-      {showResults && (
-        <SearchResultsView
-          query={searchQuery}
-          onClose={() => setShowResults(false)}
-        />
-      )}
 
       {viewingPro && (
         <ProProfileSheet
