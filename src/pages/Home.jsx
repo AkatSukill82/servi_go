@@ -4,6 +4,7 @@ import { useI18n } from '@/hooks/useI18n';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import { base44 } from '@/api/base44Client';
 import { Search, Zap, AlertCircle, X, CheckCircle } from 'lucide-react';
+import SearchResultsView from '@/components/search/SearchResultsView';
 import { useMutation, useQueryClient as useQC } from '@tanstack/react-query';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +15,8 @@ import PullToRefresh from '@/components/ui/PullToRefresh';
 export default function Home() {
 
   const [viewingPro, setViewingPro] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showResults, setShowResults] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -122,11 +125,33 @@ export default function Home() {
         <OnboardingModal />
 
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-5">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {firstName ? `${t('home_greeting')}, ${firstName}` : t('home_greeting')} 👋
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">{t('home_subtitle')}</p>
+        </div>
+
+        {/* Search bar */}
+        <div className="flex gap-2 mb-5">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && setShowResults(true)}
+              placeholder="Plombier, électricien, jardinier..."
+              className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:border-transparent"
+              style={{ '--tw-ring-color': '#FF6B35' }}
+            />
+          </div>
+          <button
+            onClick={() => setShowResults(true)}
+            className="h-12 px-5 rounded-xl text-sm font-semibold text-white shrink-0"
+            style={{ backgroundColor: '#FF6B35' }}
+          >
+            Rechercher
+          </button>
         </div>
 
         {/* Unfinished request banner */}
@@ -264,6 +289,13 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {showResults && (
+        <SearchResultsView
+          query={searchQuery}
+          onClose={() => setShowResults(false)}
+        />
+      )}
 
       {viewingPro && (
         <ProProfileSheet
