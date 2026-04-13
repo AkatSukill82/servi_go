@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { FileText, CheckCircle, Clock, PenLine, Trash2, X } from 'lucide-react';
+import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -130,7 +131,18 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
 
   return (
     <>
-      <div className={`mx-4 my-2 rounded-2xl border p-4 space-y-3 ${bothSigned ? 'bg-green-50 border-green-200' : 'bg-primary/5 border-primary/20'}`}>
+      <div className="mx-4 my-2 rounded-2xl overflow-hidden border border-border shadow-sm">
+        {/* Branded contract header */}
+        <div className="flex items-center justify-between px-4 py-2.5" style={{ backgroundColor: '#1A1A2E' }}>
+          <div className="flex items-center gap-2">
+            <ServiGoIcon size={18} white />
+            <span className="text-xs font-bold text-white">ServiGo</span>
+          </div>
+          <span className="text-[10px] text-white/60 font-mono">{contract.contract_number}</span>
+        </div>
+        {/* Status bar */}
+        <div className="h-1" style={{ backgroundColor: bothSigned ? '#00B894' : contract.status === 'cancelled' ? '#E17055' : '#FF6B35' }} />
+        <div className={`p-4 space-y-3 ${bothSigned ? 'bg-green-50' : 'bg-card'}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FileText className={`w-4 h-4 ${bothSigned ? 'text-brand-green' : 'text-primary'}`} />
@@ -180,6 +192,13 @@ export default function ContractPanel({ requestId, userEmail, userType }) {
         {mySigned && !bothSigned && (
           <p className="text-xs text-center text-muted-foreground italic">En attente de signature de l'autre partie...</p>
         )}
+        {/* Contract footer */}
+        <div className="px-4 py-2 border-t border-border/50 bg-muted/30">
+          <p className="text-[9px] text-muted-foreground text-center">
+            Document généré par ServiGo · Bruxelles, Belgique · Valeur contractuelle légale
+          </p>
+        </div>
+        </div>
       </div>
 
       {showSign && <SignaturePad onSign={(d) => signMutation.mutate(d)} onClose={() => setShowSign(false)} />}

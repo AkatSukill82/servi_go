@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { maskIban } from '@/utils/formatters';
+import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
@@ -235,8 +236,8 @@ export default function ProProfile() {
 
             <div className="flex flex-wrap gap-1.5 mt-2">
               {isVerified ? (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200 flex items-center gap-1">
-                  <ShieldCheck className="w-2.5 h-2.5" /> Pro Vérifié ✓
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1" style={{ backgroundColor: '#FFF3EE', color: '#FF6B35', borderColor: '#FF6B35' }}>
+                  <ServiGoIcon size={10} /> Pro Vérifié ServiGo ✓
                 </span>
               ) : (
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">

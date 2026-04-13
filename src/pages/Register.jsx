@@ -13,6 +13,7 @@ import {
   User, Briefcase, MapPin, CheckCircle, ChevronRight, ChevronLeft,
   Upload, Loader2, ShieldCheck, Home, X, AlertCircle
 } from 'lucide-react';
+import ServiGoLogo, { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 
 const STEPS = ['Type', 'Infos', 'Identité', 'Confirmation'];
 
@@ -51,7 +52,8 @@ function ProgressBar({ step }) {
       </div>
       <div className="h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
         <motion.div
-          className="h-full bg-[#534AB7] rounded-full"
+          className="h-full rounded-full"
+          style={{ backgroundColor: '#FF6B35' }}
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -131,8 +133,8 @@ function StepTypeChoice({ onSelect }) {
   return (
     <div className="w-full max-w-lg mx-auto px-5 pb-10">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-[#534AB7] flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span className="text-2xl font-black text-white">S</span>
+        <div className="flex justify-center mb-4">
+          <ServiGoIcon size={56} />
         </div>
         <h1 className="text-2xl font-bold text-[#111827]">Bienvenue sur ServiGo</h1>
         <p className="text-[#6B7280] mt-1 text-sm">Trouvez le bon professionnel, partout en Belgique</p>
@@ -183,9 +185,10 @@ function StepTypeChoice({ onSelect }) {
         }}
         className={`w-full h-12 rounded-xl text-base font-semibold transition-colors ${
           selected
-            ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white'
+            ? 'text-white'
             : 'bg-[#E5E7EB] text-[#9CA3AF]'
         }`}
+        style={selected ? { backgroundColor: '#FF6B35' } : {}}
       >
         Continuer <ChevronRight className="inline w-5 h-5 ml-1" />
       </button>
@@ -405,7 +408,8 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
         <button
           onClick={handleSubmit}
           disabled={isSaving || !termsAccepted}
-          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: '#FF6B35' }}
         >
           {isSaving ? <><Loader2 className="inline w-4 h-4 mr-2 animate-spin" />Enregistrement...</> : <>Continuer <ChevronRight className="inline w-5 h-5 ml-1" /></>}
         </button>
@@ -563,9 +567,10 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
           disabled={!requiredDone || saving}
           className={`w-full h-12 rounded-xl text-base font-semibold transition-colors mt-2 ${
             requiredDone && !saving
-              ? 'bg-[#534AB7] hover:bg-[#4338A0] text-white cursor-pointer'
+              ? 'text-white cursor-pointer'
               : 'bg-[#E5E7EB] text-[#9CA3AF] cursor-not-allowed'
           }`}
+          style={requiredDone && !saving ? { backgroundColor: '#FF6B35' } : {}}
         >
           {saving ? <><Loader2 className="inline w-4 h-4 mr-2 animate-spin" />Envoi en cours...</> : <>Soumettre mes documents <ChevronRight className="inline w-5 h-5 ml-1" /></>}
         </button>
@@ -616,7 +621,8 @@ function StepConfirmation({ userType, firstName, navigate }) {
 
       <button
         onClick={() => navigate(userType === 'professionnel' ? '/ProDashboard' : '/Home')}
-        className="w-full h-12 rounded-xl text-base font-semibold bg-[#534AB7] hover:bg-[#4338A0] text-white transition-colors"
+        className="w-full h-12 rounded-xl text-base font-semibold text-white transition-colors"
+      style={{ backgroundColor: '#FF6B35' }}
       >
         Découvrir ServiGo <ChevronRight className="inline w-5 h-5 ml-1" />
       </button>
@@ -700,12 +706,7 @@ export default function Register() {
     <div className="bg-[#F7F6F3] overflow-y-auto" style={{ height: '100dvh' }}>
       {/* Login link */}
       <div className="w-full max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#534AB7] flex items-center justify-center">
-            <span className="text-white font-black text-sm">S</span>
-          </div>
-          <span className="font-black text-[#111827] text-lg">ServiGo</span>
-        </div>
+        <ServiGoLogo size="sm" />
         <button
           onClick={() => base44.auth.redirectToLogin()}
           className="text-sm font-semibold text-[#534AB7] border border-[#534AB7]/30 px-4 py-2 rounded-xl hover:bg-[#534AB7]/5 transition-colors"

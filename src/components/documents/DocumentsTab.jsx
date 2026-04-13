@@ -13,16 +13,21 @@ function generateInvoicePDF(invoice, type = 'facture') {
   const doc = new jsPDF();
   const isDevis = type === 'devis';
 
-  // Header
-  doc.setFillColor(15, 15, 15);
-  doc.rect(0, 0, 210, 40, 'F');
+  // Header — branded #1A1A2E
+  doc.setFillColor(26, 26, 46);
+  doc.rect(0, 0, 210, 44, 'F');
+  // Orange accent bar
+  doc.setFillColor(255, 107, 53);
+  doc.rect(0, 44, 210, 3, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
-  doc.text('ServiGo', 20, 18);
-  doc.setFontSize(11);
+  doc.text('ServiGo', 20, 20);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(isDevis ? 'DEVIS' : 'FACTURE', 20, 30);
+  doc.setTextColor(255, 107, 53);
+  doc.text(isDevis ? 'DEVIS' : 'FACTURE', 20, 32);
+  doc.setTextColor(255, 255, 255);
 
   // Reset color
   doc.setTextColor(30, 30, 30);
@@ -108,10 +113,14 @@ function generateInvoicePDF(invoice, type = 'facture') {
   }
 
   // Footer
+  doc.setFillColor(26, 26, 46);
+  doc.rect(0, 278, 210, 20, 'F');
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text('ServiGo — Plateforme de services à domicile', 105, 285, { align: 'center' });
+  doc.setTextColor(255, 255, 255);
+  doc.text('ServiGo — contact@servigo.be — Bruxelles, Belgique 🇧🇪', 105, 287, { align: 'center' });
+  doc.setTextColor(255, 107, 53);
+  doc.text('www.servigo.be', 105, 293, { align: 'center' });
 
   doc.save(`${isDevis ? 'devis' : 'facture'}_${invoice.invoice_number}.pdf`);
 }

@@ -6,6 +6,7 @@ import { base44 } from '@/api/base44Client';
 
 
 import BottomNav from './BottomNav';
+import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
 
@@ -107,8 +108,12 @@ export default function AppLayout() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
+      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ backgroundColor: '#1A1A2E' }}>
+        <div className="flex flex-col items-center gap-4">
+          <ServiGoIcon size={56} />
+          <span className="text-2xl font-black text-white">ServiGo</span>
+          <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mt-2" />
+        </div>
       </div>
     );
   }
