@@ -133,10 +133,11 @@ export default function Home() {
 
   const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
 
-  const handleSearch = async () => {
+  const handleSearch = async (overrideQuery) => {
+    const q = (overrideQuery !== undefined ? overrideQuery : searchQuery).trim().toLowerCase();
+    if (overrideQuery !== undefined) setSearchQuery(overrideQuery);
     setSearching(true);
     const data = await base44.entities.Professional.list('-rating', 200);
-    const q = searchQuery.trim().toLowerCase();
     const filtered = q === ''
       ? data
       : data.filter(p =>
@@ -502,6 +503,7 @@ export default function Home() {
                     category={category}
                     index={index}
                     unavailable={!prosByCategory[category.name]}
+                    onSearch={handleSearch}
                   />
                 ))}
               </div>

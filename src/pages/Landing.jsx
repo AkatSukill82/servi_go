@@ -124,6 +124,40 @@ function CategoryCard({ category, index, onClick }) {
   );
 }
 
+const ROTATING_WORDS = ['plombier', 'électricien', 'déménageur', 'serrurier', 'peintre', 'jardinier'];
+
+function RotatingWord() {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % ROTATING_WORDS.length);
+        setVisible(true);
+      }, 400);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span
+      style={{
+        color: '#FF6B35',
+        fontWeight: 900,
+        display: 'inline-block',
+        transition: 'opacity 0.4s ease',
+        opacity: visible ? 1 : 0,
+        minWidth: '220px',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {ROTATING_WORDS[index]}
+    </span>
+  );
+}
+
 export default function Landing() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
@@ -224,8 +258,8 @@ export default function Landing() {
             transition={{ delay: 0.1, duration: 0.6 }}
             className="text-4xl md:text-6xl font-black leading-tight mb-5"
           >
-            Trouvez un artisan de confiance<br />
-            <span className="text-[#68D391] whitespace-nowrap inline-block">en moins de 10 minutes</span>
+            Trouvez le bon <RotatingWord /><br />
+            <span className="text-[#68D391] whitespace-nowrap inline-block">près de chez vous</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
