@@ -42,14 +42,17 @@ export default function NotificationDropdown({ userEmail }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
+  const [showAll, setShowAll] = useState(false);
+
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifDropdown', userEmail],
-    queryFn: () => base44.entities.Notification.filter({ recipient_email: userEmail }, '-created_date', 10),
+    queryFn: () => base44.entities.Notification.filter({ recipient_email: userEmail }, '-created_date', 30),
     enabled: !!userEmail,
     refetchInterval: 30000,
   });
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
+  const displayedNotifications = showAll ? notifications : notifications.filter(n => !n.is_read);
 
   const markAllMutation = useMutation({
     mutationFn: async () => {
@@ -95,26 +98,39 @@ export default function NotificationDropdown({ userEmail }) {
             style={{ top: '100%' }}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h3 className="font-semibold text-sm">Notifications</h3>
-              {unreadCount > 0 && (
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-sm">Notifications</h3>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5">{unreadCount}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => markAllMutation.mutate()}
-                  className="text-xs text-primary flex items-center gap-1 hover:underline"
+                  onClick={() => setShowAll(v => !v)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
                 >
-                  <Check className="w-3 h-3" /> Tout marquer comme lu
+                  {showAll ? 'Non lues' : 'Toutes'}
                 </button>
-              )}
+                {unreadCount > 0 && (
+                  <button
+                    onClick={() => markAllMutation.mutate()}
+                    className="text-xs text-primary flex items-center gap-1 hover:underline"
+                  >
+                    <Check className="w-3 h-3" /> Tout lire
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
+              {displayedNotifications.length === 0 ? (
                 <div className="text-center py-10 px-4">
                   <Bell className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
                   <p className="text-sm text-muted-foreground">Tout est à jour !</p>
                   <p className="text-xs text-muted-foreground/60 mt-1">Vos notifications apparaîtront ici.</p>
                 </div>
               ) : (
-                notifications.slice(0, 8).map(n => {
+                displayedNotifications.slice(0, 10).map(n => {
                   const config = NOTIF_ICONS[n.type] || { icon: Bell, color: 'text-muted-foreground bg-muted' };
                   const Icon = config.icon;
                   return (

@@ -23,6 +23,7 @@ import ProPublicProfile from './pages/ProPublicProfile';
 import ProMessages from './pages/ProMessages';
 import CGUFull from './pages/CGUFull';
 import Confidentialite from './pages/Confidentialite';
+import ErrorBoundary from './components/ui/ErrorBoundary';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
   }
 
   return (
+    <ErrorBoundary>
     <Routes>
       {/* Root → redirect to external site */}
       <Route path="/" element={<ExternalRedirect to="https://servi-go-pro.base44.app" />} />
@@ -98,6 +100,7 @@ const AuthenticatedApp = () => {
 
       <Route path="*" element={<PageNotFound />} />
     </Routes>
+    </ErrorBoundary>
   );
 };
 

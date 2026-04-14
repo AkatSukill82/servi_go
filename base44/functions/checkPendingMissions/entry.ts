@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
@@ -9,6 +9,8 @@ function haversine(lat1, lon1, lat2, lon2) {
     Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+
+const MAX_RETRIES = 3; // Maximum relay cycles before cancelling
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -34,6 +36,7 @@ Deno.serve(async (req) => {
   );
 
   let reassigned = 0;
+  let cancelled = 0;
   let reverted = 0;
 
   for (const req_ of pendingRequests) {
@@ -48,7 +51,44 @@ Deno.serve(async (req) => {
       triedPros.push(req_.professional_email);
     }
 
-    // Find next available pro
+    // Count relay cycles from pro_notes
+    const notes = req_.pro_notes || '';
+    const relayCycleCount = (notes.match(/Relance auto:/g) || []).length;
+
+    const traceNote = notes + `\n[${new Date().toISOString()}] Relance auto: ${req_.professional_email} n'a pas répondu (30 min). Cycle ${relayCycleCount + 1}/${MAX_RETRIES}.`;
+
+    // Hard stop: cancel if max retries reached
+    if (relayCycleCount >= MAX_RETRIES) {
+      console.log(`Mission ${req_.id} cancelled after ${MAX_RETRIES} retry cycles.`);
+      await base44.asServiceRole.entities.ServiceRequestV2.update(req_.id, {
+        status: 'cancelled',
+        cancelled_by: 'admin',
+        cancellation_reason: 'aucun_professionnel_disponible',
+        professional_id: null,
+        professional_name: null,
+        professional_email: null,
+        tried_professionals: triedPros,
+        pro_notes: traceNote + ' → ANNULÉ: max relances atteint.',
+      });
+
+      // Send ONE final notification to customer
+      if (req_.customer_email) {
+        await base44.asServiceRole.entities.Notification.create({
+          recipient_email: req_.customer_email,
+          recipient_type: 'particulier',
+          type: 'mission_refused',
+          title: 'Mission annulée',
+          body: `Aucun ${req_.category_name || 'professionnel'} disponible dans votre zone. Votre demande a été annulée. Vous pouvez en créer une nouvelle.`,
+          request_id: req_.id,
+          action_url: `/Home`,
+        });
+      }
+
+      cancelled++;
+      continue;
+    }
+
+    // Find next available pro in same category
     const allPros = await base44.asServiceRole.entities.User.filter(
       { user_type: 'professionnel', available: true, verification_status: 'verified' },
       '-rating', 200
@@ -86,11 +126,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const traceNote = (req_.pro_notes || '') +
-      `\n[${new Date().toISOString()}] Relance auto: ${req_.professional_email} n'a pas répondu (30 min).`;
-
     if (nextPro) {
-      // Assign to next pro
+      // Assign to next pro — send notification to NEW pro only
       await base44.asServiceRole.entities.ServiceRequestV2.update(req_.id, {
         status: 'pending_pro',
         professional_id: nextPro.id,
@@ -100,7 +137,6 @@ Deno.serve(async (req) => {
         pro_notes: traceNote + ` → Relancé vers ${nextPro.email}`,
       });
 
-      // Notify new pro
       await base44.asServiceRole.entities.Notification.create({
         recipient_email: nextPro.email,
         recipient_type: 'professionnel',
@@ -114,32 +150,35 @@ Deno.serve(async (req) => {
       console.log(`Mission ${req_.id} reassigned to ${nextPro.email} (dist: ${nextPro._dist?.toFixed(1)}km)`);
       reassigned++;
     } else {
-      // No pro available → revert to searching + notify client
+      // No more untried pros — cancel immediately (don't loop back to searching)
+      console.log(`Mission ${req_.id} cancelled: all pros tried in category ${req_.category_name}.`);
       await base44.asServiceRole.entities.ServiceRequestV2.update(req_.id, {
-        status: 'searching',
+        status: 'cancelled',
+        cancelled_by: 'admin',
+        cancellation_reason: 'aucun_professionnel_disponible',
         professional_id: null,
         professional_name: null,
         professional_email: null,
         tried_professionals: triedPros,
-        pro_notes: traceNote + ' → Aucun pro disponible, retour en recherche.',
+        pro_notes: traceNote + ' → ANNULÉ: tous les pros de la catégorie ont été essayés.',
       });
 
+      // ONE notification to customer
       if (req_.customer_email) {
         await base44.asServiceRole.entities.Notification.create({
           recipient_email: req_.customer_email,
           recipient_type: 'particulier',
           type: 'mission_refused',
-          title: 'Recherche en cours…',
-          body: `Aucun ${req_.category_name} disponible pour l'instant. Nous continuons la recherche.`,
+          title: 'Mission annulée',
+          body: `Aucun ${req_.category_name || 'professionnel'} disponible dans votre zone. Vous pouvez créer une nouvelle demande.`,
           request_id: req_.id,
-          action_url: `/Chat?requestId=${req_.id}`,
+          action_url: `/Home`,
         });
       }
 
-      console.log(`Mission ${req_.id} reverted to searching (all pros tried: ${triedPros.join(', ')})`);
-      reverted++;
+      cancelled++;
     }
   }
 
-  return Response.json({ ok: true, processed: pendingRequests.length, reassigned, reverted });
+  return Response.json({ ok: true, processed: pendingRequests.length, reassigned, cancelled, reverted });
 });
