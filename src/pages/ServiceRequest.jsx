@@ -20,6 +20,9 @@ export default function ServiceRequest() {
   const urlParams = new URLSearchParams(window.location.search);
   const categoryId = urlParams.get('categoryId');
   const isUrgent = urlParams.get('urgent') === 'true';
+  const priorityProId = urlParams.get('priorityProId');
+  const priorityProEmail = urlParams.get('priorityProEmail');
+  const prefilledCategoryName = urlParams.get('category_name');
 
   const [step, setStep] = useState(STEPS.ADDRESS);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -29,6 +32,7 @@ export default function ServiceRequest() {
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [requestId, setRequestId] = useState(null);
+  const [preselectedPro, setPreselectedPro] = useState(null);
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
@@ -36,13 +40,29 @@ export default function ServiceRequest() {
     if (user?.address && !address) setAddress(user.address);
   }, [user?.address]);
 
+  // Load preselected pro if priorityProId or priorityProEmail is in URL
+  useEffect(() => {
+    if (!priorityProId && !priorityProEmail) return;
+    const query = priorityProId ? { id: priorityProId } : { email: priorityProEmail };
+    base44.entities.User.filter(query, '-created_date', 1)
+      .then(users => { if (users[0]) setPreselectedPro(users[0]); })
+      .catch(() => {});
+  }, [priorityProId, priorityProEmail]);
+
   const { data: category, isLoading: loadingCategory } = useQuery({
-    queryKey: ['category', categoryId],
+    queryKey: ['category', categoryId, prefilledCategoryName],
     queryFn: async () => {
-      const cats = await base44.entities.ServiceCategory.filter({ id: categoryId });
-      return cats[0];
+      if (categoryId) {
+        const cats = await base44.entities.ServiceCategory.filter({ id: categoryId });
+        return cats[0];
+      }
+      if (prefilledCategoryName) {
+        const cats = await base44.entities.ServiceCategory.filter({ name: prefilledCategoryName });
+        return cats[0];
+      }
+      return null;
     },
-    enabled: !!categoryId,
+    enabled: !!(categoryId || prefilledCategoryName),
   });
 
   const questions = category?.questions || [];
@@ -66,7 +86,8 @@ export default function ServiceRequest() {
   }
 
   if (loadingCategory) return <div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" /></div>;
-  if (!category) return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Service non trouvé</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
+  if (!category && (categoryId || prefilledCategoryName)) return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Service non trouvé</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
+  if (!category) return <div className="px-4 pt-6 text-center"><p className="text-muted-foreground">Aucun service sélectionné</p><Button variant="outline" onClick={() => navigate('/Home')} className="mt-4">Retour</Button></div>;
 
   const handleAddressNext = () => {
     if (!address.trim()) return;
@@ -87,8 +108,15 @@ export default function ServiceRequest() {
     const lastName = user?.last_name || user?.full_name?.split(' ').slice(1).join(' ') || '';
 
     const newRequest = await createMutation.mutateAsync({
-      category_id: categoryId,
+      category_id: category?.id || categoryId,
       category_name: category?.name,
+      // Pre-fill pro if selected from profile
+      ...(preselectedPro ? {
+        professional_id: preselectedPro.id,
+        professional_name: preselectedPro.full_name || `${preselectedPro.first_name || ''} ${preselectedPro.last_name || ''}`.trim(),
+        professional_email: preselectedPro.email,
+        status: 'pending_pro',
+      } : {}),
       answers: answersArray,
       customer_id: user?.id,
       customer_first_name: firstName,
@@ -223,6 +251,15 @@ export default function ServiceRequest() {
               onDateChange={setScheduledDate}
               onTimeChange={setScheduledTime}
             />
+            {preselectedPro && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
+                <span className="text-lg">👤</span>
+                <div>
+                  <p className="text-xs font-semibold text-green-800">Professionnel pré-sélectionné</p>
+                  <p className="text-xs text-green-700">{preselectedPro.full_name || preselectedPro.email} — {preselectedPro.category_name}</p>
+                </div>
+              </div>
+            )}
             <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
               <p className="text-sm font-semibold text-primary">📋 Récapitulatif</p>
               <p className="text-sm text-muted-foreground mt-1">{category.name} · {address}</p>
