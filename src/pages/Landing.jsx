@@ -224,7 +224,7 @@ export default function Landing() {
             transition={{ delay: 0.1, duration: 0.6 }}
             className="text-4xl md:text-6xl font-black leading-tight mb-5"
           >
-            <span className="whitespace-nowrap">Trouvez un artisan de confiance</span><br />
+            Trouvez un artisan de confiance<br />
             <span className="text-[#68D391] whitespace-nowrap inline-block">en moins de 10 minutes</span>
           </motion.h1>
           <motion.p
