@@ -398,7 +398,7 @@ export default function ProProfile() {
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
               <Headphones className="w-4 h-4 mr-2" /> Contacter le support
             </Button>
-            <Button variant="outline" onClick={() => logout()} className="w-full h-12 rounded-xl text-sm text-muted-foreground">
+            <Button variant="outline" onClick={async () => { await base44.auth.logout(); window.location.href = '/login'; }} className="w-full h-12 rounded-xl text-sm text-muted-foreground">
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
             </Button>
 

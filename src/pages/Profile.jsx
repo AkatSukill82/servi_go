@@ -423,10 +423,13 @@ export default function Profile() {
               </div>
               <Button
                 variant="outline"
-                onClick={() => logout()}
+                onClick={async () => {
+                  await base44.auth.logout();
+                  window.location.href = '/login';
+                }}
                 className="w-full h-12 rounded-xl text-sm text-muted-foreground"
               >
-              <LogOut className="w-4 h-4 mr-2" /> Déconnexion
+                <LogOut className="w-4 h-4 mr-2" /> Déconnexion
               </Button>
 
               <div className="flex items-center justify-center gap-3 py-2 text-xs text-muted-foreground">
