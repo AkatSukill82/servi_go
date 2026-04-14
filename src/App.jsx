@@ -24,6 +24,7 @@ import ProMessages from './pages/ProMessages';
 import CGUFull from './pages/CGUFull';
 import Confidentialite from './pages/Confidentialite';
 import ErrorBoundary from './components/ui/ErrorBoundary';
+import Landing from './pages/Landing';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -59,8 +60,8 @@ const AuthenticatedApp = () => {
   return (
     <ErrorBoundary>
     <Routes>
-      {/* Root → redirect to external site */}
-      <Route path="/" element={<ExternalRedirect to="https://servi-go-pro.base44.app" />} />
+      {/* Root → Landing page for unauthenticated users */}
+      <Route path="/" element={<Landing />} />
 
       {/* Public pages (no layout) */}
       <Route path="/SelectUserType" element={<SelectUserType />} />
