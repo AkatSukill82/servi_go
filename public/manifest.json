@@ -1,0 +1,18 @@
+{
+  "name": "ServiGo",
+  "short_name": "ServiGo",
+  "description": "Votre plateforme de confiance pour trouver des professionnels à domicile en Belgique.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#FF6B35",
+  "background_color": "#1A1A2E",
+  "icons": [
+    {
+      "src": "https://base44.com/logo_v2.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
