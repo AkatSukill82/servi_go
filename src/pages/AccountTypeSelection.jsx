@@ -83,7 +83,7 @@ export default function AccountTypeSelection() {
           <p className="text-center text-sm text-[#718096]">
             Déjà un compte ?{' '}
             <button
-              onClick={() => base44.auth.redirectToLogin()}
+              onClick={() => base44.auth.redirectToLogin('/Home')}
               className="text-[#FF6B35] font-semibold hover:underline"
             >
               Se connecter

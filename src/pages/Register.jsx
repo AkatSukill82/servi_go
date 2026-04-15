@@ -713,7 +713,7 @@ export default function Register() {
       <div className="w-full max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
         <ServiGoLogo size="sm" />
         <button
-          onClick={() => base44.auth.redirectToLogin()}
+          onClick={() => base44.auth.redirectToLogin('/Home')}
           className="text-sm font-semibold text-[#534AB7] border border-[#534AB7]/30 px-4 py-2 rounded-xl hover:bg-[#534AB7]/5 transition-colors"
         >
           Se connecter
