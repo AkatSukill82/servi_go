@@ -170,8 +170,13 @@ export default function Landing() {
         const user = await base44.auth.me();
         if (user?.role === 'admin') navigate('/AdminDashboard', { replace: true });
         else if (user?.user_type === 'professionnel') navigate('/ProDashboard', { replace: true });
-        else if (user?.user_type === 'particulier') navigate('/Home', { replace: true });
-        else navigate('/SelectUserType', { replace: true }); // compte sans type → choisir rôle
+        else {
+          // Default missing user_type to 'particulier' silently
+          if (!user?.user_type) {
+            base44.auth.updateMe({ user_type: 'particulier' }).catch(() => {});
+          }
+          navigate('/Home', { replace: true });
+        }
       } else {
         setChecking(false);
       }

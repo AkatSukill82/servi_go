@@ -84,25 +84,31 @@ export default function AppLayout() {
   const scrollRefs = useRef({});
 
   useEffect(() => {
+    const resolveUserType = async (user) => {
+      if (!user?.user_type) {
+        // Silently default to 'particulier' — never redirect existing users to role selection
+        await base44.auth.updateMe({ user_type: 'particulier' }).catch(() => {});
+        const updated = { ...user, user_type: 'particulier' };
+        queryClient.setQueryData(['currentUser'], updated);
+        setCurrentUser(updated);
+        setUserType('particulier');
+      } else {
+        setUserType(user.user_type);
+      }
+    };
+
     const cached = queryClient.getQueryData(['currentUser']);
     if (cached) {
-      if (!cached?.user_type) navigate('/SelectUserType', { replace: true });
-      else setUserType(cached.user_type);
       setCurrentUser(cached);
-      setLoading(false);
+      resolveUserType(cached).then(() => setLoading(false));
       return;
     }
     base44.auth.me().then(user => {
       queryClient.setQueryData(['currentUser'], user);
       setCurrentUser(user);
-      if (!user?.user_type) {
-        navigate('/SelectUserType', { replace: true });
-      } else {
-        setUserType(user.user_type);
-      }
-      setLoading(false);
+      resolveUserType(user).then(() => setLoading(false));
     }).catch(() => {
-      navigate('/Landing', { replace: true });
+      navigate('/', { replace: true });
     });
   }, []);
 

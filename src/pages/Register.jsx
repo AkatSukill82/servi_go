@@ -646,16 +646,21 @@ export default function Register() {
   });
 
   useEffect(() => {
-    // Si utilisateur déjà connecté avec un rôle → rediriger vers son dashboard
+    // Si utilisateur déjà connecté avec un rôle complet → rediriger vers son dashboard
     if (user) {
       if (user.role === 'admin') { navigate('/AdminDashboard', { replace: true }); return; }
       if (user.user_type === 'professionnel') { navigate('/ProDashboard', { replace: true }); return; }
       if (user.user_type === 'particulier') { navigate('/Home', { replace: true }); return; }
     }
+
     const preselected = location.state?.preselectedType;
     if (preselected) {
+      // Coming from /signup — new registration flow
       setUserType(preselected);
-      setStep(1);
+      setStep(1); // Skip type selection (step 0), go straight to personal info
+    } else {
+      // No type preselected — redirect to signup page
+      navigate('/signup', { replace: true });
     }
   }, [user]);
 
