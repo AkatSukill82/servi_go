@@ -25,6 +25,7 @@ import CGUFull from './pages/CGUFull';
 import Confidentialite from './pages/Confidentialite';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Landing from './pages/Landing';
+import AccountTypeSelection from './pages/AccountTypeSelection';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
 
       {/* Public pages (no layout) */}
       <Route path="/SelectUserType" element={<SelectUserType />} />
+      <Route path="/signup" element={<AccountTypeSelection />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />

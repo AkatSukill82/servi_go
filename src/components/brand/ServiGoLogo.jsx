@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function ServiGoIcon({ size = 32, className = '', white = false }) {
+export function ServiGoIcon({ size = 32, className = '', white = false, dark = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
       <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill={white ? '#FFFFFF' : '#FF6B35'} />

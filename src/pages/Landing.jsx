@@ -410,7 +410,7 @@ export default function Landing() {
               Se connecter
             </button>
             <button
-              onClick={() => navigate('/Register')}
+              onClick={() => navigate('/signup')}
               className="border-2 border-white text-white font-bold px-8 py-4 rounded-2xl hover:bg-white/10 transition-colors text-base"
             >
               Créer un compte
@@ -436,7 +436,7 @@ export default function Landing() {
               <p className="font-bold mb-3 text-sm uppercase tracking-wide text-white/50">Services</p>
               <div className="space-y-2 text-sm text-white/70">
                 <p className="hover:text-white cursor-pointer" onClick={() => base44.auth.redirectToLogin()}>Trouver un artisan</p>
-                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/Register', { state: { preselectedType: 'professionnel' } })}>Devenir artisan</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/signup')}>Devenir artisan</p>
                 <p className="hover:text-white cursor-pointer">Comment ça marche</p>
               </div>
             </div>
