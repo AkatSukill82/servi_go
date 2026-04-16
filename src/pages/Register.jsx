@@ -94,7 +94,7 @@ function StyledInput({ value, onChange, onBlur, placeholder, type = 'text', suff
         onChange={onChange}
         onBlur={onBlur}
         placeholder={placeholder}
-        className={`w-full h-11 px-3.5 py-2.5 border border-border rounded-lg bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${suffix ? 'pr-10' : ''} ${className}`}
+        className={`w-full h-11 px-3.5 py-2.5 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${suffix ? 'pr-10' : ''} ${className}`}
         style={{ fontSize: 16 }}
         {...props}
       />
@@ -345,7 +345,7 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
                 value={form.category_name}
                 onChange={e => { set('category_name', e.target.value); touch('category_name'); }}
                 onBlur={() => touch('category_name')}
-                className={`w-full h-11 px-3.5 border rounded-lg text-foreground bg-card focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${
+                className={`w-full h-11 px-3.5 border rounded-lg text-foreground bg-background focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${
                   touched.category_name ? (errors.category_name ? 'border-red-400' : 'border-[#1D9E75]') : 'border-border'
                 }`}
                 style={{ fontSize: 16 }}
@@ -372,7 +372,7 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
                 onBlur={() => touch('pro_description')}
                 placeholder="Décrivez vos compétences, expériences et services proposés..."
                 rows={4}
-                className={`w-full px-3.5 py-2.5 border rounded-lg text-foreground bg-card placeholder-muted-foreground focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] resize-none text-base ${
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-foreground bg-background placeholder:text-muted-foreground focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] resize-none text-base ${
                   touched.pro_description ? (errors.pro_description ? 'border-red-400' : 'border-[#1D9E75]') : 'border-border'
                 }`}
                 style={{ fontSize: 16 }}
@@ -384,7 +384,7 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
         {!canProceed && Object.values(touched).some(Boolean) && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-            <div className="text-xs text-red-700 space-y-0.5">
+            <div className="text-xs text-red-700 dark:text-red-400 space-y-0.5">
               {Object.entries(errors).filter(([,v]) => v && touched[Object.keys(errors).find(k => errors[k] === v)]).map(([key, msg]) => msg ? <p key={key}>• {msg}</p> : null)}
             </div>
           </div>
@@ -467,7 +467,7 @@ function UploadZone({ label, hint, value, onChange, required = true }) {
           </button>
         </div>
       ) : (
-        <label className="flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-colors border-[#D1D5DB] bg-[#F9FAFB] hover:border-[#534AB7]/50">
+        <label className="flex flex-col items-center justify-center w-full h-28 rounded-xl border-2 border-dashed cursor-pointer transition-colors border-border bg-muted/30 hover:border-[#534AB7]/50">
           {loading ? (
             <Loader2 className="w-6 h-6 animate-spin text-[#534AB7]" />
           ) : (
@@ -544,8 +544,8 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5">
-        <p className="text-sm text-blue-800 font-semibold mb-1">🔒 Pourquoi cette étape ?</p>
-        <p className="text-xs text-blue-700">Pour la sécurité de tous, ServiGo vérifie l'identité de chaque membre. Cela protège les clients contre les arnaques et les professionnels contre les faux clients.</p>
+        <p className="text-sm text-blue-800 dark:text-blue-300 font-semibold mb-1">🔒 Pourquoi cette étape ?</p>
+        <p className="text-xs text-blue-700 dark:text-blue-400">Pour la sécurité de tous, ServiGo vérifie l'identité de chaque membre. Cela protège les clients contre les arnaques et les professionnels contre les faux clients.</p>
       </div>
 
       <div className="space-y-4">
@@ -589,7 +589,7 @@ function StepConfirmation({ userType, firstName, navigate }) {
 
       <h1 className="text-2xl font-bold text-[#111827] mb-2">Bienvenue, {firstName || 'chez ServiGo'} !</h1>
 
-      <div className="bg-white border border-[#E5E7EB] rounded-2xl p-5 mb-6 text-left shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-5 mb-6 text-left shadow-sm">
         <div className="flex items-center gap-2 mb-3">
           <ShieldCheck className="w-5 h-5 text-[#1D9E75]" />
           <p className="font-semibold text-sm text-[#111827]">Compte créé ✓</p>
@@ -612,7 +612,7 @@ function StepConfirmation({ userType, firstName, navigate }) {
           ? [{ icon: '🔍', text: 'Trouvez des pros' }, { icon: '📋', text: 'Contrats signés' }, { icon: '⭐', text: 'Avis vérifiés' }]
           : [{ icon: '📩', text: 'Missions reçues' }, { icon: '✅', text: 'Badge vérifié' }, { icon: '💰', text: '0% commission' }]
         ).map(({ icon, text }) => (
-          <div key={text} className="bg-white border border-[#E5E7EB] rounded-xl p-3 shadow-sm">
+          <div key={text} className="bg-card border border-border rounded-xl p-3 shadow-sm">
             <span className="text-2xl block mb-1">{icon}</span>
             <p className="text-xs font-medium text-[#6B7280]">{text}</p>
           </div>

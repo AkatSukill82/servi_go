@@ -249,8 +249,8 @@ export default function ProDashboard() {
         <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3">
           <span className="text-xl shrink-0">⏰</span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-yellow-800">Mission demain !</p>
-            <p className="text-xs text-yellow-700">{upcomingJob.category_name} à {upcomingJob.scheduled_time || '?'} chez {upcomingJob.customer_name || 'le client'}</p>
+            <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">Mission demain !</p>
+            <p className="text-xs text-yellow-700 dark:text-yellow-400">{upcomingJob.category_name} à {upcomingJob.scheduled_time || '?'} chez {upcomingJob.customer_name || 'le client'}</p>
           </div>
         </div>
       )}
@@ -272,26 +272,26 @@ export default function ProDashboard() {
         <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center gap-3">
           <span className="text-lg shrink-0">⚠️</span>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-orange-800">Identité non vérifiée</p>
-            <p className="text-xs text-orange-600">Certaines fonctionnalités sont limitées en attendant la vérification.</p>
+            <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">Identité non vérifiée</p>
+            <p className="text-xs text-orange-600 dark:text-orange-400">Certaines fonctionnalités sont limitées en attendant la vérification.</p>
           </div>
-          <button onClick={() => navigate('/EidVerification')} className="text-xs font-bold text-orange-700 underline">Vérifier</button>
+          <button onClick={() => navigate('/EidVerification')} className="text-xs font-bold text-orange-700 dark:text-orange-300 underline">Vérifier</button>
         </div>
       )}
 
       {/* Subscription banner */}
       {!subscription || subscription.status === 'pending_payment' ? (
         <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-blue-200 bg-blue-50 flex items-center gap-3 text-left">
-          <CreditCard className="w-5 h-5 text-blue-600 shrink-0" />
+          <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-blue-900">🚀 Activez votre abonnement Pro</p>
-            <p className="text-xs text-blue-700">10€/mois — Recevez des missions dès aujourd'hui</p>
+            <p className="text-sm font-semibold text-blue-900 dark:text-blue-300">🚀 Activez votre abonnement Pro</p>
+            <p className="text-xs text-blue-700 dark:text-blue-400">10€/mois — Recevez des missions dès aujourd'hui</p>
           </div>
-          <span className="text-xs font-bold text-blue-600">S'abonner →</span>
+          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">S'abonner →</span>
         </button>
       ) : hasActiveSubscription ? (
         <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-green-200 bg-green-50 flex items-center gap-3 text-left">
-          <CreditCard className="w-5 h-5 text-[#38A169] shrink-0" />
+          <CreditCard className="w-5 h-5 text-[#38A169] dark:text-green-400 shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-semibold">Abonnement actif</p>
             <p className="text-xs text-muted-foreground">{`10 €/mois · ${subscription.renewal_date ? `Renouvellement le ${subscription.renewal_date}` : ''}`}</p>
@@ -302,10 +302,10 @@ export default function ProDashboard() {
         <button onClick={() => navigate('/ProSubscription')} className="w-full rounded-2xl p-4 border border-red-200 bg-red-50 flex items-center gap-3 text-left">
           <CreditCard className="w-5 h-5 text-destructive shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-red-800">⚠️ Abonnement expiré</p>
-            <p className="text-xs text-red-600">Renouvelez-le pour continuer à recevoir des missions</p>
+            <p className="text-sm font-semibold text-red-800 dark:text-red-300">⚠️ Abonnement expiré</p>
+            <p className="text-xs text-red-600 dark:text-red-400">Renouvelez-le pour continuer à recevoir des missions</p>
           </div>
-          <span className="text-xs font-bold text-red-600">Renouveler →</span>
+          <span className="text-xs font-bold text-red-600 dark:text-red-400">Renouveler →</span>
         </button>
       )}
 
@@ -313,8 +313,8 @@ export default function ProDashboard() {
       {subscription && ['expired', 'cancelled'].includes(subscription.status) && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center space-y-3">
           <AlertCircle className="w-10 h-10 text-red-500 mx-auto" />
-          <h3 className="font-bold text-red-800">Abonnement expiré</h3>
-          <p className="text-sm text-red-700">Votre abonnement a expiré. Renouvelez-le pour accéder aux missions clients.</p>
+          <h3 className="font-bold text-red-800 dark:text-red-300">Abonnement expiré</h3>
+          <p className="text-sm text-red-700 dark:text-red-400">Votre abonnement a expiré. Renouvelez-le pour accéder aux missions clients.</p>
           <Button onClick={() => navigate('/ProSubscription')} className="w-full h-12 rounded-xl">
             <CreditCard className="w-4 h-4 mr-2" /> Renouveler maintenant
           </Button>
@@ -324,9 +324,9 @@ export default function ProDashboard() {
       {/* Tabs */}
       <div className="flex gap-2">
         {[['missions', 'Missions', incomingRequests.length], ['stats', 'Statistiques', 0]].map(([key, label, count]) => (
-          <button key={key} onClick={() => setActiveTab(key)} className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${activeTab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'}`}>
+          <button key={key} onClick={() => setActiveTab(key)} className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium border transition-colors min-h-[44px] ${activeTab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'}`}>
             {label}
-            {count > 0 && <span className="text-xs font-bold bg-white/20 rounded-full px-1.5">{count}</span>}
+            {count > 0 && <span className={`text-xs font-bold rounded-full px-1.5 ${activeTab === key ? 'bg-white/25 text-white' : 'bg-muted text-foreground'}`}>{count}</span>}
           </button>
         ))}
       </div>

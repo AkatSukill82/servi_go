@@ -162,13 +162,13 @@ export default function MissionHistory() {
             { key: 'done', label: 'Terminées', count: done.length, icon: CheckCircle },
           ].map(({ key, label, count, icon: Icon }) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-colors min-h-[44px] ${
                 tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-muted-foreground'
               }`}>
               <Icon className="w-4 h-4" />
               {label}
               {count > 0 && (
-                <span className={`text-xs font-bold rounded-full px-1.5 ${tab === key ? 'bg-white/20' : 'bg-muted'}`}>{count}</span>
+                <span className={`text-xs font-bold rounded-full px-1.5 ${tab === key ? 'bg-white/25 text-white' : 'bg-muted text-foreground'}`}>{count}</span>
               )}
             </button>
           ))}

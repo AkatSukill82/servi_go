@@ -285,7 +285,7 @@ export default function ProProfile() {
           <button
             key={key}
             onClick={() => setActiveTab(key)}
-            className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-colors ${
+            className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-colors min-h-[44px] ${
               activeTab === key
                 ? 'bg-[#534AB7] text-white border-[#534AB7] shadow-sm'
                 : 'bg-card text-muted-foreground border-border hover:bg-muted'
@@ -390,7 +390,7 @@ export default function ProProfile() {
                     base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
                   aria-label="Mode nuit"
-                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${dark ? 'bg-[#4F46E5]' : 'bg-muted'}`}
+                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 border ${dark ? 'bg-[#4F46E5] border-[#4F46E5]' : 'bg-muted border-border'}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${dark ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>

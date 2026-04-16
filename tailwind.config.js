@@ -5,6 +5,15 @@ module.exports = {
   safelist: [
     "bg-accent", "text-accent", "bg-accent/10", "text-accent-foreground",
     "bg-success", "text-success", "bg-warning", "text-warning", "bg-danger", "text-danger",
+    // Dark mode colored badge backgrounds
+    "dark:bg-orange-900/30", "dark:bg-yellow-900/30", "dark:bg-blue-900/30",
+    "dark:bg-purple-900/30", "dark:bg-indigo-900/30", "dark:bg-sky-900/30",
+    "dark:bg-green-900/30", "dark:bg-red-900/30",
+    "dark:text-orange-400", "dark:text-yellow-400", "dark:text-blue-400",
+    "dark:text-purple-400", "dark:text-indigo-400", "dark:text-sky-400",
+    "dark:text-green-400", "dark:text-red-400",
+    // Dark text on primary buttons
+    "text-primary-foreground",
   ],
   theme: {
     extend: {

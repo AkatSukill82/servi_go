@@ -145,12 +145,13 @@ export default function AppLayout() {
     <div
       className="bg-background overflow-hidden"
       style={{
-        /* Fallback pour vieux Android qui ne supporte pas dvh */
         height: '100vh',
+        // @ts-ignore
         height: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         display: 'flex',
         flexDirection: 'column',
+        maxWidth: '100vw',
       }}
     >
 

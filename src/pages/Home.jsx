@@ -122,7 +122,7 @@ export default function Home() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Que cherchez-vous ? Plombier, déménageur…"
-              className="w-full h-14 pl-11 pr-12 rounded-xl border border-border bg-card text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent transition shadow-card"
+              className="w-full h-14 pl-11 pr-12 rounded-xl border border-border bg-card text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent transition shadow-card"
               style={{ fontSize: 16 }}
             />
             <button className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground tap-scale">
