@@ -133,7 +133,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [, _setDarkHook] = useDarkMode();
+  const [dark, setDark] = useDarkMode();
   const [tab, setTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
@@ -143,8 +143,12 @@ export default function Profile() {
     queryFn: () => base44.auth.me(),
   });
 
-  // Source de vérité = user.dark_mode (BDD), pas le hook local
-  const dark = user?.dark_mode === true;
+  // Sync depuis la BDD une seule fois au chargement
+  useEffect(() => {
+    if (user?.dark_mode !== undefined) {
+      setDark(user.dark_mode === true);
+    }
+  }, [user?.dark_mode]);
 
   useEffect(() => {
     if (user) {
@@ -416,10 +420,8 @@ export default function Profile() {
                 <button
                   onClick={() => {
                     const next = !dark;
-                    _setDarkHook(next);
-                    base44.auth.updateMe({ dark_mode: next })
-                      .then(() => queryClient.invalidateQueries({ queryKey: ['currentUser'] }))
-                      .catch(() => {});
+                    setDark(next);
+                    base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
                   className={`w-12 h-6 rounded-full transition-colors duration-200 relative ${dark ? 'bg-[#4F46E5]' : 'bg-muted'}`}
                 >
