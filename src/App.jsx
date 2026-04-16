@@ -108,19 +108,7 @@ const AuthenticatedApp = () => {
 };
 
 function App() {
-  useEffect(() => {
-    // Apply saved dark mode preference immediately on mount
-    const saved = localStorage.getItem('servigo_dark_mode');
-    const oldSaved = localStorage.getItem('servigo-theme');
-    const isDark = saved === 'true' || (saved === null && oldSaved === 'dark');
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-  }, []);
+  // Theme is applied synchronously by index.html script — no effect needed here.
 
   return (
     <AuthProvider>

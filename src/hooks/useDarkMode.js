@@ -5,9 +5,11 @@ const STORAGE_KEY = 'sg_dark';
 function applyTheme(isDark) {
   if (isDark) {
     document.documentElement.classList.add('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
     localStorage.setItem(STORAGE_KEY, '1');
   } else {
     document.documentElement.classList.remove('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
     localStorage.setItem(STORAGE_KEY, '0');
   }
 }
