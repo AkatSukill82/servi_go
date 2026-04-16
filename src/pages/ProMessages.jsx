@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { MessageCircle } from 'lucide-react';
