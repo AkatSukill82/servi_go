@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Zap, ShieldCheck, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
 
 const STEPS = [
   {
@@ -22,7 +23,6 @@ const STEPS = [
             <MapPin className="w-8 h-8 text-white" />
           </div>
         </div>
-        {/* Floating pro dots */}
         {[[-60, -20], [55, -30], [50, 40], [-50, 45]].map(([x, y], i) => (
           <motion.div key={i}
             initial={{ opacity: 0, scale: 0 }}
@@ -103,7 +103,7 @@ const STEPS = [
   },
 ];
 
-const STORAGE_KEY = 'servigo_onboarding_done';
+const LS_KEY = 'servigo_onboarding_done';
 const CGU_KEY = 'servigo_cgu_accepted';
 
 export default function OnboardingModal() {
@@ -112,23 +112,54 @@ export default function OnboardingModal() {
   const [cguAccepted, setCguAccepted] = useState(false);
 
   useEffect(() => {
-    const done = localStorage.getItem(STORAGE_KEY);
-    if (!done) {
-      // Small delay so the app renders first
-      const t = setTimeout(() => setVisible(true), 800);
-      return () => clearTimeout(t);
-    }
+    // Fast local check first — avoids flicker on repeat sessions
+    if (localStorage.getItem(LS_KEY)) return;
+
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user) return;
+
+        // Already marked as done in the DB
+        if (user.onboarding_completed) {
+          localStorage.setItem(LS_KEY, '1');
+          return;
+        }
+
+        // Treat existing active users as already onboarded (they have requests or messages)
+        const [requests, messages] = await Promise.all([
+          base44.entities.ServiceRequestV2.filter({ customer_email: user.email }, '-created_date', 1),
+          base44.entities.Message.filter({ sender_email: user.email }, '-created_date', 1),
+        ]);
+        if (requests.length > 0 || messages.length > 0) {
+          // Existing user — silently mark as done
+          await base44.auth.updateMe({ onboarding_completed: true });
+          localStorage.setItem(LS_KEY, '1');
+          return;
+        }
+
+        // New user — show the modal after a short delay
+        setTimeout(() => setVisible(true), 800);
+      } catch {
+        // If anything fails, don't block the user
+      }
+    })();
   }, []);
 
-  const close = () => {
-    localStorage.setItem(STORAGE_KEY, '1');
+  const markDone = async () => {
+    localStorage.setItem(LS_KEY, '1');
     if (cguAccepted) localStorage.setItem(CGU_KEY, '1');
     setVisible(false);
+    try {
+      await base44.auth.updateMe({ onboarding_completed: true });
+    } catch {
+      // Non-critical — localStorage flag is already set
+    }
   };
 
   const next = () => {
     if (step < STEPS.length - 1) setStep(s => s + 1);
-    else close();
+    else markDone();
   };
 
   const current = STEPS[step];
@@ -152,7 +183,7 @@ export default function OnboardingModal() {
           >
             {/* Close */}
             <div className="flex justify-end px-5 pt-4">
-              <button onClick={close} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              <button onClick={markDone} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
