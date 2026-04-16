@@ -13,16 +13,16 @@ const ACTIVE_STATUSES = ['searching', 'pending_pro', 'accepted', 'contract_pendi
 const DONE_STATUSES = ['completed', 'cancelled', 'disputed'];
 
 const STATUS_CONFIG = {
-  searching:        { label: 'Recherche...', cls: 'bg-orange-100 text-orange-700' },
-  pending_pro:      { label: 'En attente', cls: 'bg-yellow-100 text-yellow-700' },
-  accepted:         { label: 'Acceptée', cls: 'bg-blue-100 text-blue-700' },
-  contract_pending: { label: 'Contrat envoyé', cls: 'bg-purple-100 text-purple-700' },
-  contract_signed:  { label: 'Contrat signé', cls: 'bg-indigo-100 text-indigo-700' },
-  pro_en_route:     { label: 'En route', cls: 'bg-sky-100 text-sky-700' },
-  in_progress:      { label: 'En cours', cls: 'bg-blue-100 text-blue-700' },
-  completed:        { label: 'Terminée ✓', cls: 'bg-green-100 text-green-700' },
-  cancelled:        { label: 'Annulée', cls: 'bg-gray-100 text-gray-500' },
-  disputed:         { label: 'En litige', cls: 'bg-red-100 text-red-600' },
+  searching:        { label: 'Recherche...', cls: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' },
+  pending_pro:      { label: 'En attente', cls: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
+  accepted:         { label: 'Acceptée', cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
+  contract_pending: { label: 'Contrat envoyé', cls: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' },
+  contract_signed:  { label: 'Contrat signé', cls: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' },
+  pro_en_route:     { label: 'En route', cls: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400' },
+  in_progress:      { label: 'En cours', cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
+  completed:        { label: 'Terminée ✓', cls: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' },
+  cancelled:        { label: 'Annulée', cls: 'bg-muted text-muted-foreground' },
+  disputed:         { label: 'En litige', cls: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' },
 };
 
 function MissionCard({ req, onRate }) {

@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
-import { useDarkMode } from '@/hooks/useDarkMode';
+import { useTheme } from '@/lib/ThemeContext';
 
 const TABS = [
   { key: 'infos', label: 'Mes informations', icon: User },
@@ -68,7 +68,7 @@ function ReferralSection({ user }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 mt-1">
-      <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
           <Gift className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-sm">Mes parrainages</h3>
@@ -133,7 +133,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [dark, setDark] = useDarkMode();
+  const { dark, setDark } = useTheme();
   const [tab, setTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
@@ -217,9 +217,9 @@ export default function Profile() {
   const eidVerified = user?.eid_status === 'verified';
 
   return (
-    <div className="min-h-full bg-[#F8F8F6]">
+    <div className="min-h-full bg-background">
       {/* Hero Card */}
-      <div className="bg-white border-b border-border/50 shadow-sm px-5 pt-8 pb-6">
+      <div className="bg-card border-b border-border/50 shadow-sm px-5 pt-8 pb-6">
         <div className="flex items-start gap-4">
           {/* Avatar */}
           <div className="relative shrink-0">
@@ -292,7 +292,7 @@ export default function Profile() {
             key={key}
             onClick={() => setTab(key)}
             className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-colors ${
-              tab === key ? 'bg-primary text-white border-primary shadow-sm' : 'bg-white text-muted-foreground border-border hover:bg-gray-50'
+              tab === key ? 'bg-primary text-white border-primary shadow-sm' : 'bg-card text-muted-foreground border-border hover:bg-muted'
             }`}
           >
             <Icon className="w-4 h-4" />
@@ -305,7 +305,7 @@ export default function Profile() {
         {/* ─── ONGLET INFOS ─── */}
         {tab === 'infos' && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-border/50">
                 <h3 className="font-semibold text-sm">Informations personnelles</h3>
                 <button
@@ -389,8 +389,8 @@ export default function Profile() {
             {/* eID Card */}
             <button
               onClick={() => navigate('/EidVerification')}
-              className={`w-full bg-white rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left transition-colors ${
-                eidVerified ? 'border-green-200' : 'border-red-200'
+              className={`w-full bg-card rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left transition-colors ${
+                eidVerified ? 'border-green-200 dark:border-green-900' : 'border-red-200 dark:border-red-900'
               }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${eidVerified ? 'bg-green-50' : 'bg-red-50'}`}>
@@ -409,7 +409,7 @@ export default function Profile() {
 
             {/* Actions */}
             <div className="space-y-2 pt-2">
-              <div className="flex items-center justify-between bg-white rounded-2xl border border-border/50 shadow-sm px-5 py-4">
+              <div className="flex items-center justify-between bg-card rounded-2xl border border-border/50 shadow-sm px-5 py-4">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
                   <div>
@@ -462,7 +462,7 @@ export default function Profile() {
         {/* ─── ONGLET SÉCURITÉ ─── */}
         {tab === 'securite' && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <div className="bg-white rounded-2xl border border-border/50 shadow-sm p-5">
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5">
               <h3 className="font-semibold mb-4 text-sm">Sécurité du compte</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">

@@ -28,7 +28,7 @@ const STEPS = [
             initial={{ opacity: 0, scale: 0 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 + i * 0.15 }}
-            className="absolute w-8 h-8 bg-white rounded-full border-2 border-blue-200 shadow flex items-center justify-center text-xs font-bold text-blue-600"
+            className="absolute w-8 h-8 bg-card rounded-full border-2 border-blue-200 shadow flex items-center justify-center text-xs font-bold text-blue-600"
             style={{ top: `calc(50% + ${y}px)`, left: `calc(50% + ${x}px)` }}
           >
             {['P', 'E', 'D', 'M'][i]}
@@ -62,7 +62,7 @@ const STEPS = [
         <div className="absolute top-3 right-6">
           <div className="bg-red-100 border border-red-300 rounded-full px-3 py-1 text-xs font-bold text-red-700">⚡ SOS</div>
         </div>
-        <div className="absolute bottom-6 left-4 bg-white rounded-xl px-3 py-2 shadow-md border border-border">
+        <div className="absolute bottom-6 left-4 bg-card rounded-xl px-3 py-2 shadow-md border border-border">
           <p className="text-xs font-semibold text-foreground">Pro en route</p>
           <p className="text-[10px] text-muted-foreground">~8 min</p>
         </div>
@@ -92,7 +92,7 @@ const STEPS = [
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 + i * 0.15 }}
-            className="absolute bg-white border border-green-200 rounded-full px-2.5 py-1 shadow text-[10px] font-semibold text-green-700"
+            className="absolute bg-card border border-green-200 dark:border-green-800 rounded-full px-2.5 py-1 shadow text-[10px] font-semibold text-green-700 dark:text-green-400"
             style={{ top: badge.top, left: badge.left, right: badge.right, bottom: badge.bottom }}
           >
             {badge.label}
@@ -147,7 +147,7 @@ export default function OnboardingModal() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-            className="w-full max-w-md bg-background rounded-t-3xl overflow-hidden"
+            className="w-full max-w-md bg-card rounded-t-3xl overflow-hidden"
             style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
           >
             {/* Close */}

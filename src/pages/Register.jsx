@@ -94,7 +94,7 @@ function StyledInput({ value, onChange, onBlur, placeholder, type = 'text', suff
         onChange={onChange}
         onBlur={onBlur}
         placeholder={placeholder}
-        className={`w-full h-11 px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${suffix ? 'pr-10' : ''} ${className}`}
+        className={`w-full h-11 px-3.5 py-2.5 border border-border rounded-lg bg-card text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${suffix ? 'pr-10' : ''} ${className}`}
         style={{ fontSize: 16 }}
         {...props}
       />
@@ -148,7 +148,7 @@ function StepTypeChoice({ onSelect }) {
             className={`w-full text-left p-5 rounded-2xl border-2 transition-all shadow-sm ${
               selected === type
                 ? 'border-[#534AB7] bg-[#EEEDFE]/40 shadow-md'
-                : 'border-[#E5E7EB] bg-white hover:border-[#534AB7]/40 hover:shadow-md'
+                : 'border-border bg-card hover:border-[#534AB7]/40 hover:shadow-md'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -345,8 +345,8 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
                 value={form.category_name}
                 onChange={e => { set('category_name', e.target.value); touch('category_name'); }}
                 onBlur={() => touch('category_name')}
-                className={`w-full h-11 px-3.5 border rounded-lg text-[#111827] bg-white focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${
-                  touched.category_name ? (errors.category_name ? 'border-red-400' : 'border-[#1D9E75]') : 'border-[#E5E7EB]'
+                className={`w-full h-11 px-3.5 border rounded-lg text-foreground bg-card focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] text-base ${
+                  touched.category_name ? (errors.category_name ? 'border-red-400' : 'border-[#1D9E75]') : 'border-border'
                 }`}
                 style={{ fontSize: 16 }}
               >
@@ -372,8 +372,8 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
                 onBlur={() => touch('pro_description')}
                 placeholder="Décrivez vos compétences, expériences et services proposés..."
                 rows={4}
-                className={`w-full px-3.5 py-2.5 border rounded-lg text-[#111827] placeholder-[#9CA3AF] focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] resize-none text-base ${
-                  touched.pro_description ? (errors.pro_description ? 'border-red-400' : 'border-[#1D9E75]') : 'border-[#E5E7EB]'
+                className={`w-full px-3.5 py-2.5 border rounded-lg text-foreground bg-card placeholder-muted-foreground focus:outline-none focus:border-[#534AB7] focus:ring-1 focus:ring-[#534AB7] resize-none text-base ${
+                  touched.pro_description ? (errors.pro_description ? 'border-red-400' : 'border-[#1D9E75]') : 'border-border'
                 }`}
                 style={{ fontSize: 16 }}
               />
@@ -389,7 +389,7 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
             </div>
           </div>
         )}
-        <div className="flex items-start gap-3 p-4 bg-white border border-[#E5E7EB] rounded-xl">
+        <div className="flex items-start gap-3 p-4 bg-card border border-border rounded-xl">
           <input
             type="checkbox"
             id="terms"
@@ -708,7 +708,7 @@ export default function Register() {
   };
 
   return (
-    <div className="bg-[#F7F6F3] overflow-y-auto" style={{ height: '100dvh' }}>
+    <div className="bg-background overflow-y-auto" style={{ height: '100dvh' }}>
       {/* Login link */}
       <div className="w-full max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
         <ServiGoLogo size="sm" />

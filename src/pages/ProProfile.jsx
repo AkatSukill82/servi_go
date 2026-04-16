@@ -25,7 +25,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
-import { useDarkMode } from '@/hooks/useDarkMode';
+import { useTheme } from '@/lib/ThemeContext';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 
 const TABS = [
@@ -90,8 +90,7 @@ export default function ProProfile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [, _setDarkHook] = useDarkMode();
-  const dark = user?.dark_mode === true;
+  const { dark, setDark } = useTheme();
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
@@ -387,10 +386,8 @@ export default function ProProfile() {
                 <button
                   onClick={() => {
                     const next = !dark;
-                    _setDarkHook(next);
-                    base44.auth.updateMe({ dark_mode: next })
-                      .then(() => queryClient.invalidateQueries({ queryKey: ['currentUser'] }))
-                      .catch(() => {});
+                    setDark(next);
+                    base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
                   aria-label="Mode nuit"
                   className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${dark ? 'bg-[#4F46E5]' : 'bg-muted'}`}

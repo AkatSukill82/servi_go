@@ -8,7 +8,7 @@ import { base44 } from '@/api/base44Client';
 import BottomNav from './BottomNav';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import ProBottomNav from './ProBottomNav';
-import { useDarkMode } from '@/hooks/useDarkMode';
+import { useTheme } from '@/lib/ThemeContext';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home'));
@@ -57,7 +57,7 @@ export default function AppLayout() {
   const location = useLocation();
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [, setDark] = useDarkMode();
+  const { setDark } = useTheme();
   const [currentUser, setCurrentUser] = React.useState(null);
   const userEmail = currentUser?.email;
 
