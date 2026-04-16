@@ -135,9 +135,6 @@ export default function Profile() {
   const { logout } = useAuth();
   const [, _setDarkHook] = useDarkMode();
   const [tab, setTab] = useState('infos');
-
-  // Source de vérité = user.dark_mode (BDD), pas le hook local
-  const dark = user?.dark_mode === true;
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
 
@@ -145,6 +142,9 @@ export default function Profile() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+
+  // Source de vérité = user.dark_mode (BDD), pas le hook local
+  const dark = user?.dark_mode === true;
 
   useEffect(() => {
     if (user) {
