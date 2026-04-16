@@ -9,7 +9,6 @@ import BottomNav from './BottomNav';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
-import { motion } from 'framer-motion';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home'));
