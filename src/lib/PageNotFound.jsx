@@ -1,19 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, ArrowLeft } from 'lucide-react';
+import { Home, ArrowLeft, MapPin } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function PageNotFound() {
   const navigate = useNavigate();
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(timer);
-          navigate('/Home');
-          return 0;
-        }
+        if (c <= 1) { clearInterval(timer); navigate('/Home'); return 0; }
         return c - 1;
       });
     }, 1000);
@@ -21,53 +18,40 @@ export default function PageNotFound() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-6" style={{ minHeight: '100dvh' }}>
-      <div className="text-center max-w-sm mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-background px-6 font-inter" style={{ minHeight: '100dvh' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="text-center max-w-xs mx-auto"
+      >
         {/* Illustration */}
-        <div className="w-32 h-32 mx-auto mb-6 relative">
-          <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-6xl font-black text-primary/20">4</span>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto shadow-lg">
-                <span className="text-2xl font-black text-white">S</span>
-              </div>
-            </div>
-          </div>
+        <div className="w-28 h-28 mx-auto mb-6 rounded-2xl bg-[#4F46E5]/10 flex items-center justify-center">
+          <MapPin className="w-14 h-14 text-[#4F46E5]" strokeWidth={1.5} />
         </div>
 
-        <h1 className="text-7xl font-black text-primary/20 mb-2">404</h1>
-        <h2 className="text-xl font-bold text-foreground mb-3">Page introuvable</h2>
-        <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-          Oups ! Cette page n'existe pas ou a été déplacée.<br />
-          Pas d'inquiétude, ServiGo est toujours là pour vous aider.
-        </p>
-        <p className="text-sm text-primary font-medium mb-8">
-          Redirection vers l'accueil dans {countdown} seconde{countdown > 1 ? 's' : ''}…
+        <p className="text-xs font-bold tracking-widest text-[#4F46E5] uppercase mb-2">Erreur 404</p>
+        <h1 className="text-2xl font-bold text-foreground tracking-[-0.02em] mb-2">Page introuvable</h1>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+          Cette page n'existe pas ou a été déplacée.<br />
+          Redirection dans <span className="font-semibold text-foreground">{countdown}s</span>…
         </p>
 
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => navigate('/')}
-            className="w-full h-12 rounded-xl bg-primary text-white font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+            onClick={() => navigate('/Home')}
+            className="w-full h-12 rounded-pill bg-[#4F46E5] text-white text-sm font-semibold flex items-center justify-center gap-2 tap-scale"
           >
-            <Home className="w-4 h-4" />
-            Retour à l'accueil
+            <Home className="w-4 h-4" /> Retour à l'accueil
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="w-full h-12 rounded-xl border border-border text-foreground font-medium flex items-center justify-center gap-2 hover:bg-muted transition-colors"
+            className="w-full h-12 rounded-pill border border-border text-foreground text-sm font-medium flex items-center justify-center gap-2 tap-scale"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Page précédente
+            <ArrowLeft className="w-4 h-4" /> Page précédente
           </button>
         </div>
-
-        <p className="text-xs text-muted-foreground mt-8">
-          <span className="font-semibold text-primary">ServiGo</span> — Trouvez le bon professionnel
-        </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

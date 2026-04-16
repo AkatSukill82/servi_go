@@ -9,6 +9,7 @@ import BottomNav from './BottomNav';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import ProBottomNav from './ProBottomNav';
 import { useDarkMode } from '@/hooks/useDarkMode';
+import { motion } from 'framer-motion';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home'));
@@ -114,12 +115,19 @@ export default function AppLayout() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ backgroundColor: '#1A1A2E' }}>
-        <div className="flex flex-col items-center gap-4">
-          <ServiGoIcon size={56} />
-          <span className="text-2xl font-black text-white">ServiGo</span>
-          <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin mt-2" />
-        </div>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0F172A]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center gap-3"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-[#4F46E5] flex items-center justify-center shadow-float">
+            <span className="text-3xl font-bold text-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>S</span>
+          </div>
+          <span className="text-xl font-bold text-white tracking-[-0.02em]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>ServiGo</span>
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white/70 rounded-full animate-spin mt-1" />
+        </motion.div>
       </div>
     );
   }

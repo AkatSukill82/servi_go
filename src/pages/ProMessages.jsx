@@ -48,13 +48,16 @@ export default function ProMessages() {
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count_pro || 0), 0);
 
   return (
-    <div className="min-h-full bg-[#F8F8F6]">
+    <div className="min-h-full bg-background">
       {/* Header */}
-      <div className="bg-white border-b border-border/50 shadow-sm px-5 pt-8 pb-4">
+      <div
+        className="bg-card/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-20 px-4 pt-4 pb-3"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+      >
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold tracking-tight">Messages</h1>
+          <h1 className="text-xl font-semibold tracking-[-0.02em]">Messages</h1>
           {totalUnread > 0 && (
-            <span className="text-xs font-bold bg-red-500 text-white rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+            <span className="text-xs font-bold bg-[#EF4444] text-white rounded-pill min-w-[20px] h-5 flex items-center justify-center px-1.5">
               {totalUnread}
             </span>
           )}
@@ -62,17 +65,23 @@ export default function ProMessages() {
         <p className="text-xs text-muted-foreground mt-0.5">{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
       </div>
 
-      <div className="px-4 py-3 space-y-2">
+      <div className="divide-y divide-border/50">
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-          </div>
-        ) : conversations.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-              <MessageCircle className="w-8 h-8 text-muted-foreground" strokeWidth={1.5} />
+          [1,2,3,4].map(i => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+              <div className="w-12 h-12 rounded-full shimmer shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 shimmer rounded-lg w-2/5" />
+                <div className="h-3 shimmer rounded-lg w-3/4" />
+              </div>
             </div>
-            <p className="text-sm font-medium text-foreground">Aucune conversation pour le moment</p>
+          ))
+        ) : conversations.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center px-6">
+            <div className="w-20 h-20 rounded-full bg-[#4F46E5]/10 flex items-center justify-center mb-4">
+              <MessageCircle className="w-10 h-10 text-[#4F46E5]" strokeWidth={1.5} />
+            </div>
+            <p className="text-base font-semibold">Aucun message</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-xs">Vos échanges avec les clients apparaîtront ici</p>
           </div>
         ) : (
@@ -83,31 +92,31 @@ export default function ProMessages() {
               <button
                 key={conv.id}
                 onClick={() => conv.request_id && navigate(`/Chat?requestId=${conv.request_id}`)}
-                className="w-full bg-white rounded-2xl border border-border/50 shadow-sm px-4 py-3 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left tap-scale hover:bg-muted/30 transition-colors"
               >
                 <div className="relative shrink-0">
-                  <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                  <div className="w-12 h-12 rounded-full bg-[#4F46E5]/10 flex items-center justify-center text-sm font-bold text-[#4F46E5]">
                     {initials}
                   </div>
                   {hasUnread && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white" />
+                    <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#4F46E5] rounded-full border-2 border-card" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-0.5">
-                    <p className={`text-sm truncate ${hasUnread ? 'font-bold' : 'font-medium'}`}>
+                  <div className="flex items-baseline justify-between mb-0.5">
+                    <p className={`text-sm truncate ${hasUnread ? 'font-bold text-foreground' : 'font-medium text-foreground'}`}>
                       {conv.customer_name || 'Client'}
                     </p>
-                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                    <span className="text-[11px] text-muted-foreground shrink-0 ml-2">
                       {relativeTime(conv.last_message_at)}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className={`text-xs truncate ${hasUnread ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
                     {conv.last_message_preview || 'Démarrez la conversation'}
                   </p>
                 </div>
                 {hasUnread && (
-                  <span className="shrink-0 min-w-[20px] h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
+                  <span className="shrink-0 min-w-[20px] h-5 bg-[#4F46E5] text-white text-[11px] font-bold rounded-pill flex items-center justify-center px-1.5">
                     {conv.unread_count_pro}
                   </span>
                 )}

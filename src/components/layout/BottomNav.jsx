@@ -3,16 +3,45 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Home, ClipboardList, MessageCircle, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const MISSION_TYPES = ['new_mission','mission_accepted','mission_refused','contract_to_sign','contract_signed','pro_en_route','mission_started','mission_completed','dispute_opened','dispute_resolved'];
 const MESSAGE_TYPES = ['message_received'];
 
-function NavBadge({ count, color = 'bg-red-500' }) {
+function NavBadge({ count }) {
   if (!count) return null;
   return (
-    <span className={`absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] ${color} rounded-full flex items-center justify-center text-[10px] font-semibold text-white px-0.5 leading-none`}>
+    <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 bg-[#EF4444] rounded-pill flex items-center justify-center text-[10px] font-bold text-white px-0.5 leading-none">
       {count > 9 ? '9+' : count}
     </span>
+  );
+}
+
+function NavItem({ path, icon: Icon, label, badge, isActive, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center tap-scale relative"
+    >
+      <div className="relative">
+        {isActive && (
+          <motion.div
+            layoutId="nav-indicator"
+            className="absolute -inset-2 bg-[#4F46E5]/10 rounded-xl"
+            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+          />
+        )}
+        <Icon
+          style={{ width: 22, height: 22, position: 'relative', zIndex: 1 }}
+          strokeWidth={isActive ? 2.2 : 1.6}
+          className={isActive ? 'text-[#4F46E5]' : 'text-muted-foreground'}
+        />
+        <NavBadge count={badge} />
+      </div>
+      <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-[#4F46E5]' : 'text-muted-foreground'}`}>
+        {label}
+      </span>
+    </button>
   );
 }
 
@@ -33,7 +62,7 @@ export default function BottomNav() {
 
   const missionBadge = notifs.filter(n => MISSION_TYPES.includes(n.type)).length;
   const messageBadge = notifs.filter(n => MESSAGE_TYPES.includes(n.type)).length;
-  const profileIncomplete = user && (!user.photo_url || !user.phone || user.eid_status !== 'verified');
+  const profileIncomplete = user && (!user.photo_url || !user.phone || user.eid_status !== 'verified') ? 1 : 0;
 
   useEffect(() => {
     if (!user?.email || !notifs.length) return;
@@ -47,36 +76,26 @@ export default function BottomNav() {
   }, [location.pathname, user?.email]);
 
   const navItems = [
-    { path: '/Home', icon: Home, label: 'Accueil', badge: 0 },
-    { path: '/MissionHistory', icon: ClipboardList, label: 'Demandes', badge: missionBadge },
-    { path: '/Messages', icon: MessageCircle, label: 'Messages', badge: messageBadge },
-    { path: '/Profile', icon: User, label: 'Profil', badge: profileIncomplete ? 1 : 0, badgeColor: 'bg-amber-500' },
+    { path: '/Home',           icon: Home,          label: 'Accueil',   badge: 0 },
+    { path: '/MissionHistory', icon: ClipboardList, label: 'Missions',  badge: missionBadge },
+    { path: '/Messages',       icon: MessageCircle, label: 'Messages',  badge: messageBadge },
+    { path: '/Profile',        icon: User,          label: 'Profil',    badge: profileIncomplete },
   ];
-
-  const activeTab = navItems.find(n => location.pathname === n.path)?.path || '/Home';
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-t border-border"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center justify-around h-14 px-2">
-        {navItems.map(({ path, icon: Icon, label, badge, key, badgeColor }) => {
-          const isActive = location.pathname === path;
-          return (
-            <button
-              key={key || path}
-              onClick={() => navigate(path, { replace: true })}
-              className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center"
-            >
-              <div className="relative">
-                <Icon style={{ width: 20, height: 20 }} strokeWidth={isActive ? 2.2 : 1.6} className={isActive ? 'text-primary' : 'text-muted-foreground'} />
-                <NavBadge count={badge} color={badgeColor} />
-              </div>
-              <span className={`text-[9px] font-medium transition-colors ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{label}</span>
-            </button>
-          );
-        })}
+      <div className="flex items-center justify-around h-14 px-1">
+        {navItems.map((item) => (
+          <NavItem
+            key={item.path}
+            {...item}
+            isActive={location.pathname === item.path}
+            onClick={() => navigate(item.path, { replace: true })}
+          />
+        ))}
       </div>
     </nav>
   );

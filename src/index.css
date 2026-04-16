@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,149 +7,109 @@
 
 @layer base {
   :root {
-    /* ServiGo Design Tokens — Refined Professional */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F7FAFC;
-    --bg-tertiary: #EDF2F7;
-    --bg-card: #FFFFFF;
-    --bg-input: #FFFFFF;
-    --bg-hover: #EDF2F7;
-    --text-primary: #1A202C;
-    --text-secondary: #718096;
-    --text-tertiary: #A0AEC0;
-    --text-on-accent: #FFFFFF;
-    --border-light: #E2E8F0;
-    --border-medium: #CBD5E0;
-    --accent-blue: #1A365D;
-    --accent-blue-mid: #2B6CB0;
-    --accent-blue-light: #EBF8FF;
-    --accent-blue-hover: #2D4A7A;
-    --accent-green: #38A169;
-    --accent-green-light: #F0FFF4;
-    --accent-green-hover: #2F855A;
-    --accent-orange: #DD6B20;
-    --accent-orange-light: #FFFAF0;
-    --accent-red: #E53E3E;
-    --accent-red-light: #FFF5F5;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
-    --shadow-lg: 0 10px 30px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.04);
-    --nav-bg: #FFFFFF;
-    --nav-border: #E2E8F0;
-    --modal-bg: #FFFFFF;
-    --modal-overlay: rgba(0,0,0,0.5);
-    --chat-bubble-own: #1A365D;
-    --chat-bubble-own-text: #FFFFFF;
-    --chat-bubble-other: #EDF2F7;
-    --chat-bubble-other-text: #1A202C;
-    --progress-bg: #E2E8F0;
-    --progress-fill: #2B6CB0;
-    --star-color: #F6AD55;
-    --divider: #EDF2F7;
-    --badge-verified-bg: #F0FFF4;
-    --badge-verified-text: #22543D;
-    --badge-warning-bg: #FFFAF0;
-    --badge-warning-text: #744210;
-    --badge-danger-bg: #FFF5F5;
-    --badge-danger-text: #742A2A;
-    --radius: 0.75rem;
-    /* Shadcn tokens */
-    --background: 210 40% 98%;
-    --foreground: 220 26% 14%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 26% 14%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
-    --primary: 213 73% 24%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 94%;
-    --secondary-foreground: 220 26% 14%;
-    --muted: 210 40% 94%;
-    --muted-foreground: 215 25% 45%;
-    --accent: 210 40% 94%;
-    --accent-foreground: 220 26% 14%;
-    --destructive: 0 72% 51%;
+    /* ── ServiGo Design Tokens ── */
+    --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* Brand */
+    --color-primary:   #0F172A;
+    --color-accent:    #4F46E5;
+    --color-accent-hover: #4338CA;
+    --color-success:   #10B981;
+    --color-warning:   #F59E0B;
+    --color-danger:    #EF4444;
+
+    /* Neutrals – Light */
+    --color-bg:        #FFFFFF;
+    --color-bg-soft:   #F8FAFC;
+    --color-border:    #E2E8F0;
+    --color-text:      #0F172A;
+    --color-text-muted:#64748B;
+    --color-surface:   #FFFFFF;
+    --color-chip-bg:   #F1F5F9;
+
+    /* Shadows */
+    --shadow-card:     0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.06);
+    --shadow-float:    0 4px 16px rgba(15,23,42,0.12);
+
+    /* Radius */
+    --radius-sm:  8px;
+    --radius-md:  12px;
+    --radius-lg:  16px;
+    --radius-xl:  24px;
+    --radius-pill: 9999px;
+
+    /* Shadcn tokens – Light */
+    --background:          0 0% 100%;
+    --foreground:          222 47% 11%;
+    --card:                0 0% 100%;
+    --card-foreground:     222 47% 11%;
+    --popover:             0 0% 100%;
+    --popover-foreground:  222 47% 11%;
+    --primary:             222 47% 11%;
+    --primary-foreground:  0 0% 100%;
+    --secondary:           214 32% 91%;
+    --secondary-foreground:222 47% 11%;
+    --muted:               210 40% 96%;
+    --muted-foreground:    215 25% 40%;
+    --accent:              243 75% 59%;
+    --accent-foreground:   0 0% 100%;
+    --destructive:         0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 213 73% 45%;
+    --border:              214 32% 91%;
+    --input:               214 32% 91%;
+    --ring:                243 75% 59%;
+    --radius:              0.75rem;
+
+    /* Sidebar */
     --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 220 26% 14%;
-    --sidebar-primary: 220 26% 14%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary:    222 47% 11%;
     --sidebar-primary-foreground: 0 0% 99%;
-    --sidebar-accent: 210 40% 96%;
-    --sidebar-accent-foreground: 220 26% 14%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 213 73% 45%;
+    --sidebar-accent:     214 32% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border:     214 32% 91%;
+    --sidebar-ring:       243 75% 59%;
   }
 
+  /* ── Dark mode ── */
   [data-theme="dark"], .dark {
-    /* ServiGo Dark Design Tokens */
-    --bg-primary: #0F0F0F;
-    --bg-secondary: #1A1A1A;
-    --bg-tertiary: #141414;
-    --bg-card: #1E1E1E;
-    --bg-input: #252525;
-    --bg-hover: #2A2A2A;
-    --text-primary: #F9FAFB;
-    --text-secondary: #9CA3AF;
-    --text-tertiary: #6B7280;
-    --text-on-accent: #FFFFFF;
-    --border-light: #2E2E2E;
-    --border-medium: #3A3A3A;
-    --accent-purple: #7B74E8;
-    --accent-purple-light: #1E1B3A;
-    --accent-purple-hover: #8F89EE;
-    --accent-green: #2DB887;
-    --accent-green-light: #0D2620;
-    --accent-green-hover: #38C894;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
-    --nav-bg: #1A1A1A;
-    --nav-border: #2E2E2E;
-    --modal-bg: #1E1E1E;
-    --modal-overlay: rgba(0,0,0,0.75);
-    --chat-bubble-own: #4E46A8;
-    --chat-bubble-own-text: #F9FAFB;
-    --chat-bubble-other: #252525;
-    --chat-bubble-other-text: #F9FAFB;
-    --progress-bg: #2E2E2E;
-    --progress-fill: #7B74E8;
-    --star-color: #FCD34D;
-    --divider: #2E2E2E;
-    --badge-verified-bg: #0D2620;
-    --badge-verified-text: #6EE7B7;
-    --badge-warning-bg: #271E0A;
-    --badge-warning-text: #FCD34D;
-    --badge-danger-bg: #2D0A0A;
-    --badge-danger-text: #FCA5A5;
-    --background: 0 0% 5%;
-    --foreground: 0 0% 96%;
-    --card: 0 0% 9%;
-    --card-foreground: 0 0% 96%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 96%;
-    --primary: 245 50% 65%;
-    --primary-foreground: 0 0% 7%;
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 0 0% 82%;
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 52%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 92%;
-    --destructive: 0 65% 48%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 17%;
-    --input: 0 0% 13%;
-    --ring: 245 50% 65%;
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 82%;
-    --sidebar-primary: 0 0% 96%;
-    --sidebar-primary-foreground: 0 0% 7%;
-    --sidebar-accent: 0 0% 13%;
-    --sidebar-accent-foreground: 0 0% 82%;
-    --sidebar-border: 0 0% 17%;
-    --sidebar-ring: 0 0% 88%;
+    --color-bg:        #0B0F14;
+    --color-bg-soft:   #111827;
+    --color-border:    #1F2937;
+    --color-text:      #F1F5F9;
+    --color-text-muted:#94A3B8;
+    --color-surface:   #111827;
+    --color-chip-bg:   #1F2937;
+    --shadow-card:     0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.2);
+
+    --background:          222 47% 5%;
+    --foreground:          210 40% 95%;
+    --card:                222 47% 7%;
+    --card-foreground:     210 40% 95%;
+    --popover:             222 47% 7%;
+    --popover-foreground:  210 40% 95%;
+    --primary:             210 40% 95%;
+    --primary-foreground:  222 47% 5%;
+    --secondary:           222 47% 12%;
+    --secondary-foreground:210 40% 85%;
+    --muted:               222 47% 12%;
+    --muted-foreground:    215 20% 55%;
+    --accent:              243 75% 59%;
+    --accent-foreground:   0 0% 100%;
+    --destructive:         0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border:              222 47% 15%;
+    --input:               222 47% 12%;
+    --ring:                243 75% 59%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 85%;
+    --sidebar-primary:    210 40% 95%;
+    --sidebar-primary-foreground: 222 47% 5%;
+    --sidebar-accent:     222 47% 12%;
+    --sidebar-accent-foreground: 210 40% 85%;
+    --sidebar-border:     222 47% 15%;
+    --sidebar-ring:       210 40% 85%;
   }
 }
 
@@ -161,10 +120,8 @@
   }
 
   html, body {
-    /* Empêche le bounce/overscroll sur iOS et Android */
     overscroll-behavior: none;
     overflow: hidden;
-    /* Hauteur plein écran cross-platform (fallback pour vieux Android) */
     height: 100%;
     width: 100%;
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -176,22 +133,23 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter;
+    font-family: var(--font-inter);
+    @apply bg-background text-foreground;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
-    /* Évite le zoom auto sur focus input iOS */
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    font-feature-settings: "cv02","cv03","cv04","cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* ✅ Inputs : font-size ≥ 16px pour éviter le zoom auto sur iOS */
   input, textarea, select {
     font-size: 16px !important;
-    /* Scroll fluide iOS dans les zones scrollables */
     -webkit-overflow-scrolling: touch;
+    font-family: var(--font-inter);
   }
 
-  /* Zones scrollables fluides sur iOS */
   .overflow-y-auto, .overflow-y-scroll {
     -webkit-overflow-scrolling: touch;
   }
@@ -199,13 +157,50 @@
   button, a, [role="tab"] {
     user-select: none;
     -webkit-user-select: none;
-    /* Évite le délai de 300ms sur tap mobile */
     touch-action: manipulation;
   }
 
-  /* Fix : images ne débordent pas */
   img {
     max-width: 100%;
     height: auto;
+  }
+}
+
+/* ── Shimmer skeleton ── */
+@layer utilities {
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--muted-foreground) / 0.1) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Safe area helpers */
+  .pb-safe   { padding-bottom: env(safe-area-inset-bottom); }
+  .pt-safe   { padding-top:    env(safe-area-inset-top); }
+  .mb-safe   { margin-bottom:  env(safe-area-inset-bottom); }
+
+  /* Tap feedback */
+  .tap-scale {
+    @apply transition-transform duration-150 active:scale-[0.97] active:opacity-90;
+  }
+
+  /* Card elevation */
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Pill */
+  .pill {
+    border-radius: var(--radius-pill);
   }
 }

@@ -34,7 +34,7 @@ function MissionCard({ req, onRate }) {
     : null;
 
   return (
-    <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
+    <div className="bg-card rounded-xl border border-border/50 p-4 space-y-3 shadow-card tap-scale">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm truncate">{req.category_name}</p>
@@ -64,14 +64,25 @@ function MissionCard({ req, onRate }) {
   );
 }
 
-function EmptyState({ label }) {
+function EmptyState({ label, isActive }) {
+  const navigate = useNavigate();
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-        <FileText className="w-7 h-7 text-muted-foreground" />
+    <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
+      <div className="w-20 h-20 rounded-full bg-[#4F46E5]/10 flex items-center justify-center">
+        <FileText className="w-10 h-10 text-[#4F46E5]" strokeWidth={1.5} />
       </div>
-      <p className="text-sm font-semibold text-foreground">{label}</p>
-      <p className="text-xs text-muted-foreground">Vos missions apparaîtront ici</p>
+      <p className="text-base font-semibold text-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground max-w-xs">
+        {isActive ? 'Réservez votre premier service en quelques clics' : 'Vos missions terminées apparaîtront ici'}
+      </p>
+      {isActive && (
+        <button
+          onClick={() => navigate('/Home')}
+          className="mt-3 bg-[#4F46E5] text-white text-sm font-semibold px-6 py-3 rounded-pill tap-scale"
+        >
+          Trouver un artisan
+        </button>
+      )}
     </div>
   );
 }
@@ -125,7 +136,7 @@ export default function MissionHistory() {
   const displayed = tab === 'active' ? active : done;
 
   return (
-    <div className="min-h-screen bg-background pb-6">
+    <div className="min-h-full bg-background pb-6">
       {ratingTarget && (
         <RatingModal
           request={ratingTarget}
@@ -135,9 +146,12 @@ export default function MissionHistory() {
         />
       )}
 
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-4">
-        <h1 className="text-xl font-bold">Historique des missions</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{requests.length} mission{requests.length !== 1 ? 's' : ''} au total</p>
+      <div
+        className="sticky top-0 z-20 bg-card/95 backdrop-blur-md border-b border-border/50 px-4 py-4"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+      >
+        <h1 className="text-xl font-semibold tracking-[-0.02em]">Missions</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">{requests.length} mission{requests.length !== 1 ? 's' : ''} au total</p>
       </div>
 
       <div className="px-4 pt-4 space-y-4">
@@ -162,11 +176,22 @@ export default function MissionHistory() {
 
         {/* Content */}
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+          <div className="space-y-3">
+            {[1,2,3].map(i => (
+              <div key={i} className="bg-card rounded-xl border border-border/50 p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 shimmer rounded-lg w-2/5" />
+                    <div className="h-3 shimmer rounded-lg w-3/5" />
+                  </div>
+                  <div className="h-5 shimmer rounded-pill w-16" />
+                </div>
+                <div className="h-9 shimmer rounded-lg" />
+              </div>
+            ))}
           </div>
         ) : displayed.length === 0 ? (
-          <EmptyState label={tab === 'active' ? 'Aucune mission en cours' : 'Aucune mission terminée'} />
+          <EmptyState label={tab === 'active' ? 'Aucune mission en cours' : 'Aucune mission terminée'} isActive={tab === 'active'} />
         ) : (
           <div className="space-y-3">
             {displayed.map(req => (
