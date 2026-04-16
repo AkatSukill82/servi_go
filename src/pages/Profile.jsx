@@ -133,8 +133,11 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const [dark, setDark] = useDarkMode();
+  const [, _setDarkHook] = useDarkMode();
   const [tab, setTab] = useState('infos');
+
+  // Source de vérité = user.dark_mode (BDD), pas le hook local
+  const dark = user?.dark_mode === true;
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
 
@@ -413,12 +416,14 @@ export default function Profile() {
                 <button
                   onClick={() => {
                     const next = !dark;
-                    setDark(next);
-                    base44.auth.updateMe({ dark_mode: next }).catch(() => {});
+                    _setDarkHook(next);
+                    base44.auth.updateMe({ dark_mode: next })
+                      .then(() => queryClient.invalidateQueries({ queryKey: ['currentUser'] }))
+                      .catch(() => {});
                   }}
-                  className={`w-12 h-6 rounded-full transition-colors relative ${dark ? 'bg-[#534AB7]' : 'bg-muted'}`}
+                  className={`w-12 h-6 rounded-full transition-colors duration-200 relative ${dark ? 'bg-[#4F46E5]' : 'bg-muted'}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${dark ? 'translate-x-6' : 'translate-x-0.5'}`} />
+                  <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${dark ? 'translate-x-[26px]' : 'translate-x-0.5'}`} />
                 </button>
               </div>
               <Button
