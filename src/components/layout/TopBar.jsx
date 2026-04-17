@@ -49,7 +49,7 @@ export default function TopBar({ title, subtitle }) {
     <>
       <div
         className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border/50"
-        style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        style={{ paddingTop: 0 }}
       >
         <div className="flex items-center justify-between px-4 h-14">
           {/* Left: title + subtitle */}
