@@ -421,82 +421,84 @@ export default function Profile() {
               {!eidVerified && <span className="text-primary text-sm font-bold">→</span>}
             </button>
 
-            {/* Actions */}
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center justify-between bg-card rounded-2xl border border-border/50 shadow-sm px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
-                  <div>
-                    <p className="text-sm font-medium">Mode nuit</p>
-                    <p className="text-xs text-muted-foreground">Thème sombre pour les yeux</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const next = !dark;
-                    setDark(next);
-                    base44.auth.updateMe({ dark_mode: next }).catch(() => {});
-                  }}
-                  style={{
-                    position: 'relative',
-                    width: '48px',
-                    height: '28px',
-                    borderRadius: '14px',
-                    backgroundColor: dark ? '#4F46E5' : '#D1D5DB',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: 0,
-                    flexShrink: 0,
-                    transition: 'background-color 0.2s ease',
-                    minHeight: 'unset',
-                    minWidth: 'unset',
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute',
-                    top: '2px',
-                    left: dark ? '22px' : '2px',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                    transition: 'left 0.2s ease',
-                  }} />
-                </button>
-              </div>
-              {user?.role === 'admin' && (
-                <Button
-                  variant="outline"
-                  onClick={() => setShowAdminModal(true)}
-                  className="w-full h-12 rounded-xl text-sm border-purple-200 text-purple-700 hover:bg-purple-50"
-                >
-                  <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard Admin
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  await base44.auth.logout();
-                  window.location.href = '/login';
-                }}
-                className="w-full h-12 rounded-xl text-sm text-muted-foreground"
-              >
-                <LogOut className="w-4 h-4 mr-2" /> Déconnexion
-              </Button>
-
-              <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
-                <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
-                <span>·</span>
-                <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
-                <span>·</span>
-                <span>© 2026 ServiGo</span>
-              </div>
-            </div>
           </motion.div>
         )}
 
         {tab === 'infos' && user && <ReferralSection user={user} />}
+
+        {/* Mode nuit + Déconnexion + Footer — toujours en dernier */}
+        {tab === 'infos' && (
+          <div className="space-y-2 pt-2">
+            <div className="flex items-center justify-between bg-card rounded-2xl border border-border/50 shadow-sm px-5 py-4">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
+                <div>
+                  <p className="text-sm font-medium">Mode nuit</p>
+                  <p className="text-xs text-muted-foreground">Thème sombre pour les yeux</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const next = !dark;
+                  setDark(next);
+                  base44.auth.updateMe({ dark_mode: next }).catch(() => {});
+                }}
+                style={{
+                  position: 'relative',
+                  width: '48px',
+                  height: '28px',
+                  borderRadius: '14px',
+                  backgroundColor: dark ? '#4F46E5' : '#D1D5DB',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  flexShrink: 0,
+                  transition: 'background-color 0.2s ease',
+                  minHeight: 'unset',
+                  minWidth: 'unset',
+                }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: dark ? '22px' : '2px',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  transition: 'left 0.2s ease',
+                }} />
+              </button>
+            </div>
+            {user?.role === 'admin' && (
+              <Button
+                variant="outline"
+                onClick={() => setShowAdminModal(true)}
+                className="w-full h-12 rounded-xl text-sm border-purple-200 text-purple-700 hover:bg-purple-50"
+              >
+                <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard Admin
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                await base44.auth.logout();
+                window.location.href = '/login';
+              }}
+              className="w-full h-12 rounded-xl text-sm text-muted-foreground"
+            >
+              <LogOut className="w-4 h-4 mr-2" /> Déconnexion
+            </Button>
+            <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
+              <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
+              <span>·</span>
+              <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
+              <span>·</span>
+              <span>© 2026 ServiGo</span>
+            </div>
+          </div>
+        )}
 
         {/* Admin password modal */}
         {showAdminModal && (
