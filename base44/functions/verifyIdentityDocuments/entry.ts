@@ -5,35 +5,46 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
 
-    // Can be called from automation (event payload) or manually with verificationId
-    const verificationId = body.verificationId || body.event?.entity_id || body.data?.id;
+    // Called from entity automation: body has { event, data }
+    // Called manually: body has { verificationId }
+    const verificationId = body.verificationId
+      || body.event?.entity_id
+      || body.data?.id;
+
     if (!verificationId) {
       return Response.json({ error: 'verificationId required' }, { status: 400 });
     }
 
-    // Fetch the verification record using service role
-    const records = await base44.asServiceRole.entities.IdentityVerification.filter({ id: verificationId });
-    const record = records[0];
-    if (!record) {
+    // Always use service role to read/write — works both from automation and manual call
+    const record = await base44.asServiceRole.entities.IdentityVerification.get('IdentityVerification', verificationId)
+      .catch(() => null);
+
+    // Fallback: filter by id if .get() not available
+    let verif = record;
+    if (!verif) {
+      const records = await base44.asServiceRole.entities.IdentityVerification.filter({ id: verificationId });
+      verif = records[0];
+    }
+
+    if (!verif) {
       return Response.json({ error: 'IdentityVerification not found' }, { status: 404 });
     }
 
     // Skip if already reviewed
-    if (record.status !== 'pending_review') {
-      return Response.json({ message: `Already processed: ${record.status}` });
+    if (verif.status !== 'pending_review') {
+      return Response.json({ message: `Already processed: ${verif.status}` });
     }
 
-    const isPro = record.user_type === 'professionnel';
+    const isPro = verif.user_type === 'professionnel';
 
-    // ── Build list of documents to analyse ──────────────────────────────────
+    // Build list of documents to analyse
     const docsToAnalyse = [];
-
-    if (record.eid_front_url) docsToAnalyse.push({ label: 'Recto carte eID belge', url: record.eid_front_url });
-    if (record.eid_back_url)  docsToAnalyse.push({ label: 'Verso carte eID belge', url: record.eid_back_url });
-    if (record.selfie_url)    docsToAnalyse.push({ label: 'Selfie avec carte eID', url: record.selfie_url });
+    if (verif.eid_front_url) docsToAnalyse.push({ label: 'Recto carte eID belge', url: verif.eid_front_url });
+    if (verif.eid_back_url)  docsToAnalyse.push({ label: 'Verso carte eID belge', url: verif.eid_back_url });
+    if (verif.selfie_url)    docsToAnalyse.push({ label: 'Selfie avec carte eID', url: verif.selfie_url });
     if (isPro) {
-      if (record.insurance_url) docsToAnalyse.push({ label: 'Attestation assurance RC Pro', url: record.insurance_url });
-      if (record.onss_url)      docsToAnalyse.push({ label: 'Attestation ONSS / Indépendant', url: record.onss_url });
+      if (verif.insurance_url) docsToAnalyse.push({ label: 'Attestation assurance RC Pro', url: verif.insurance_url });
+      if (verif.onss_url)      docsToAnalyse.push({ label: 'Attestation ONSS / Indépendant', url: verif.onss_url });
     }
 
     if (docsToAnalyse.length === 0) {
@@ -43,12 +54,10 @@ Deno.serve(async (req) => {
 
     const fileUrls = docsToAnalyse.map(d => d.url);
     const docLabels = docsToAnalyse.map((d, i) => `- Image ${i + 1} : ${d.label}`).join('\n');
-
-    // ── Call LLM with vision ─────────────────────────────────────────────────
     const userTypeLabel = isPro ? 'un professionnel' : 'un particulier';
+
     const prompt = `
 Tu es un expert en vérification de documents d'identité pour une plateforme belge de services à domicile (ServiGo).
-
 Tu vas analyser les documents soumis par ${userTypeLabel} pour vérifier leur authenticité.
 
 Documents fournis (dans l'ordre des images) :
@@ -66,24 +75,18 @@ Réponds UNIQUEMENT avec ce JSON (sans markdown) :
 {
   "decision": "approved" | "rejected" | "manual_review",
   "confidence": 0.0 à 1.0,
-  "documents": [
-    {
-      "label": "...",
-      "valid": true | false,
-      "reason": "..."
-    }
-  ],
+  "documents": [{ "label": "...", "valid": true | false, "reason": "..." }],
   "rejection_reason": "..." (uniquement si decision = rejected),
   "summary": "Résumé en 1-2 phrases pour l'admin"
 }
 
-Critères de décision :
+Critères :
 - "approved" : tous les documents requis sont présents, lisibles et semblent authentiques (confidence >= 0.80)
 - "rejected" : au moins un document est clairement falsifié, illisible, ou ne correspond pas au type attendu
 - "manual_review" : documents présents mais qualité insuffisante pour décider automatiquement
 `.trim();
 
-    console.log(`[verifyIdentityDocuments] Analysing ${fileUrls.length} documents for ${verificationId} (${record.user_type})`);
+    console.log(`[verifyIdentityDocuments] Analysing ${fileUrls.length} docs for ${verificationId} (${verif.user_type})`);
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
@@ -94,33 +97,18 @@ Critères de décision :
         properties: {
           decision: { type: 'string' },
           confidence: { type: 'number' },
-          documents: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                label: { type: 'string' },
-                valid: { type: 'boolean' },
-                reason: { type: 'string' },
-              },
-            },
-          },
+          documents: { type: 'array', items: { type: 'object', properties: { label: { type: 'string' }, valid: { type: 'boolean' }, reason: { type: 'string' } } } },
           rejection_reason: { type: 'string' },
           summary: { type: 'string' },
         },
       },
     });
 
-    console.log(`[verifyIdentityDocuments] AI result:`, JSON.stringify(result));
+    console.log(`[verifyIdentityDocuments] AI result for ${verificationId}:`, JSON.stringify(result));
 
-    const decision = result.decision;
-    const summary = result.summary || '';
-    const rejectionReason = result.rejection_reason || '';
-    const confidence = result.confidence || 0;
+    const { decision, summary = '', rejection_reason: rejectionReason = '', confidence = 0 } = result;
 
-    // ── Apply decision ───────────────────────────────────────────────────────
     if (decision === 'approved') {
-      // Update verification record
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
         status: 'approved',
         reviewed_by: 'IA ServiGo',
@@ -128,21 +116,19 @@ Critères de décision :
         rejection_reason: null,
       });
 
-      // Update user profile
-      const users = await base44.asServiceRole.entities.User.filter({ email: record.user_email });
+      const users = await base44.asServiceRole.entities.User.filter({ email: verif.user_email });
       if (users[0]) {
         const updateData = { eid_status: 'verified' };
         if (isPro) updateData.verification_status = 'verified';
         await base44.asServiceRole.entities.User.update(users[0].id, updateData);
       }
 
-      // Notify user
       await base44.asServiceRole.entities.Notification.create({
-        recipient_email: record.user_email,
+        recipient_email: verif.user_email,
         recipient_type: isPro ? 'professionnel' : 'particulier',
         type: 'subscription_activated',
         title: '✅ Identité vérifiée automatiquement !',
-        body: `Vos documents ont été validés automatiquement par notre système IA. ${summary}`,
+        body: `Vos documents ont été validés par notre système IA. ${summary}`,
         action_url: isPro ? '/ProProfile' : '/Profile',
       });
 
@@ -156,9 +142,8 @@ Critères de décision :
         rejection_reason: rejectionReason || summary,
       });
 
-      // Notify user
       await base44.asServiceRole.entities.Notification.create({
-        recipient_email: record.user_email,
+        recipient_email: verif.user_email,
         recipient_type: isPro ? 'professionnel' : 'particulier',
         type: 'payment_failed',
         title: '❌ Documents refusés',
@@ -169,12 +154,11 @@ Critères de décision :
       console.log(`[verifyIdentityDocuments] REJECTED ${verificationId}: ${rejectionReason}`);
 
     } else {
-      // manual_review — leave status as pending_review, just add a note
+      // manual_review — leave as pending_review, add IA note
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
         rejection_reason: `[IA - révision manuelle requise] ${summary}`,
       });
 
-      // Notify admin (create a notification for all admins)
       const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
       for (const admin of admins) {
         await base44.asServiceRole.entities.Notification.create({
@@ -182,7 +166,7 @@ Critères de décision :
           recipient_type: 'admin',
           type: 'new_mission',
           title: '🔍 Vérification manuelle requise',
-          body: `Le dossier de ${record.user_name || record.user_email} nécessite une vérification manuelle. ${summary}`,
+          body: `Le dossier de ${verif.user_name || verif.user_email} nécessite une vérification manuelle. ${summary}`,
           action_url: '/AdminVerification',
         });
       }
@@ -190,13 +174,7 @@ Critères de décision :
       console.log(`[verifyIdentityDocuments] MANUAL_REVIEW required for ${verificationId}`);
     }
 
-    return Response.json({
-      verificationId,
-      decision,
-      confidence,
-      summary,
-      documentsAnalysed: docsToAnalyse.length,
-    });
+    return Response.json({ verificationId, decision, confidence, summary, documentsAnalysed: docsToAnalyse.length });
 
   } catch (error) {
     console.error('[verifyIdentityDocuments] Error:', error);
