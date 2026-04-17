@@ -59,7 +59,27 @@
   </script>
   </head>
   <body>
+    <div id="splash" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:#1A1A2E;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+      <svg width="80" height="80" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#FF6B35"/>
+        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div style="color:white;font-size:28px;font-weight:700;margin-top:16px;font-family:system-ui,sans-serif;letter-spacing:-0.02em;">ServiGo</div>
+      <div id="splash-spinner" style="margin-top:32px;width:32px;height:32px;border:3px solid rgba(255,255,255,0.2);border-top:3px solid #FF6B35;border-radius:50%;animation:splashSpin 1s linear infinite;"></div>
+      <style>@keyframes splashSpin{to{transform:rotate(360deg)}}</style>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Hide splash once React has mounted
+      window.__hideSplash = function() {
+        var s = document.getElementById('splash');
+        if (s) {
+          s.style.transition = 'opacity 0.3s ease';
+          s.style.opacity = '0';
+          setTimeout(function(){ s.style.display = 'none'; }, 300);
+        }
+      };
+    </script>
   </body>
 </html>
