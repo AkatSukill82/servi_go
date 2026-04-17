@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { Zap, AlertTriangle, ChevronRight, Phone, Clock, CheckCircle } from 'lucide-react';
