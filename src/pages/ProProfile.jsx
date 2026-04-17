@@ -17,7 +17,7 @@ import {
 import {
   Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays,
   FileText, Headphones, ShieldCheck, Star, CreditCard, Pencil,
-  Trash2, Check, Shield, User, CheckCircle, Clock, Upload, AlertTriangle
+  Trash2, Check, Shield, User, CheckCircle, Clock, Upload, AlertTriangle, LayoutDashboard
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
@@ -92,6 +92,20 @@ export default function ProProfile() {
   const { dark, setDark } = useTheme();
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminError, setAdminError] = useState(false);
+
+  const handleAdminAccess = () => {
+    if (adminPassword === 'servigo2026') {
+      setShowAdminModal(false);
+      setAdminPassword('');
+      setAdminError(false);
+      navigate('/AdminDashboard');
+    } else {
+      setAdminError(true);
+    }
+  };
   const [form, setForm] = useState({
     first_name: '', last_name: '', phone: '', address: '', photo_url: '',
     category_name: '', base_price: '', hourly_rate: '',
@@ -452,6 +466,15 @@ export default function ProProfile() {
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
               <Headphones className="w-4 h-4 mr-2" /> Contacter le support
             </Button>
+            {user?.role === 'admin' && (
+              <Button
+                variant="outline"
+                onClick={() => setShowAdminModal(true)}
+                className="w-full h-12 rounded-xl text-sm border-purple-200 text-purple-700 hover:bg-purple-50"
+              >
+                <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard Admin
+              </Button>
+            )}
             <Button variant="outline" onClick={async () => { await base44.auth.logout(); window.location.href = '/login'; }} className="w-full h-12 rounded-xl text-sm text-muted-foreground">
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
             </Button>
@@ -584,6 +607,37 @@ export default function ProProfile() {
               </div>
             </div>
           </motion.div>
+        )}
+
+        {/* Admin password modal */}
+        {showAdminModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-6" onClick={e => e.target === e.currentTarget && setShowAdminModal(false)}>
+            <div className="bg-card rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                  <LayoutDashboard className="w-5 h-5 text-purple-700" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Accès Admin</p>
+                  <p className="text-xs text-muted-foreground">Entrez le mot de passe admin</p>
+                </div>
+              </div>
+              <Input
+                type="password"
+                placeholder="Mot de passe"
+                value={adminPassword}
+                onChange={e => { setAdminPassword(e.target.value); setAdminError(false); }}
+                onKeyDown={e => e.key === 'Enter' && handleAdminAccess()}
+                className={`h-11 rounded-xl ${adminError ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
+                autoFocus
+              />
+              {adminError && <p className="text-xs text-red-500 -mt-2">Mot de passe incorrect</p>}
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setShowAdminModal(false); setAdminPassword(''); setAdminError(false); }} className="flex-1 rounded-xl h-11">Annuler</Button>
+                <Button onClick={handleAdminAccess} className="flex-1 rounded-xl h-11 bg-purple-600 hover:bg-purple-700">Accéder</Button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* ─── ONGLET SÉCURITÉ ─── */}
