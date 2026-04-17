@@ -1,20 +1,11 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, CheckCircle, ShieldCheck, ArrowRight, Loader2, Upload, Clock, AlertCircle, XCircle } from 'lucide-react';
+import { Camera, CheckCircle, ShieldCheck, ArrowRight, Loader2, Upload, AlertCircle, XCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-
-// Maps field name → display label
-const FIELD_LABELS = {
-  eid_front_url: 'Recto de la carte eID',
-  eid_back_url: 'Verso de la carte eID',
-  selfie_url: 'Selfie avec votre carte eID',
-  insurance_url: "Attestation d'assurance RC Pro",
-  onss_url: 'Attestation ONSS / Indépendant',
-};
+import { motion, AnimatePresence } from 'framer-motion';
 
 function UploadZone({ label, icon: Icon, value, onChange, loading, accept = "image/*,application/pdf", capture, error, errorReason }) {
   const hasError = !!error;
@@ -30,20 +21,17 @@ function UploadZone({ label, icon: Icon, value, onChange, loading, accept = "ima
         }`}>
           {loading
             ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-            : hasError
-            ? <XCircle className="w-5 h-5 text-red-500" />
-            : value
-            ? <CheckCircle className="w-5 h-5 text-green-600" />
+            : hasError ? <XCircle className="w-5 h-5 text-red-500" />
+            : value ? <CheckCircle className="w-5 h-5 text-green-600" />
             : <Icon className="w-5 h-5 text-muted-foreground" />
           }
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium">{label}</p>
-          {value ? (
-            <p className="text-xs text-green-600 mt-0.5">✓ Téléversé</p>
-          ) : (
-            <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG ou PDF</p>
-          )}
+          {value
+            ? <p className="text-xs text-green-600 mt-0.5">✓ Téléversé</p>
+            : <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG ou PDF</p>
+          }
         </div>
         <label className="shrink-0 cursor-pointer">
           <div className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl ${
@@ -54,13 +42,49 @@ function UploadZone({ label, icon: Icon, value, onChange, loading, accept = "ima
           <input type="file" accept={accept} capture={capture} className="hidden" onChange={onChange} />
         </label>
       </div>
-      {/* Red banner with error reason */}
       {hasError && errorReason && (
         <div className="bg-red-50 border-t border-red-200 px-4 py-2.5">
-          <p className="text-xs text-red-700 font-medium">❌ Refusé : {errorReason}</p>
+          <p className="text-xs text-red-700 font-medium">❌ {errorReason}</p>
         </div>
       )}
     </div>
+  );
+}
+
+function AnalyzingScreen() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center justify-center py-16 text-center space-y-6"
+    >
+      <div className="relative">
+        <div className="w-24 h-24 rounded-3xl bg-primary/10 flex items-center justify-center">
+          <Sparkles className="w-12 h-12 text-primary" />
+        </div>
+        <div className="absolute inset-0 rounded-3xl border-4 border-primary/20 animate-ping" />
+      </div>
+      <div>
+        <h2 className="text-xl font-bold mb-2">Analyse en cours...</h2>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          Notre IA vérifie vos documents. Cela prend généralement <strong>15 à 30 secondes</strong>.
+        </p>
+      </div>
+      <div className="w-full max-w-xs space-y-2">
+        {['Recto eID', 'Verso eID', 'Selfie', 'Documents pro'].map((step, i) => (
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.4 }}
+            className="flex items-center gap-2 text-sm text-muted-foreground"
+          >
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+            <span>Vérification : {step}</span>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
   );
 }
 
@@ -73,26 +97,30 @@ export default function EidVerification() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: existingVerif } = useQuery({
+  const { data: existingVerif, refetch: refetchVerif } = useQuery({
     queryKey: ['identityVerif', user?.email],
     queryFn: () => base44.entities.IdentityVerification.filter({ user_email: user.email }, '-created_date', 1).then(r => r[0] || null),
     enabled: !!user?.email,
-    refetchInterval: 5000, // poll to get AI results
   });
 
   const [files, setFiles] = useState({});
   const [uploading, setUploading] = useState({});
   const [urls, setUrls] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  // aiResult holds the fresh result returned directly from the function call
+  const [aiResult, setAiResult] = useState(null);
 
   const isPro = user?.user_type === 'professionnel';
 
-  // Build a map of field → AI result for rejected docs
+  // Use aiResult (fresh) if available, else fall back to existingVerif from DB
+  const activeVerif = aiResult ? { ...existingVerif, ...aiResult } : existingVerif;
+
+  // Build map field → AI doc result
   const aiResults = {};
-  if (existingVerif?.ai_document_results) {
-    for (const doc of existingVerif.ai_document_results) {
-      if (doc.field) aiResults[doc.field] = doc;
-    }
+  const docResults = activeVerif?.ai_document_results || [];
+  for (const doc of docResults) {
+    if (doc.field) aiResults[doc.field] = doc;
   }
 
   const handleUpload = async (e, field) => {
@@ -111,25 +139,16 @@ export default function EidVerification() {
     if (e.target) e.target.value = '';
   };
 
-  // For a rejected verif, pre-populate valid docs and let user re-upload invalid ones
   const getEffectiveUrl = (field) => {
-    // If user just uploaded a new file, use that
     if (urls[field]) return urls[field];
-    // If previous verif has this doc and it was valid (or no AI result), keep it
-    if (existingVerif?.[field]) {
+    if (activeVerif?.[field]) {
       const result = aiResults[field];
-      if (!result || result.valid) return existingVerif[field];
+      if (!result || result.valid) return activeVerif[field];
     }
     return '';
   };
 
   const getFieldValue = (field) => files[field] || (getEffectiveUrl(field) ? true : null);
-  const isFieldError = (field) => {
-    if (!existingVerif?.ai_document_results) return false;
-    const result = aiResults[field];
-    // Only show error if no new file was uploaded for this field
-    return result && !result.valid && !urls[field];
-  };
 
   const handleSubmit = async () => {
     const front = getEffectiveUrl('eid_front_url');
@@ -148,8 +167,9 @@ export default function EidVerification() {
 
     setSubmitting(true);
 
-    // If there's an existing rejected verif, update it; otherwise create a new one
-    if (existingVerif && existingVerif.status === 'rejected') {
+    // Create or update the IdentityVerification record
+    let verifId;
+    if (existingVerif && (existingVerif.status === 'rejected' || existingVerif.status === 'pending_review')) {
       await base44.entities.IdentityVerification.update(existingVerif.id, {
         status: 'pending_review',
         eid_front_url: front,
@@ -162,8 +182,9 @@ export default function EidVerification() {
         reviewed_by: null,
         reviewed_date: null,
       });
+      verifId = existingVerif.id;
     } else {
-      await base44.entities.IdentityVerification.create({
+      const created = await base44.entities.IdentityVerification.create({
         user_email: user.email,
         user_name: user.full_name,
         user_type: user.user_type || 'particulier',
@@ -173,31 +194,54 @@ export default function EidVerification() {
         selfie_url: selfie,
         insurance_url: insurance || null,
       });
+      verifId = created.id;
     }
 
-    await base44.auth.updateMe({ eid_status: 'pending_review' }).catch(() => {});
-
-    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-    queryClient.invalidateQueries({ queryKey: ['identityVerif', user.email] });
     setSubmitting(false);
-    toast.success('Dossier soumis ! Vérification en cours.');
+    setAnalyzing(true);
+
+    // Call the AI verification function directly and wait for the result
+    const response = await base44.functions.invoke('verifyIdentityDocuments', { verificationId: verifId });
+    const fnResult = response.data;
+
+    setAnalyzing(false);
+
+    // Refresh the verif record from DB to get the updated status
+    await refetchVerif();
+    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+
+    // Store the per-doc AI results locally so we can show them immediately
+    if (fnResult?.aiDocumentResults) {
+      setAiResult({
+        status: fnResult.decision === 'approved' ? 'approved' : fnResult.decision === 'rejected' ? 'rejected' : 'pending_review',
+        ai_document_results: fnResult.aiDocumentResults,
+        ai_summary: fnResult.summary,
+        eid_front_url: front,
+        eid_back_url: back,
+        selfie_url: selfie,
+        insurance_url: insurance || null,
+      });
+    }
+
+    // Reset uploaded files so the state is clean for re-submission
+    setUrls({});
+    setFiles({});
   };
 
-  const isRejected = existingVerif?.status === 'rejected';
-  const isPending = existingVerif?.status === 'pending_review';
-  const isApproved = existingVerif?.status === 'approved';
-  const hasAiResults = existingVerif?.ai_document_results?.length > 0;
-  const needsResubmit = !existingVerif || isRejected;
-
-  // All required fields list
   const DOCS = [
     { field: 'eid_front_url', label: 'Recto de la carte eID', icon: Camera, capture: 'environment' },
     { field: 'eid_back_url', label: 'Verso de la carte eID', icon: Camera, capture: 'environment' },
     { field: 'selfie_url', label: 'Selfie avec votre carte eID', icon: Camera, capture: 'user' },
-    ...(isPro ? [
-      { field: 'insurance_url', label: "Attestation d'assurance RC Pro", icon: Upload, accept: 'image/*,application/pdf' },
-    ] : []),
+    ...(isPro ? [{ field: 'insurance_url', label: "Attestation d'assurance RC Pro", icon: Upload, accept: 'image/*,application/pdf' }] : []),
   ];
+
+  const currentStatus = activeVerif?.status;
+  const hasDocResults = docResults.length > 0;
+  const invalidDocs = docResults.filter(d => !d.valid);
+  const validDocs = docResults.filter(d => d.valid);
+  const isApproved = currentStatus === 'approved';
+  const isRejected = currentStatus === 'rejected';
+  const showForm = !isApproved && !analyzing;
 
   return (
     <div className="min-h-screen bg-background overflow-y-auto">
@@ -216,93 +260,127 @@ export default function EidVerification() {
           </p>
         </motion.div>
 
-        {/* Status banners */}
-        {isPending && !hasAiResults && (
-          <div className="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6">
-            <Clock className="w-6 h-6 text-orange-600 shrink-0" />
-            <div>
-              <p className="font-semibold text-orange-800">Dossier en cours de vérification</p>
-              <p className="text-sm text-orange-600 mt-0.5">Notre IA analyse vos documents...</p>
-            </div>
-          </div>
-        )}
+        <AnimatePresence mode="wait">
 
-        {isApproved && (
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4 mb-6">
-            <CheckCircle className="w-6 h-6 text-green-600 shrink-0" />
-            <div>
-              <p className="font-semibold text-green-800">Identité vérifiée ✓</p>
-              <p className="text-sm text-green-600 mt-0.5">Votre compte est certifié ServiGo</p>
-            </div>
-          </div>
-        )}
+          {/* Analyzing screen */}
+          {analyzing && <AnalyzingScreen key="analyzing" />}
 
-        {isRejected && (
-          <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
-            <AlertCircle className="w-6 h-6 text-red-600 shrink-0" />
-            <div>
-              <p className="font-semibold text-red-800">Documents à corriger</p>
-              <p className="text-sm text-red-600 mt-0.5">
-                {existingVerif?.ai_summary || existingVerif?.rejection_reason || 'Veuillez re-soumettre les documents indiqués ci-dessous.'}
-              </p>
-            </div>
-          </div>
-        )}
+          {/* Results + form */}
+          {!analyzing && (
+            <motion.div key="content" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
 
-        {/* Upload form */}
-        {(needsResubmit || (!isApproved && !isPending)) && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              {isRejected ? 'Corriger vos documents' : 'Documents requis'}
-            </h2>
+              {/* ── APPROVED ── */}
+              {isApproved && (
+                <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl p-4">
+                  <CheckCircle className="w-6 h-6 text-green-600 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-green-800">Identité vérifiée ✓</p>
+                    <p className="text-sm text-green-600 mt-0.5">{activeVerif?.ai_summary || 'Votre compte est certifié ServiGo'}</p>
+                  </div>
+                </div>
+              )}
 
-            {DOCS.map(({ field, label, icon, capture, accept }) => {
-              const aiDoc = aiResults[field];
-              const hasNewUpload = !!urls[field];
-              const showError = aiDoc && !aiDoc.valid && !hasNewUpload;
-              const showValid = aiDoc && aiDoc.valid && !hasNewUpload;
+              {/* ── REJECTED: show per-doc results ── */}
+              {isRejected && hasDocResults && (
+                <div className="space-y-3">
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                    <p className="font-semibold text-red-800 mb-1">📋 Résultat de l'analyse</p>
+                    <p className="text-sm text-red-700">{activeVerif?.ai_summary}</p>
+                  </div>
 
-              return (
-                <div key={field}>
-                  <UploadZone
-                    label={label}
-                    icon={icon}
-                    value={getFieldValue(field)}
-                    onChange={(e) => handleUpload(e, field)}
-                    loading={uploading[field]}
-                    accept={accept}
-                    capture={capture}
-                    error={showError}
-                    errorReason={showError ? aiDoc.reason : null}
-                  />
-                  {showValid && !hasNewUpload && (
-                    <p className="text-xs text-green-600 mt-1 pl-1">✓ Ce document a été accepté — vous pouvez le laisser tel quel</p>
+                  {/* Valid docs */}
+                  {validDocs.length > 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-2xl p-4 space-y-2">
+                      <p className="text-xs font-bold text-green-800 uppercase tracking-wide">✅ Documents acceptés — rien à faire</p>
+                      {validDocs.map(doc => (
+                        <div key={doc.field} className="flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-green-800">{doc.label}</p>
+                            <p className="text-xs text-green-600">{doc.reason}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Invalid docs */}
+                  {invalidDocs.length > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
+                      <p className="text-xs font-bold text-red-800 uppercase tracking-wide">❌ Documents à renvoyer</p>
+                      {invalidDocs.map(doc => (
+                        <div key={doc.field} className="flex items-start gap-2">
+                          <XCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-red-800">{doc.label}</p>
+                            <p className="text-xs text-red-600">{doc.reason}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              );
-            })}
+              )}
 
-            <div className="bg-muted/40 rounded-2xl p-4 text-xs text-muted-foreground space-y-1">
-              <p>🔒 Vos documents sont chiffrés et stockés de manière sécurisée</p>
-              <p>⚡ La vérification est automatique via notre IA</p>
-            </div>
+              {/* ── UPLOAD FORM ── */}
+              {showForm && (
+                <div className="space-y-3">
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    {isRejected ? 'Corriger et renvoyer vos documents' : 'Documents requis'}
+                  </h2>
 
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="w-full h-14 rounded-2xl text-base font-bold"
-            >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ShieldCheck className="w-5 h-5 mr-2" />}
-              {submitting ? 'Envoi en cours...' : isRejected ? 'Soumettre les corrections' : 'Soumettre mon dossier'}
-            </Button>
-          </motion.div>
-        )}
+                  {DOCS.map(({ field, label, icon, capture, accept }) => {
+                    const aiDoc = aiResults[field];
+                    const hasNewUpload = !!urls[field];
+                    const showError = aiDoc && !aiDoc.valid && !hasNewUpload;
+                    const showValidNote = aiDoc && aiDoc.valid && !hasNewUpload;
 
-        {isApproved && (
-          <Button onClick={() => navigate(-1)} className="w-full h-14 rounded-2xl text-base mt-4">
-            Retour au profil <ArrowRight className="w-5 h-5 ml-2" />
-          </Button>
-        )}
+                    return (
+                      <div key={field}>
+                        <UploadZone
+                          label={label}
+                          icon={icon}
+                          value={getFieldValue(field)}
+                          onChange={(e) => handleUpload(e, field)}
+                          loading={uploading[field]}
+                          accept={accept}
+                          capture={capture}
+                          error={showError}
+                          errorReason={showError ? aiDoc.reason : null}
+                        />
+                        {showValidNote && (
+                          <p className="text-xs text-green-600 mt-1 pl-1">✓ Accepté — conservé automatiquement</p>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  <div className="bg-muted/40 rounded-2xl p-4 text-xs text-muted-foreground space-y-1">
+                    <p>🔒 Vos documents sont chiffrés et stockés de manière sécurisée</p>
+                    <p>⚡ Résultat instantané par notre IA</p>
+                  </div>
+
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting || Object.values(uploading).some(Boolean)}
+                    className="w-full h-14 rounded-2xl text-base font-bold"
+                  >
+                    {submitting
+                      ? <><Loader2 className="w-5 h-5 animate-spin mr-2" />Envoi en cours...</>
+                      : <><ShieldCheck className="w-5 h-5 mr-2" />{isRejected ? 'Renvoyer les corrections' : 'Soumettre mon dossier'}</>
+                    }
+                  </Button>
+                </div>
+              )}
+
+              {isApproved && (
+                <Button onClick={() => navigate(-1)} className="w-full h-14 rounded-2xl text-base mt-2">
+                  Retour au profil <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

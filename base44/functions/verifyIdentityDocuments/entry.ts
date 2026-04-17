@@ -29,8 +29,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'IdentityVerification not found' }, { status: 404 });
     }
 
-    // Skip if already reviewed
-    if (verif.status !== 'pending_review') {
+    // Skip if already reviewed (only for automation triggers, not direct calls)
+    const isDirectCall = !!body.verificationId;
+    if (!isDirectCall && verif.status !== 'pending_review') {
       console.log(`[verifyIdentityDocuments] Skipping — already processed: ${verif.status}`);
       return Response.json({ message: `Already processed: ${verif.status}` });
     }
