@@ -53,6 +53,31 @@
     },
     "reviewed_date": {
       "type": "string"
+    },
+    "ai_document_results": {
+      "type": "array",
+      "description": "R\u00e9sultat IA par document : { label, field, valid, reason }",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ai_summary": {
+      "type": "string",
+      "description": "R\u00e9sum\u00e9 global de l'analyse IA"
     }
   },
   "required": [

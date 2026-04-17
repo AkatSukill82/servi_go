@@ -1,12 +1,19 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+// Maps document labels to their entity field names
+const LABEL_TO_FIELD = {
+  'Recto carte eID belge': 'eid_front_url',
+  'Verso carte eID belge': 'eid_back_url',
+  'Selfie avec carte eID': 'selfie_url',
+  'Attestation assurance RC Pro': 'insurance_url',
+  'Attestation ONSS / Indépendant': 'onss_url',
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
 
-    // Called from entity automation: body has { event, data }
-    // Called manually: body has { verificationId }
     const verificationId = body.verificationId
       || body.event?.entity_id
       || body.data?.id;
@@ -15,7 +22,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'verificationId required' }, { status: 400 });
     }
 
-    // Use filter (not .get()) — works reliably with service role
     const records = await base44.asServiceRole.entities.IdentityVerification.filter({ id: verificationId });
     const verif = records[0];
 
@@ -42,7 +48,6 @@ Deno.serve(async (req) => {
     }
 
     if (docsToAnalyse.length === 0) {
-      console.log(`[verifyIdentityDocuments] No documents uploaded for ${verificationId}`);
       return Response.json({ message: 'No documents to analyse' });
     }
 
@@ -62,7 +67,7 @@ Pour CHAQUE document, évalue :
 2. Les informations semblent-elles authentiques (pas de signes évidents de falsification) ?
 3. Pour la carte eID : est-ce bien une carte d'identité belge (champs NOM, PRÉNOM, DATE DE NAISSANCE, N° NATIONAL, photo visible) ?
 4. Pour le selfie : la personne tient-elle bien une carte d'identité visible ?
-5. Pour l'assurance : y a-t-il un en-tête d'assureur, un numéro de police, une date de validité ?
+5. Pour l'assurance : y a-t-il un en-tête d'assureur, un numéro de police, une date de validité ? (un permis de conduire N'EST PAS une assurance)
 6. Pour l'ONSS/indépendant : y a-t-il un en-tête officiel, un numéro BCE, une date ?
 
 Réponds UNIQUEMENT avec ce JSON (sans markdown) :
@@ -82,7 +87,7 @@ Critères :
 
     console.log(`[verifyIdentityDocuments] Analysing ${fileUrls.length} docs for ${verificationId} (${verif.user_type})`);
 
-    // Mark as in-progress to prevent duplicate runs from automation
+    // Mark as in-progress to prevent duplicate runs
     await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
       rejection_reason: '[IA en cours d\'analyse...]',
     });
@@ -105,7 +110,15 @@ Critères :
 
     console.log(`[verifyIdentityDocuments] AI result for ${verificationId}:`, JSON.stringify(result));
 
-    const { decision, summary = '', rejection_reason: rejectionReason = '', confidence = 0 } = result;
+    const { decision, summary = '', rejection_reason: rejectionReason = '', confidence = 0, documents = [] } = result;
+
+    // Build per-doc results with field mapping
+    const aiDocumentResults = documents.map(doc => ({
+      label: doc.label,
+      field: LABEL_TO_FIELD[doc.label] || null,
+      valid: doc.valid,
+      reason: doc.reason,
+    }));
 
     if (decision === 'approved') {
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
@@ -113,6 +126,8 @@ Critères :
         reviewed_by: 'IA ServiGo',
         reviewed_date: new Date().toISOString(),
         rejection_reason: null,
+        ai_document_results: aiDocumentResults,
+        ai_summary: summary,
       });
 
       const users = await base44.asServiceRole.entities.User.filter({ email: verif.user_email });
@@ -134,28 +149,34 @@ Critères :
       console.log(`[verifyIdentityDocuments] APPROVED ${verificationId} (confidence: ${confidence})`);
 
     } else if (decision === 'rejected') {
+      const invalidDocs = aiDocumentResults.filter(d => !d.valid).map(d => d.label).join(', ');
+
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
         status: 'rejected',
         reviewed_by: 'IA ServiGo',
         reviewed_date: new Date().toISOString(),
         rejection_reason: rejectionReason || summary,
+        ai_document_results: aiDocumentResults,
+        ai_summary: summary,
       });
 
       await base44.asServiceRole.entities.Notification.create({
         recipient_email: verif.user_email,
         recipient_type: isPro ? 'professionnel' : 'particulier',
         type: 'payment_failed',
-        title: '❌ Documents refusés',
-        body: `Vos documents n'ont pas pu être validés. Raison : ${rejectionReason || summary}. Veuillez re-soumettre des documents lisibles.`,
+        title: '❌ Documents à corriger',
+        body: `Certains documents n'ont pas été acceptés : ${invalidDocs}. Veuillez les re-soumettre.`,
         action_url: isPro ? '/ProVerificationOnboarding' : '/EidVerification',
       });
 
       console.log(`[verifyIdentityDocuments] REJECTED ${verificationId}: ${rejectionReason}`);
 
     } else {
-      // manual_review
+      // manual_review — save doc results too so admin/user can see the partial analysis
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
-        rejection_reason: `[IA - révision manuelle requise] ${summary}`,
+        rejection_reason: `[Révision manuelle requise] ${summary}`,
+        ai_document_results: aiDocumentResults,
+        ai_summary: summary,
       });
 
       const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
@@ -173,7 +194,7 @@ Critères :
       console.log(`[verifyIdentityDocuments] MANUAL_REVIEW required for ${verificationId}`);
     }
 
-    return Response.json({ verificationId, decision, confidence, summary, documentsAnalysed: docsToAnalyse.length });
+    return Response.json({ verificationId, decision, confidence, summary, documentsAnalysed: docsToAnalyse.length, aiDocumentResults });
 
   } catch (error) {
     console.error('[verifyIdentityDocuments] Error:', error);
