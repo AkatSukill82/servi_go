@@ -15,16 +15,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'verificationId required' }, { status: 400 });
     }
 
-    // Always use service role to read/write — works both from automation and manual call
-    const record = await base44.asServiceRole.entities.IdentityVerification.get('IdentityVerification', verificationId)
-      .catch(() => null);
-
-    // Fallback: filter by id if .get() not available
-    let verif = record;
-    if (!verif) {
-      const records = await base44.asServiceRole.entities.IdentityVerification.filter({ id: verificationId });
-      verif = records[0];
-    }
+    // Use filter (not .get()) — works reliably with service role
+    const records = await base44.asServiceRole.entities.IdentityVerification.filter({ id: verificationId });
+    const verif = records[0];
 
     if (!verif) {
       return Response.json({ error: 'IdentityVerification not found' }, { status: 404 });
@@ -32,6 +25,7 @@ Deno.serve(async (req) => {
 
     // Skip if already reviewed
     if (verif.status !== 'pending_review') {
+      console.log(`[verifyIdentityDocuments] Skipping — already processed: ${verif.status}`);
       return Response.json({ message: `Already processed: ${verif.status}` });
     }
 
@@ -87,6 +81,11 @@ Critères :
 `.trim();
 
     console.log(`[verifyIdentityDocuments] Analysing ${fileUrls.length} docs for ${verificationId} (${verif.user_type})`);
+
+    // Mark as in-progress to prevent duplicate runs from automation
+    await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
+      rejection_reason: '[IA en cours d\'analyse...]',
+    });
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
@@ -154,7 +153,7 @@ Critères :
       console.log(`[verifyIdentityDocuments] REJECTED ${verificationId}: ${rejectionReason}`);
 
     } else {
-      // manual_review — leave as pending_review, add IA note
+      // manual_review
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
         rejection_reason: `[IA - révision manuelle requise] ${summary}`,
       });
