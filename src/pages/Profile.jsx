@@ -423,7 +423,7 @@ export default function Profile() {
                     setDark(next);
                     base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
-                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 border ${dark ? 'bg-[#4F46E5] border-[#4F46E5]' : 'bg-muted border-border'}`}
+                  className={`relative w-12 h-4 rounded-full transition-colors duration-200 border ${dark ? 'bg-[#4F46E5] border-[#4F46E5]' : 'bg-muted border-border'}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${dark ? 'translate-x-6' : 'translate-x-0'}`} />
                 </button>
