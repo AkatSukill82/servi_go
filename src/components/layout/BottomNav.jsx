@@ -87,7 +87,7 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-center justify-around h-14 px-1">
+      <div className="w-full max-w-2xl mx-auto flex items-center justify-around h-14 px-1">
         {navItems.map((item) => (
           <NavItem
             key={item.path}

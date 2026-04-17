@@ -243,7 +243,7 @@ export default function ProDashboard() {
   const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
 
   return (
-    <div className="px-5 pt-7 pb-4 space-y-5">
+    <div className="px-4 sm:px-6 pt-7 pb-4 space-y-5">
 
       {/* Upcoming mission reminder */}
       {upcomingJob && (

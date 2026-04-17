@@ -113,7 +113,7 @@ export default function Home() {
         {/* Top bar */}
         <TopBar title={firstName ? `Bonjour ${firstName} 👋` : 'Accueil'} subtitle={user?.address?.split(',')[0] || 'Belgique'} />
 
-        <div className="px-4 pt-4 space-y-5">
+        <div className="px-4 sm:px-6 pt-4 space-y-5">
 
           {/* ── Search bar ── */}
           <div className="relative">
@@ -234,7 +234,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                 {filteredCategories.map((category, index) => (
                   <ServiceCard
                     key={category.id}

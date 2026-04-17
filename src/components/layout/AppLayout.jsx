@@ -152,6 +152,7 @@ export default function AppLayout() {
         display: 'flex',
         flexDirection: 'column',
         maxWidth: '100vw',
+        overflowX: 'hidden',
       }}
     >
 
@@ -186,9 +187,11 @@ export default function AppLayout() {
               }}
               ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
             >
-              <Suspense fallback={<TabSpinner />}>
-                <TabComponent />
-              </Suspense>
+              <div className="w-full max-w-2xl mx-auto">
+                <Suspense fallback={<TabSpinner />}>
+                  <TabComponent />
+                </Suspense>
+              </div>
             </div>
           );
         })}
@@ -205,9 +208,11 @@ export default function AppLayout() {
               className="absolute inset-0 overflow-y-auto bg-background"
               style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)' }}
             >
-              <Suspense fallback={<TabSpinner />}>
-                <StackComponent />
-              </Suspense>
+              <div className="w-full max-w-2xl mx-auto">
+                <Suspense fallback={<TabSpinner />}>
+                  <StackComponent />
+                </Suspense>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

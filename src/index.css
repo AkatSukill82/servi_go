@@ -294,13 +294,32 @@
 /* Responsive max-width containers */
 .app-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 100%;
   margin-left: auto;
   margin-right: auto;
+}
+
+@media (min-width: 640px) {
+  .app-container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 768px;
+  }
 }
 
 /* Touch target minimum size */
 button, a, [role="button"] {
   min-height: 44px;
   min-width: 44px;
+}
+
+/* Tablet/desktop: remove overflow-hidden from html/body to allow proper layout */
+@media (min-width: 768px) {
+  html, body {
+    overflow: hidden;
+  }
 }
