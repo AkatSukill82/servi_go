@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro, CreditCard, AlertTriangle, Clock, Eye, Wrench, RefreshCw } from 'lucide-react';
+import { ShieldCheck, CheckCircle, XCircle, FileText, User, BarChart2, TrendingUp, Euro, CreditCard, AlertTriangle, Clock, Eye, Wrench, RefreshCw, Sparkles, Loader2 } from 'lucide-react';
 import { deduplicateByEmail } from '@/utils/deduplicateByEmail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -170,6 +170,20 @@ function IdentityVerifTab() {
   const [filter, setFilter] = useState('pending_review');
   const [expanded, setExpanded] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [aiAnalysing, setAiAnalysing] = useState(null);
+
+  const handleAiAnalysis = async (verificationId) => {
+    setAiAnalysing(verificationId);
+    try {
+      const res = await base44.functions.invoke('verifyIdentityDocuments', { verificationId });
+      queryClient.invalidateQueries({ queryKey: ['allIdentityVerifs'] });
+      toast.success(`Analyse IA terminée : ${res.data?.decision || 'voir résultat'}`);
+    } catch (e) {
+      toast.error('Erreur analyse IA : ' + e.message);
+    } finally {
+      setAiAnalysing(null);
+    }
+  };
 
   const { data: verifs = [], isLoading } = useQuery({
     queryKey: ['allIdentityVerifs'],
@@ -241,16 +255,31 @@ function IdentityVerifTab() {
                       </div>
                     ) : null
                   )}
+                  {/* AI analysis note */}
+                  {v.rejection_reason?.startsWith('[IA') && (
+                    <div className="bg-purple-50 border border-purple-200 rounded-lg px-3 py-2 flex items-start gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600 shrink-0 mt-0.5" />
+                      <p className="text-xs text-purple-700">{v.rejection_reason}</p>
+                    </div>
+                  )}
                   {v.status === 'pending_review' && (
                     <div className="space-y-2 pt-1">
-                      <input value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Raison du refus (si refus)" className="w-full text-sm border border-border rounded-xl px-3 py-2" />
+                      {/* Re-run AI */}
+                      <button
+                        onClick={() => handleAiAnalysis(v.id)}
+                        disabled={aiAnalysing === v.id}
+                        className="w-full h-9 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+                      >
+                        {aiAnalysing === v.id ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Analyse IA en cours...</> : <><Sparkles className="w-3.5 h-3.5" />Analyser avec l'IA</>}
+                      </button>
+                      <input value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Raison du refus (si refus manuel)" className="w-full text-sm border border-border rounded-xl px-3 py-2" />
                       <div className="flex gap-2">
                         <Button onClick={() => updateMutation.mutate({ id: v.id, status: 'approved', userEmail: v.user_email, userName: v.user_name })} disabled={updateMutation.isPending} className="flex-1 h-9 rounded-xl bg-green-600 hover:bg-green-700 text-sm"><CheckCircle className="w-3.5 h-3.5 mr-1" />Approuver</Button>
                         <Button onClick={() => updateMutation.mutate({ id: v.id, status: 'rejected', reason: rejectReason, userEmail: v.user_email, userName: v.user_name })} disabled={updateMutation.isPending || !rejectReason} variant="outline" className="flex-1 h-9 rounded-xl border-red-200 text-red-600 text-sm"><XCircle className="w-3.5 h-3.5 mr-1" />Refuser</Button>
                       </div>
                     </div>
                   )}
-                  {v.rejection_reason && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">Raison : {v.rejection_reason}</p>}
+                  {v.rejection_reason && !v.rejection_reason.startsWith('[IA') && <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">Raison : {v.rejection_reason}</p>}
                 </div>
               )}
             </div>
