@@ -9,6 +9,23 @@ const LABEL_TO_FIELD = {
   'Attestation ONSS / Indépendant': 'onss_url',
 };
 
+// Helper: create a notification only if no identical one exists in the last 5 minutes
+async function createNotificationIfNotDuplicate(base44, notifData) {
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const existing = await base44.asServiceRole.entities.Notification.filter({
+    recipient_email: notifData.recipient_email,
+    type: notifData.type,
+    action_url: notifData.action_url,
+  }, '-created_date', 5);
+
+  const isDuplicate = existing.some(n => n.created_date && n.created_date > fiveMinutesAgo);
+  if (isDuplicate) {
+    console.log(`[verifyIdentityDocuments] Skipping duplicate notification for ${notifData.recipient_email} (${notifData.type})`);
+    return;
+  }
+  await base44.asServiceRole.entities.Notification.create(notifData);
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -138,11 +155,11 @@ Critères :
         await base44.asServiceRole.entities.User.update(users[0].id, updateData);
       }
 
-      await base44.asServiceRole.entities.Notification.create({
+      await createNotificationIfNotDuplicate(base44, {
         recipient_email: verif.user_email,
         recipient_type: isPro ? 'professionnel' : 'particulier',
-        type: 'subscription_activated',
-        title: '✅ Identité vérifiée automatiquement !',
+        type: 'identity_verified',
+        title: '✅ Identité vérifiée !',
         body: `Vos documents ont été validés par notre système IA. ${summary}`,
         action_url: isPro ? '/ProProfile' : '/Profile',
       });
@@ -161,10 +178,10 @@ Critères :
         ai_summary: summary,
       });
 
-      await base44.asServiceRole.entities.Notification.create({
+      await createNotificationIfNotDuplicate(base44, {
         recipient_email: verif.user_email,
         recipient_type: isPro ? 'professionnel' : 'particulier',
-        type: 'payment_failed',
+        type: 'identity_verification_required',
         title: '❌ Documents à corriger',
         body: `Certains documents n'ont pas été acceptés : ${invalidDocs}. Veuillez les re-soumettre.`,
         action_url: isPro ? '/ProVerificationOnboarding' : '/EidVerification',
@@ -173,7 +190,7 @@ Critères :
       console.log(`[verifyIdentityDocuments] REJECTED ${verificationId}: ${rejectionReason}`);
 
     } else {
-      // manual_review — save doc results too so admin/user can see the partial analysis
+      // manual_review
       await base44.asServiceRole.entities.IdentityVerification.update(verificationId, {
         rejection_reason: `[Révision manuelle requise] ${summary}`,
         ai_document_results: aiDocumentResults,
@@ -182,10 +199,10 @@ Critères :
 
       const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
       for (const admin of admins) {
-        await base44.asServiceRole.entities.Notification.create({
+        await createNotificationIfNotDuplicate(base44, {
           recipient_email: admin.email,
           recipient_type: 'admin',
-          type: 'new_mission',
+          type: 'identity_verification_required',
           title: '🔍 Vérification manuelle requise',
           body: `Le dossier de ${verif.user_name || verif.user_email} nécessite une vérification manuelle. ${summary}`,
           action_url: '/AdminVerification',

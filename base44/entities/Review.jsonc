@@ -1,0 +1,57 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "description": "ID de la demande de service"
+    },
+    "professional_email": {
+      "type": "string",
+      "description": "Email du professionnel \u00e9valu\u00e9"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Note de 1 \u00e0 5"
+    },
+    "comment": {
+      "type": "string",
+      "description": "Commentaire du client"
+    },
+    "category_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "professional_email",
+    "rating"
+  ],
+  "rls": {
+    "create": {
+      "data.customer_email": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "data.customer_email": "{{user.email}}"
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

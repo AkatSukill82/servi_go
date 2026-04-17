@@ -1,0 +1,109 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "description": "Notifications temps r\u00e9el pour clients et professionnels",
+  "properties": {
+    "recipient_email": {
+      "type": "string"
+    },
+    "recipient_type": {
+      "type": "string",
+      "enum": [
+        "particulier",
+        "professionnel",
+        "admin"
+      ]
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "new_mission",
+        "mission_accepted",
+        "mission_refused",
+        "pro_en_route",
+        "mission_started",
+        "mission_completed",
+        "contract_to_sign",
+        "contract_signed",
+        "review_request",
+        "dispute_opened",
+        "dispute_resolved",
+        "subscription_renewal",
+        "subscription_expired",
+        "subscription_activated",
+        "payment_received",
+        "payment_failed",
+        "message_received",
+        "new_review",
+        "identity_verification_required",
+        "identity_verified"
+      ],
+      "description": "Type de notification"
+    },
+    "title": {
+      "type": "string"
+    },
+    "body": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "ID de la demande associ\u00e9e si applicable"
+    },
+    "contract_id": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "action_url": {
+      "type": "string",
+      "description": "URL de redirection au clic"
+    }
+  },
+  "required": [
+    "recipient_email",
+    "type",
+    "title"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "data.recipient_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.recipient_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.recipient_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
