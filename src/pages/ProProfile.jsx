@@ -421,10 +421,32 @@ export default function ProProfile() {
                     setDark(next);
                     base44.auth.updateMe({ dark_mode: next }).catch(() => {});
                   }}
-                  aria-label="Mode nuit"
-                  className={`relative w-12 h-6 rounded-full transition-colors duration-200 border ${dark ? 'bg-[#4F46E5] border-[#4F46E5]' : 'bg-muted border-border'}`}
+                  style={{
+                    position: 'relative',
+                    width: '48px',
+                    height: '28px',
+                    borderRadius: '14px',
+                    backgroundColor: dark ? '#4F46E5' : '#D1D5DB',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    flexShrink: 0,
+                    transition: 'background-color 0.2s ease',
+                    minHeight: 'unset',
+                    minWidth: 'unset',
+                  }}
                 >
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${dark ? 'translate-x-6' : 'translate-x-0'}`} />
+                  <span style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: dark ? '22px' : '2px',
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '12px',
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    transition: 'left 0.2s ease',
+                  }} />
                 </button>
               </div>
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
