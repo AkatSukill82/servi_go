@@ -114,18 +114,19 @@ export default function AppLayout() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#0F172A]">
+      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: '#1A1A2E' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="flex flex-col items-center gap-3"
+          className="flex flex-col items-center gap-4"
         >
-          <div className="w-16 h-16 rounded-2xl bg-[#4F46E5] flex items-center justify-center shadow-float">
-            <span className="text-3xl font-bold text-white" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>S</span>
-          </div>
-          <span className="text-xl font-bold text-white tracking-[-0.02em]" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>ServiGo</span>
-          <div className="w-6 h-6 border-2 border-white/20 border-t-white/70 rounded-full animate-spin mt-1" />
+          <svg width="80" height="80" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#FF6B35"/>
+            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+          </svg>
+          <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>ServiGo</span>
+          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(255,255,255,0.2)', borderTopColor: '#FF6B35' }} />
         </motion.div>
       </div>
     );
