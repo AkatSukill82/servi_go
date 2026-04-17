@@ -462,7 +462,7 @@ export default function Profile() {
                 <LogOut className="w-4 h-4 mr-2" /> Déconnexion
               </Button>
 
-              <div className="flex items-center justify-center gap-3 py-2 text-xs text-muted-foreground">
+              <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
                 <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
                 <span>·</span>
                 <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
