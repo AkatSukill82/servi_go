@@ -681,19 +681,19 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-5">
+      <div className="grid grid-cols-5 gap-1.5 mb-5">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
-            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+            className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border transition-colors ${
               tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
             }`}>
-            <Icon className="w-3.5 h-3.5" />
-            {label}
+            <Icon className="w-4 h-4 shrink-0" />
+            <span className="text-center leading-tight">{label}</span>
             {key === 'disputes' && openDisputes > 0 && (
-              <span className="text-xs font-bold bg-yellow-500 text-white rounded-full px-1.5">{openDisputes}</span>
+              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-yellow-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{openDisputes}</span>
             )}
             {key === 'reports' && pendingReports.length > 0 && (
-              <span className="text-xs font-bold bg-red-500 text-white rounded-full px-1.5">{pendingReports.length}</span>
+              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{pendingReports.length}</span>
             )}
           </button>
         ))}
