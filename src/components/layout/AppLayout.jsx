@@ -159,7 +159,7 @@ export default function AppLayout() {
 
       {/* Expired subscription banner (pro only) */}
       {proSubExpired && (
-        <div className="fixed top-0 left-0 right-0 z-40 bg-red-600 text-white px-4 py-2 flex items-center justify-between gap-2" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+        <div className="bg-red-600 text-white px-4 py-2.5 flex items-center justify-between gap-2 shrink-0">
           <p className="text-xs font-semibold flex-1">⚠️ Abonnement expiré — vous ne recevez plus de missions</p>
           <button onClick={() => navigate('/ProSubscription')} className="text-xs font-bold bg-white text-red-600 px-3 py-1 rounded-full shrink-0">
             Réactiver
