@@ -11,11 +11,11 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const TABS = [
-  { key: 'overview', label: 'Vue d\'ensemble', icon: Activity },
+  { key: 'overview', label: 'Aperçu', icon: Activity },
   { key: 'finance', label: 'Finances', icon: Euro },
   { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
   { key: 'blacklist', label: 'Blacklist', icon: Ban },
-  { key: 'reports', label: 'Signalements', icon: Flag },
+  { key: 'reports', label: 'Rapports', icon: Flag },
 ];
 
 const REASON_LABELS = {
