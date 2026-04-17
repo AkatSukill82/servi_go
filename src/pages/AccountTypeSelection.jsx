@@ -20,7 +20,7 @@ export default function AccountTypeSelection() {
 
       {/* Content */}
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
-        <div className="w-full max-w-sm">
+        <div className="w-full md:max-w-lg">
           <h2 className="text-xl font-bold text-foreground text-center mb-2">
             Quel type de compte souhaitez-vous créer ?
           </h2>

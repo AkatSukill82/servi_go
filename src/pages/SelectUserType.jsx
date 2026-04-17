@@ -106,7 +106,7 @@ export default function SelectUserType() {
 
         {/* STEP: Choose type */}
         {step === 'choose' && (
-          <motion.div key="choose" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full max-w-sm">
+          <motion.div key="choose" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="w-full md:max-w-lg">
             <div className="text-center mb-10">
               <div className="w-20 h-20 rounded-3xl bg-primary flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <span className="text-3xl font-black text-white">S</span>
@@ -191,7 +191,7 @@ export default function SelectUserType() {
 
         {/* STEP: Confirm address */}
         {step === 'confirm' && (
-          <motion.div key="confirm" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-sm space-y-6">
+          <motion.div key="confirm" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full md:max-w-lg space-y-6">
             <div className="text-center">
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                 <MapPin className="w-10 h-10 text-green-600" />

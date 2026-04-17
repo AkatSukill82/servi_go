@@ -503,7 +503,7 @@ export default function AdminVerification() {
   ];
 
   return (
-    <div className="min-h-screen bg-background px-4 pt-6 pb-20 max-w-lg mx-auto">
+    <div className="min-h-screen bg-background px-4 pt-6 pb-20 w-full md:max-w-2xl mx-auto">
       <div className="mb-5">
         <h1 className="text-2xl font-bold tracking-tight">Administration</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Gestion de la plateforme ServiGo</p>

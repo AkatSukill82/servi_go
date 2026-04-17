@@ -45,7 +45,7 @@ function isValidBce(v) {
 function ProgressBar({ step }) {
   const pct = Math.round((step / (STEPS.length - 1)) * 100);
   return (
-    <div className="w-full max-w-lg mx-auto px-5 pt-6 pb-4">
+    <div className="w-full md:max-w-lg mx-auto px-5 pt-6 pb-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs text-[#6B7280] font-medium">Étape {step + 1} sur {STEPS.length}</span>
         <span className="text-xs font-semibold text-[#534AB7]">{STEPS[step]}</span>
@@ -131,7 +131,7 @@ function StepTypeChoice({ onSelect }) {
   ];
 
   return (
-    <div className="w-full max-w-lg mx-auto px-5 pb-10">
+    <div className="w-full md:max-w-lg mx-auto px-5 pb-10">
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
           <ServiGoIcon size={56} />
@@ -267,7 +267,7 @@ function StepPersonalInfo({ userType, initialData, onNext, onBack, isSaving = fa
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-5 pb-10">
+    <div className="w-full md:max-w-lg mx-auto px-5 pb-10">
       <div className="mb-6">
         <button onClick={onBack} className="flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#111827] mb-4">
           <ChevronLeft className="w-4 h-4" /> Retour
@@ -534,7 +534,7 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-5 pb-10">
+    <div className="w-full md:max-w-lg mx-auto px-5 pb-10">
       <div className="mb-5">
         <button onClick={onBack} className="flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#111827] mb-4">
           <ChevronLeft className="w-4 h-4" /> Retour
@@ -582,7 +582,7 @@ function StepIdentity({ userType, userName, userEmail, onNext, onBack }) {
 // ─── STEP 3: Confirmation ─────────────────────────────────────────────────────
 function StepConfirmation({ userType, firstName, navigate }) {
   return (
-    <div className="w-full max-w-lg mx-auto px-5 pb-10 text-center">
+    <div className="w-full md:max-w-lg mx-auto px-5 pb-10 text-center">
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }} className="w-24 h-24 rounded-full bg-[#E1F5EE] flex items-center justify-center mx-auto mb-6 mt-4">
         <CheckCircle className="w-12 h-12 text-[#1D9E75]" strokeWidth={1.5} />
       </motion.div>
@@ -710,7 +710,7 @@ export default function Register() {
   return (
     <div className="bg-background overflow-y-auto" style={{ height: '100dvh' }}>
       {/* Login link */}
-      <div className="w-full max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
+      <div className="w-full md:max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
         <ServiGoLogo size="sm" />
         <button
           onClick={() => base44.auth.redirectToLogin('/Home')}

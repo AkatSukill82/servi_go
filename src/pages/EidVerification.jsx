@@ -152,7 +152,7 @@ export default function EidVerification() {
 
   return (
     <div className="min-h-screen bg-background overflow-y-auto">
-      <div className="px-5 pt-6 pb-10 max-w-lg mx-auto">
+      <div className="px-5 pt-6 pb-10 w-full md:max-w-lg mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-muted-foreground mb-6">
           ← Retour
         </button>

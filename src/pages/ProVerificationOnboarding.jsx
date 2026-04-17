@@ -136,7 +136,7 @@ export default function ProVerificationOnboarding() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-5 py-8">
-      <div className="w-full max-w-sm mx-auto flex-1 flex flex-col">
+      <div className="w-full md:max-w-lg mx-auto flex-1 flex flex-col">
 
         {/* Back button */}
         <button onClick={handleBack} className="flex items-center gap-1.5 text-sm text-muted-foreground mb-4 -ml-1">
