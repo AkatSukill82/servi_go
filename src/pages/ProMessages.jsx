@@ -53,7 +53,7 @@ export default function ProMessages() {
       {/* Header */}
       <div
         className="bg-card/95 backdrop-blur-md border-b border-border/50 sticky top-0 z-20 px-4 pt-4 pb-3"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+        style={{ paddingTop: '16px' }}
       >
         <div className="flex items-center gap-2">
           <h1 className="text-xl font-semibold tracking-[-0.02em]">Messages</h1>
