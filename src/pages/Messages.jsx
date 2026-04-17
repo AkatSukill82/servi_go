@@ -72,7 +72,7 @@ export default function Messages() {
         {/* Header */}
         <div
           className="bg-card/95 backdrop-blur-md border-b border-border/50 px-4 pt-4 pb-3 sticky top-0 z-20"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+          style={{ paddingTop: '16px' }}
         >
           <h1 className="text-xl font-semibold tracking-[-0.02em] mb-3">Messages</h1>
           {/* Search */}

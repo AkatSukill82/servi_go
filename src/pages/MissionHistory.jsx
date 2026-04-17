@@ -148,7 +148,7 @@ export default function MissionHistory() {
 
       <div
         className="sticky top-0 z-20 bg-card/95 backdrop-blur-md border-b border-border/50 px-4 py-4"
-        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}
+        style={{ paddingTop: '16px' }}
       >
         <h1 className="text-xl font-semibold tracking-[-0.02em]">Missions</h1>
         <p className="text-xs text-muted-foreground mt-0.5">{requests.length} mission{requests.length !== 1 ? 's' : ''} au total</p>
