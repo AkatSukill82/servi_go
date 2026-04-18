@@ -478,15 +478,16 @@ export default function ProProfile() {
             <Button variant="outline" onClick={async () => { await base44.auth.logout(); window.location.href = '/login'; }} className="w-full h-12 rounded-xl text-sm text-muted-foreground">
               <LogOut className="w-4 h-4 mr-2" /> Déconnexion
             </Button>
-
-            <div className="flex items-center justify-center gap-3 py-2 text-xs text-muted-foreground flex-wrap">
-              <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
-              <span>·</span>
-              <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
-              <span>·</span>
-              <span>© 2026 ServiGo</span>
-            </div>
           </motion.div>
+        )}
+        {activeTab === 'infos' && (
+          <div className="flex items-center justify-center gap-3 pb-4 text-xs text-muted-foreground flex-wrap">
+            <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
+            <span>·</span>
+            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
+            <span>·</span>
+            <span>© 2026 ServiGo</span>
+          </div>
         )}
 
         {/* ─── ONGLET ACTIVITÉ ─── */}
