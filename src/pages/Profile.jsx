@@ -403,7 +403,7 @@ export default function Profile() {
           </div>
         )}
         {tab === 'infos' && (
-          <div className="flex items-center justify-center gap-3 pb-4 text-xs text-muted-foreground flex-wrap">
+          <div className="flex items-center justify-center gap-3 pb-4 text-xs text-muted-foreground">
             <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
             <span>·</span>
             <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
