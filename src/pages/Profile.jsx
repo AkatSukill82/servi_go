@@ -403,11 +403,11 @@ export default function Profile() {
           </div>
         )}
         {tab === 'infos' && (
-          <div className="flex items-center justify-center gap-2 pb-4 text-xs text-muted-foreground">
+          <div className="text-center pb-4 text-xs text-muted-foreground">
             <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
-            <span>·</span>
+            {" · "}
             <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
-            <span>·</span>
+            {" · "}
             <span>© 2026 ServiGo</span>
           </div>
         )}
