@@ -143,13 +143,15 @@ export default function ServiBot() {
 
   const shouldEscalate = (msgs, newMsg) => {
     const lower = newMsg.toLowerCase();
-    const humanKeywords = ['humain', 'personne', 'agent', 'conseiller', 'parler à', 'contacter', 'support humain', 'vrai personne'];
+    // Seulement si l'utilisateur demande EXPLICITEMENT un humain
+    const humanKeywords = ['parler à un humain', 'parler à un agent', 'parler à quelqu\'un', 'vrai personne', 'support humain', 'agent humain', 'je veux un conseiller'];
     if (humanKeywords.some(k => lower.includes(k))) return true;
+    // Ou si l'utilisateur exprime très clairement une frustration répétée (5+ messages + mots forts)
     const userMessages = msgs.filter(m => m.role === 'user');
-    if (userMessages.length >= 3) {
-      const lastThree = userMessages.slice(-3).map(m => m.content.toLowerCase());
-      const frustrationWords = ['toujours pas', 'ça marche pas', 'pas résolu', 'aidez-moi', 'impossible', 'bloqué', 'urgent', 'comprends pas'];
-      const frustrated = lastThree.filter(m => frustrationWords.some(w => m.includes(w))).length >= 2;
+    if (userMessages.length >= 5) {
+      const lastFive = userMessages.slice(-5).map(m => m.content.toLowerCase());
+      const strongFrustration = ['toujours pas résolu', 'rien ne fonctionne', 'inutile', 'nul', 'remboursement', 'avocat', 'plainte'];
+      const frustrated = lastFive.filter(m => strongFrustration.some(w => m.includes(w))).length >= 2;
       if (frustrated) return true;
     }
     return false;
