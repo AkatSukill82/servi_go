@@ -355,8 +355,12 @@ function ChatView({ chat, user, onBack, onUpdateChat }) {
       const botMsg = { id: Date.now() + 1, role: 'assistant', content: response || "Je n'ai pas pu répondre, réessayez.", timestamp: new Date().toISOString() };
       const final = [...updatedMessages, botMsg];
       saveMessages(final);
-    } catch {
-      const errMsg = { id: Date.now() + 1, role: 'assistant', content: "Une erreur est survenue. Réessayez.", timestamp: new Date().toISOString() };
+    } catch (e) {
+      const isQuotaError = e?.message?.includes('402') || e?.status === 402 || JSON.stringify(e).includes('integration_credits_limit_reached');
+      const errContent = isQuotaError
+        ? "⚠️ Le service ServiBot est temporairement indisponible en raison d'une limite de capacité. Veuillez réessayer plus tard ou contacter directement notre équipe à **contact@servigo.be**."
+        : "Une erreur est survenue. Veuillez réessayer.";
+      const errMsg = { id: Date.now() + 1, role: 'assistant', content: errContent, timestamp: new Date().toISOString() };
       saveMessages([...updatedMessages, errMsg]);
     }
     setIsTyping(false);
