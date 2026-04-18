@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { LayoutDashboard, CalendarDays, MessageCircle, User, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, MessageCircle, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const MISSION_TYPES = ['new_mission','mission_accepted','mission_refused','contract_to_sign','contract_signed','pro_en_route','mission_started','mission_completed','dispute_opened','dispute_resolved'];
@@ -81,7 +81,6 @@ export default function ProBottomNav() {
     { path: '/ProDashboard', icon: LayoutDashboard, label: 'Dashboard', badge: missionBadge },
     { path: '/ProAgenda',    icon: CalendarDays,    label: 'Agenda',    badge: 0 },
     { path: '/ProMessages',  icon: MessageCircle,   label: 'Messages',  badge: messageBadge },
-    { path: '/ServiBot',     icon: HelpCircle,      label: 'Aide',      badge: 0 },
     { path: '/ProProfile',   icon: User,            label: 'Profil',    badge: profileIncomplete },
   ];
 

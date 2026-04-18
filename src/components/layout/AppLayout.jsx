@@ -41,12 +41,10 @@ const TAB_COMPONENTS = {
   '/ProProfile': ProProfile,
 };
 
-const ServiBot = lazy(() => import('@/pages/ServiBot'));
-
 const STACK_COMPONENTS = {
   '/ServiceRequest': ServiceRequest,
   '/ProSubscription': ProSubscription,
-  '/ServiBot': ServiBot,
+  // ServiBot désactivé temporairement
 };
 
 const TabSpinner = () => (
