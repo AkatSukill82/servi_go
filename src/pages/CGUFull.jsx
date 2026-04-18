@@ -80,7 +80,9 @@ export default function CGUFull() {
         ))}
 
         <div className="pt-6 border-t border-border text-center text-xs text-muted-foreground">
-          © 2026 ServiGo — Tous droits réservés
+          <span>© 2026 ServiGo — Tous droits réservés</span>
+          {" · "}
+          <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
         </div>
       </div>
     </div>

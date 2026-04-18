@@ -461,11 +461,12 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/40">
-            <p>© 2026 ServiGo. Tous droits réservés.</p>
-            <button onClick={() => base44.auth.redirectToLogin('/Home')} className="text-white/60 hover:text-white transition-colors font-medium">
-              Se connecter →
-            </button>
+          <div className="border-t border-white/10 pt-6 text-center text-sm text-white/40">
+            <span>© 2026 ServiGo. Tous droits réservés.</span>
+            {" · "}
+            <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">CGU</a>
+            {" · "}
+            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">Confidentialité</a>
           </div>
         </div>
       </footer>

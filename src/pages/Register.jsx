@@ -760,11 +760,11 @@ export default function Register() {
       </AnimatePresence>
 
       {/* Footer légal */}
-      <div className="w-full py-4 px-5 flex items-center justify-center gap-3 text-xs text-[#9CA3AF]">
-        <a href="/cgu" target="_blank" rel="noopener noreferrer" className="hover:text-[#534AB7] underline">CGU</a>
-        <span>·</span>
-        <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-[#534AB7] underline">Confidentialité</a>
-        <span>·</span>
+      <div className="text-center py-4 text-xs text-muted-foreground">
+        <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
+        {" · "}
+        <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
+        {" · "}
         <span>© 2026 ServiGo</span>
       </div>
     </div>
