@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
 import ReferralSection from '@/components/profile/ReferralSection';
 import { useTheme } from '@/lib/ThemeContext';
+import PageFooter from '@/components/layout/PageFooter';
 
 const TABS = [
   { key: 'infos', label: 'Infos', icon: User },
@@ -402,15 +403,7 @@ export default function Profile() {
             </Button>
           </div>
         )}
-        {tab === 'infos' && (
-          <div className="text-center pb-4 text-xs text-muted-foreground">
-            <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
-            {" · "}
-            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
-            {" · "}
-            <span>© 2026 ServiGo</span>
-          </div>
-        )}
+        {tab === 'infos' && <PageFooter />}
 
         {/* Admin password modal */}
         {showAdminModal && (

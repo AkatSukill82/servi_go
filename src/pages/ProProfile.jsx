@@ -26,6 +26,7 @@ import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 import { useTheme } from '@/lib/ThemeContext';
 import DocumentsTab from '@/components/documents/DocumentsTab';
+import PageFooter from '@/components/layout/PageFooter';
 
 const TABS = [
   { key: 'infos', label: 'Infos', icon: User },
@@ -480,15 +481,7 @@ export default function ProProfile() {
             </Button>
           </motion.div>
         )}
-        {activeTab === 'infos' && (
-          <div className="text-center pb-4 text-xs text-muted-foreground">
-            <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">CGU</a>
-            {" · "}
-            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
-            {" · "}
-            <span>© 2026 ServiGo</span>
-          </div>
-        )}
+        {activeTab === 'infos' && <PageFooter />}
 
         {/* ─── ONGLET ACTIVITÉ ─── */}
         {activeTab === 'activite' && (
