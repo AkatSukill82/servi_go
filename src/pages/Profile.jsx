@@ -20,8 +20,8 @@ import ReferralSection from '@/components/profile/ReferralSection';
 import { useTheme } from '@/lib/ThemeContext';
 
 const TABS = [
-  { key: 'infos', label: 'Mes informations', icon: User },
-  { key: 'recus', label: 'Mes reçus', icon: Receipt },
+  { key: 'infos', label: 'Infos', icon: User },
+  { key: 'recus', label: 'Reçus', icon: Receipt },
   { key: 'securite', label: 'Sécurité', icon: Shield },
 ];
 
@@ -220,7 +220,7 @@ export default function Profile() {
             }`}
           >
             <Icon className="w-4 h-4" />
-            <span className="truncate text-[10px]">{label.split(' ').slice(-1)[0]}</span>
+            <span className="truncate text-[10px]">{label}</span>
           </button>
         ))}
       </div>

@@ -28,8 +28,8 @@ import { useTheme } from '@/lib/ThemeContext';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 
 const TABS = [
-  { key: 'infos', label: 'Mes infos', icon: User },
-  { key: 'activite', label: 'Mon activité', icon: Briefcase },
+  { key: 'infos', label: 'Infos', icon: User },
+  { key: 'activite', label: 'Activité', icon: Briefcase },
   { key: 'documents', label: 'Documents', icon: FileText },
   { key: 'securite', label: 'Sécurité', icon: Shield },
 ];
@@ -338,7 +338,7 @@ export default function ProProfile() {
             }`}
           >
             <Icon className="w-4 h-4" />
-            <span className="text-[10px] truncate">{label.split(' ').slice(-1)[0]}</span>
+            <span className="text-[10px] truncate">{label}</span>
           </button>
         ))}
       </div>
