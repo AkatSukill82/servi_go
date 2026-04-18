@@ -27,14 +27,17 @@ export default function TopBar({ title, subtitle }) {
     queryKey: ['unreadNotifs', user?.email],
     queryFn: () => base44.entities.Notification.filter({ recipient_email: user.email, is_read: false }, '-created_date', 20),
     enabled: !!user?.email,
-    refetchInterval: 30000,
-    staleTime: 10000,
+    refetchInterval: 60000,
+    staleTime: 30000,
   });
 
   const unreadCount = notifs.length;
 
   const markAllRead = async () => {
-    await Promise.all(notifs.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
+    // Sequential updates to avoid rate limiting
+    for (const n of notifs) {
+      await base44.entities.Notification.update(n.id, { is_read: true });
+    }
     queryClient.invalidateQueries({ queryKey: ['unreadNotifs', user?.email] });
   };
 
