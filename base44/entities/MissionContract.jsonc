@@ -1,0 +1,222 @@
+{
+  "name": "MissionContract",
+  "type": "object",
+  "description": "Contrat de mission sign\u00e9 num\u00e9riquement entre le professionnel et le client \u2014 prot\u00e8ge les deux parties",
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "description": "ID de la demande de service associ\u00e9e"
+    },
+    "contract_number": {
+      "type": "string",
+      "description": "Num\u00e9ro unique du contrat ex: CTR-2026-0001"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "customer_address": {
+      "type": "string"
+    },
+    "professional_email": {
+      "type": "string"
+    },
+    "professional_name": {
+      "type": "string"
+    },
+    "professional_phone": {
+      "type": "string"
+    },
+    "professional_bce": {
+      "type": "string",
+      "description": "Num\u00e9ro BCE du professionnel"
+    },
+    "category_name": {
+      "type": "string"
+    },
+    "service_description": {
+      "type": "string",
+      "description": "Description d\u00e9taill\u00e9e de la mission convenue"
+    },
+    "scheduled_date": {
+      "type": "string"
+    },
+    "scheduled_time": {
+      "type": "string"
+    },
+    "estimated_duration_hours": {
+      "type": "number",
+      "description": "Dur\u00e9e estim\u00e9e en heures"
+    },
+    "agreed_price": {
+      "type": "number",
+      "description": "Prix convenu et accept\u00e9 par les deux parties"
+    },
+    "price_includes_materials": {
+      "type": "boolean",
+      "default": false,
+      "description": "Le prix inclut-il les mat\u00e9riaux ?"
+    },
+    "payment_terms": {
+      "type": "string",
+      "enum": [
+        "after_completion",
+        "cash_on_site",
+        "bank_transfer_7d"
+      ],
+      "default": "after_completion"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "sent_to_customer",
+        "signed_customer",
+        "signed_both",
+        "active",
+        "completed",
+        "disputed",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "signature_customer": {
+      "type": "string",
+      "description": "Signature base64 PNG du client"
+    },
+    "signature_customer_date": {
+      "type": "string"
+    },
+    "signature_pro": {
+      "type": "string",
+      "description": "Signature base64 PNG du professionnel"
+    },
+    "signature_pro_date": {
+      "type": "string"
+    },
+    "customer_ip": {
+      "type": "string",
+      "description": "IP du client lors de la signature (preuve juridique)"
+    },
+    "pro_ip": {
+      "type": "string",
+      "description": "IP du professionnel lors de la signature"
+    },
+    "special_conditions": {
+      "type": "string",
+      "description": "Conditions particuli\u00e8res ajout\u00e9es par le pro"
+    },
+    "cancellation_policy": {
+      "type": "string",
+      "enum": [
+        "free_24h",
+        "50pct_under_24h",
+        "non_refundable"
+      ],
+      "default": "free_24h"
+    },
+    "photos_before": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photos prises avant intervention (URLs)"
+    },
+    "photos_after": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Photos prises apr\u00e8s intervention (URLs)"
+    },
+    "completion_confirmed_customer": {
+      "type": "boolean",
+      "default": false
+    },
+    "completion_confirmed_pro": {
+      "type": "boolean",
+      "default": false
+    },
+    "completion_date": {
+      "type": "string"
+    },
+    "governing_law": {
+      "type": "string",
+      "default": "Droit belge"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "default": "Tribunaux de Bruxelles"
+    },
+    "withdrawal_right_waived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Le client renonce \u00e0 son droit de r\u00e9tractation pour d\u00e9but d'ex\u00e9cution imm\u00e9diat"
+    },
+    "withdrawal_deadline": {
+      "type": "string",
+      "description": "Date limite de r\u00e9tractation (14 jours apr\u00e8s signature)"
+    },
+    "odr_link": {
+      "type": "string",
+      "default": "https://ec.europa.eu/consumers/odr"
+    },
+    "terms_version": {
+      "type": "string",
+      "description": "Version des CGU/CGV accept\u00e9es lors de la signature"
+    },
+    "mediation_clause": {
+      "type": "string",
+      "default": "En cas de litige, les parties s'engagent \u00e0 rechercher une solution amiable avant toute action judiciaire. Plateforme ODR : https://ec.europa.eu/consumers/odr"
+    }
+  },
+  "required": [
+    "request_id",
+    "contract_number"
+  ],
+  "rls": {
+    "create": {
+      "data.professional_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

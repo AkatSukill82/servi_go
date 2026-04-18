@@ -24,6 +24,9 @@ import ProPublicProfile from './pages/ProPublicProfile';
 import ProMessages from './pages/ProMessages';
 import CGUFull from './pages/CGUFull';
 import Confidentialite from './pages/Confidentialite';
+import MentionsLegales from './pages/MentionsLegales';
+import CGV from './pages/CGV';
+import PolitiqueCookies from './pages/PolitiqueCookies';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Landing from './pages/Landing';
 import AccountTypeSelection from './pages/AccountTypeSelection';
@@ -95,7 +98,10 @@ const AuthenticatedApp = () => {
 
       {/* Legal pages */}
       <Route path="/cgu" element={<CGUFull />} />
+      <Route path="/cgv" element={<CGV />} />
       <Route path="/confidentialite" element={<Confidentialite />} />
+      <Route path="/mentions-legales" element={<MentionsLegales />} />
+      <Route path="/cookies" element={<PolitiqueCookies />} />
 
       {/* Full screen pages (no layout) */}
       <Route path="/Chat" element={<Chat />} />

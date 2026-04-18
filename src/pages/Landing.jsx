@@ -449,8 +449,11 @@ export default function Landing() {
             <div>
               <p className="font-bold mb-3 text-sm uppercase tracking-wide text-white/50">Légal</p>
               <div className="space-y-2 text-sm text-white/70">
-                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/CGU')}>Conditions d'utilisation</p>
-                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/PrivacyPolicy')}>Politique de confidentialité</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/mentions-legales')}>Mentions légales</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/cgu')}>CGU</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/cgv')}>CGV</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/confidentialite')}>Confidentialité</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/cookies')}>Cookies</p>
               </div>
             </div>
             <div>
@@ -461,12 +464,19 @@ export default function Landing() {
               </div>
             </div>
           </div>
-          <div className="border-t border-white/10 pt-6 text-center text-sm text-white/40">
-            <span>© 2026 ServiGo. Tous droits réservés.</span>
-            {" · "}
-            <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">CGU</a>
-            {" · "}
-            <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">Confidentialité</a>
+          <div className="border-t border-white/10 pt-6 text-center text-sm text-white/40 space-y-1">
+            <div>
+              <a href="/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">Mentions légales</a>
+              {" · "}
+              <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">CGU</a>
+              {" · "}
+              <a href="/cgv" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">CGV</a>
+              {" · "}
+              <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">Confidentialité</a>
+              {" · "}
+              <a href="/cookies" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/70">Cookies</a>
+            </div>
+            <div>ServiGo — SRL en cours de constitution — BCE : en cours · © 2026</div>
           </div>
         </div>
       </footer>

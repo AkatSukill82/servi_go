@@ -9,6 +9,22 @@
     "invoice_number": {
       "type": "string"
     },
+    "invoice_date": {
+      "type": "string",
+      "description": "Date de facturation YYYY-MM-DD"
+    },
+    "service_date": {
+      "type": "string",
+      "description": "Date de la prestation YYYY-MM-DD"
+    },
+    "payment_due_date": {
+      "type": "string",
+      "description": "Date d'\u00e9ch\u00e9ance YYYY-MM-DD"
+    },
+    "payment_terms": {
+      "type": "string",
+      "description": "Ex: 30 jours fin de mois"
+    },
     "category_name": {
       "type": "string"
     },
@@ -21,6 +37,69 @@
     "professional_bce": {
       "type": "string",
       "description": "Num\u00e9ro BCE du professionnel"
+    },
+    "professional_tva": {
+      "type": "string",
+      "description": "Num\u00e9ro de TVA format BE 0XXX.XXX.XXX"
+    },
+    "professional_address": {
+      "type": "string",
+      "description": "Adresse compl\u00e8te du professionnel"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_address": {
+      "type": "string",
+      "description": "Adresse du client"
+    },
+    "currency": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "line_items": {
+      "type": "array",
+      "description": "Lignes de facturation d\u00e9taill\u00e9es",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unit_price": {
+            "type": "number"
+          },
+          "vat_rate": {
+            "type": "number",
+            "default": 21
+          },
+          "line_total": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "subtotal_ht": {
+      "type": "number",
+      "description": "Total hors taxes"
+    },
+    "total_vat": {
+      "type": "number",
+      "description": "Montant TVA total"
+    },
+    "total_ttc": {
+      "type": "number",
+      "description": "Total TTC"
+    },
+    "vat_exemption_reason": {
+      "type": "string",
+      "description": "Mention franchise TVA ex: Art. 56bis CTVA"
     },
     "base_price": {
       "type": "number"
@@ -48,11 +127,9 @@
       ],
       "default": "unpaid"
     },
-    "customer_name": {
-      "type": "string"
-    },
-    "customer_email": {
-      "type": "string"
+    "credit_note_ref": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence \u00e0 la facture d'origine si avoir"
     },
     "signature_customer_url": {
       "type": "string",

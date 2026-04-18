@@ -1,0 +1,82 @@
+{
+  "name": "ConsentLog",
+  "type": "object",
+  "description": "Tra\u00e7abilit\u00e9 des consentements RGPD des utilisateurs",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "consent_type": {
+      "type": "string",
+      "enum": [
+        "terms_of_service",
+        "privacy_policy",
+        "cookies_analytics",
+        "cookies_marketing",
+        "geolocation",
+        "newsletter",
+        "data_processing"
+      ]
+    },
+    "granted": {
+      "type": "boolean",
+      "description": "true si accept\u00e9, false si refus\u00e9"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version du document accept\u00e9 ex: v1.0"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "granted_at": {
+      "type": "string",
+      "description": "Date ISO 8601 du consentement"
+    },
+    "revoked_at": {
+      "type": "string",
+      "description": "Date de r\u00e9vocation si applicable"
+    }
+  },
+  "required": [
+    "user_email",
+    "consent_type"
+  ],
+  "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
