@@ -11,9 +11,8 @@ const MESSAGE_TYPES = ['message_received'];
 function NavBadge({ count }) {
   if (!count) return null;
   const label = count > 9 ? '9+' : String(count);
-  const hasPlus = label.includes('+');
   return (
-    <span className={`absolute -top-1 -right-1.5 min-w-[16px] h-4 rounded-pill flex items-center justify-center text-[10px] font-bold text-[#EF4444] leading-none ${hasPlus ? 'pr-0.5' : ''}`}>
+    <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] bg-[#EF4444] rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1 leading-none">
       {label}
     </span>
   );
