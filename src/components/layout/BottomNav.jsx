@@ -11,7 +11,7 @@ const MESSAGE_TYPES = ['message_received'];
 function NavBadge({ count }) {
   if (!count) return null;
   return (
-    <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 bg-[#EF4444] rounded-pill flex items-center justify-center text-[10px] font-bold text-white px-0.5 leading-none">
+    <span className="absolute -top-1 -right-1.5 min-w-[16px] h-4 color-[#red] rounded-pill flex items-center justify-center text-[10px] font-bold text-white px-0.5 leading-none">
       {count > 9 ? '9+' : count}
     </span>
   );
