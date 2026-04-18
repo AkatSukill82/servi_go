@@ -1,110 +1,97 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
-import { Copy, Check, Gift, Users } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, Copy, Gift } from 'lucide-react';
 import { toast } from 'sonner';
 
 const STATUS_BADGE = {
-  pending: { label: 'En attente', cls: 'bg-gray-100 text-gray-600' },
-  converted: { label: 'Inscrit ✓', cls: 'bg-green-100 text-green-700' },
-  rewarded: { label: 'Récompensé 🎁', cls: 'bg-yellow-100 text-yellow-700' },
-  expired: { label: 'Expiré', cls: 'bg-red-50 text-red-500' },
+  pending: { label: 'En attente', color: 'bg-gray-100 text-gray-600' },
+  converted: { label: 'Inscrit', color: 'bg-green-100 text-green-700' },
+  rewarded: { label: 'Récompensé', color: 'bg-yellow-100 text-yellow-700' },
+  expired: { label: 'Expiré', color: 'bg-red-100 text-red-600' },
 };
 
 export default function ReferralSection({ user }) {
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
+  const [codeCreating, setCodeCreating] = useState(false);
 
-  const { data: referrals = [] } = useQuery({
+  const { data: referrals = [], isSuccess } = useQuery({
     queryKey: ['referrals', user?.email],
-    queryFn: () => base44.entities.Referral.filter({ referrer_email: user.email }, '-created_date'),
+    queryFn: () => base44.entities.Referral.filter({ referrer_email: user.email }),
     enabled: !!user?.email,
   });
 
-  const createMutation = useMutation({
-    mutationFn: (code) => base44.entities.Referral.create({
+  const myCode = referrals.find(r => !r.referred_email)?.referral_code || referrals[0]?.referral_code;
+
+  useEffect(() => {
+    if (!isSuccess || myCode || codeCreating || !user?.email) return;
+    setCodeCreating(true);
+    const code = `${(user.first_name || 'USER').toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    base44.entities.Referral.create({
       referrer_email: user.email,
-      referrer_name: user.full_name || '',
+      referrer_name: user.full_name || user.email,
       referral_code: code,
       status: 'pending',
-    }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['referrals', user?.email] }),
-  });
+    }).then(() => queryClient.invalidateQueries({ queryKey: ['referrals', user.email] }));
+  }, [isSuccess, myCode, user?.email]);
 
-  // Auto-generate code if none exists
-  useEffect(() => {
-    if (!user?.email || referrals.length > 0) return;
-    const base = (user.first_name || user.full_name?.split(' ')[0] || 'USER').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6);
-    const code = `${base}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    createMutation.mutate(code);
-  }, [user?.email, referrals.length]);
-
-  const myCode = referrals.find(r => !r.referred_email)?.referral_code || referrals[0]?.referral_code;
-  const friends = referrals.filter(r => !!r.referred_email);
-
-  const copyCode = () => {
+  const handleCopy = () => {
     if (!myCode) return;
     navigator.clipboard.writeText(myCode);
     setCopied(true);
-    toast.success('Code copié !');
     setTimeout(() => setCopied(false), 2000);
+    toast.success('Code copié !');
   };
 
-  return (
-    <div className="bg-white rounded-2xl border border-border/50 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
-        <Gift className="w-4 h-4 text-primary" />
-        <h3 className="font-semibold text-sm">Mes parrainages</h3>
-      </div>
-      <div className="px-5 py-4 space-y-4">
-        {/* Tip */}
-        <div className="bg-primary/5 rounded-xl px-4 py-3 text-xs text-primary font-medium">
-          🎁 Parrainez un ami et gagnez une réduction de 10% sur votre prochaine mission
-        </div>
+  const referred = referrals.filter(r => r.referred_email);
 
-        {/* Code box */}
-        {myCode ? (
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3 mt-1">
+      <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-border/50 flex items-center gap-2">
+          <Gift className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-sm">Mes parrainages</h3>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-xs text-primary font-medium">
+            🎁 Parrainez un ami et gagnez une réduction de 10% sur votre prochaine mission
+          </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1.5">Votre code de parrainage</p>
-            <div className="flex items-center gap-2 bg-muted/50 border border-border rounded-xl px-4 py-3">
-              <span className="flex-1 font-mono text-base font-bold tracking-widest text-foreground">{myCode}</span>
-              <button onClick={copyCode}
-                className="flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-colors">
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? 'Copié !' : 'Copier'}
+            <p className="text-xs text-muted-foreground mb-2">Votre code de parrainage</p>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-muted rounded-xl px-4 py-3 font-mono font-bold text-base text-center tracking-widest border border-border">
+                {myCode || '...'}
+              </div>
+              <button onClick={handleCopy} className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center shrink-0">
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
           </div>
-        ) : (
-          <div className="text-center py-3 text-xs text-muted-foreground">Génération du code...</div>
-        )}
-
-        {/* Friends list */}
-        {friends.length > 0 ? (
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-3.5 h-3.5 text-muted-foreground" />
-              <p className="text-xs font-semibold text-muted-foreground">Amis parrainés ({friends.length})</p>
-            </div>
-            <div className="space-y-2">
-              {friends.map(r => {
-                const s = STATUS_BADGE[r.status] || STATUS_BADGE.pending;
-                return (
-                  <div key={r.id} className="flex items-center justify-between py-2 border-b border-border/40 last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{r.referred_name || r.referred_email || 'Ami'}</p>
-                      {r.referred_email && <p className="text-xs text-muted-foreground">{r.referred_email}</p>}
+          {referred.length > 0 ? (
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Amis invités ({referred.length})</p>
+              <div className="space-y-2">
+                {referred.map(r => {
+                  const badge = STATUS_BADGE[r.status] || STATUS_BADGE.pending;
+                  return (
+                    <div key={r.id} className="flex items-center justify-between bg-muted/30 rounded-xl px-3 py-2">
+                      <div>
+                        <p className="text-sm font-medium">{r.referred_name || r.referred_email}</p>
+                        {r.referred_email && <p className="text-xs text-muted-foreground">{r.referred_email}</p>}
+                      </div>
+                      <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badge.color}`}>{badge.label}</span>
                     </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground text-center py-2">Aucun ami parrainé pour l'instant. Partagez votre code !</p>
-        )}
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-2">Aucun ami parrainé pour l'instant. Partagez votre code !</p>
+          )}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
