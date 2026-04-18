@@ -30,6 +30,7 @@ import PolitiqueCookies from './pages/PolitiqueCookies';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Landing from './pages/Landing';
 import AccountTypeSelection from './pages/AccountTypeSelection';
+import ServiBot from './pages/ServiBot';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -81,6 +82,7 @@ const AuthenticatedApp = () => {
       <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
 
       {/* App pages with shared layout (tabs persistants) */}
+      <Route path="/ServiBot" element={<AppLayout />} />
       <Route path="/Home" element={<AppLayout />} />
       <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Messages" element={<AppLayout />} />

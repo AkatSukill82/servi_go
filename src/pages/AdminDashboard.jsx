@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket } from 'lucide-react';
+import SupportTicketsTab from '@/components/admin/SupportTicketsTab';
 import { formatPrice, formatDateFr } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ const TABS = [
   { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
   { key: 'blacklist', label: 'Blacklist', icon: Ban },
   { key: 'reports', label: 'Rapports', icon: Flag },
+  { key: 'tickets', label: 'Tickets', icon: Ticket },
 ];
 
 const REASON_LABELS = {
@@ -662,6 +664,13 @@ export default function AdminDashboard() {
     enabled: currentUser?.role === 'admin',
   });
 
+  const { data: newTickets = [] } = useQuery({
+    queryKey: ['adminNewTicketsCount'],
+    queryFn: () => base44.entities.SupportTicket.filter({ status: 'new' }, '-created_date', 200),
+    enabled: currentUser?.role === 'admin',
+    staleTime: 30000,
+  });
+
   if (currentUser && currentUser.role !== 'admin') {
     return (
       <div className="fixed inset-0 flex items-center justify-center text-center px-6">
@@ -681,7 +690,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-5 gap-1.5 mb-5">
+      <div className="grid grid-cols-6 gap-1.5 mb-5">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
             className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border transition-colors ${
@@ -695,6 +704,9 @@ export default function AdminDashboard() {
             {key === 'reports' && pendingReports.length > 0 && (
               <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{pendingReports.length}</span>
             )}
+            {key === 'tickets' && newTickets.length > 0 && (
+              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{newTickets.length > 9 ? '9+' : newTickets.length}</span>
+            )}
           </button>
         ))}
       </div>
@@ -704,6 +716,7 @@ export default function AdminDashboard() {
       {tab === 'disputes' && <DisputesTab />}
       {tab === 'blacklist' && <BlacklistTab />}
       {tab === 'reports' && <ReportsTab />}
+      {tab === 'tickets' && <SupportTicketsTab />}
     </div>
     </div>
   );
