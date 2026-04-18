@@ -63,8 +63,8 @@ export default function Home() {
       { customer_email: user.email, status: 'accepted' }, '-created_date', 1
     ).then(r => r[0] || null),
     enabled: !!user?.email,
-    refetchInterval: 20000,
-    staleTime: 20000,
+    staleTime: 60000,
+    refetchInterval: 60000,
   });
 
   const { data: unfinishedRequest } = useQuery({
@@ -73,8 +73,8 @@ export default function Home() {
       { customer_email: user.email }, '-created_date', 10
     ).then(r => r.find(req => ['searching', 'pending_pro'].includes(req.status)) || null),
     enabled: !!user?.email,
-    refetchInterval: 45000,
-    staleTime: 45000,
+    staleTime: 90000,
+    refetchInterval: 90000,
   });
 
   const cancelMutation = useMutation({

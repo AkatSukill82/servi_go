@@ -69,7 +69,7 @@ export default function ProDashboard() {
       return base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
     },
     enabled: !!proCategory,
-    staleTime: 10000,
+    staleTime: 30000,
   });
 
   // Query B: assigned to this pro (status='pending_pro')
@@ -80,7 +80,7 @@ export default function ProDashboard() {
       return base44.entities.ServiceRequestV2.filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date');
     },
     enabled: !!user?.email,
-    staleTime: 10000,
+    staleTime: 30000,
   });
 
   // Merge and deduplicate by id, assigned first
@@ -118,6 +118,7 @@ export default function ProDashboard() {
       return base44.entities.ServiceRequestV2.filter({ professional_email: user.email }, '-created_date', 20);
     },
     enabled: !!user?.email,
+    staleTime: 60000,
   });
 
   // GPS tracking for active missions
@@ -230,6 +231,7 @@ export default function ProDashboard() {
       return base44.entities.Review.filter({ professional_email: user.email }, '-created_date', 5);
     },
     enabled: !!user?.email,
+    staleTime: 120000,
   });
 
   const upcomingJob = myJobs.find(j => {
