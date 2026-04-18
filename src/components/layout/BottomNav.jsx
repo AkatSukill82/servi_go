@@ -12,7 +12,7 @@ function NavBadge({ count }) {
   if (!count) return null;
   const label = count > 9 ? '9+' : String(count);
   return (
-    <span className="absolute -top-1 -right-2 min-w-[18px] h-[18px] bg-[#EF4444] rounded-full flex items-center justify-center text-[9px] font-bold text-white px-1 leading-none">
+    <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] bg-[#EF4444] rounded-full flex items-center justify-center text-[8px] font-bold text-white px-0.5 leading-none">
       {label}
     </span>
   );
