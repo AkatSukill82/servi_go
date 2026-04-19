@@ -60,7 +60,7 @@ export default function AccountTypeSelection() {
               className="w-full bg-card rounded-2xl border-2 border-border hover:border-[#1A365D] hover:shadow-lg transition-all duration-200 p-5 text-left group"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-[#EBF8FF] flex items-center justify-center shrink-0 group-hover:bg-[#1A365D] transition-colors">
+                <div className="w-12 h-12 rounded-xl bg-[#00000] flex items-center justify-center shrink-0 group-hover:bg-[#1A365D] transition-colors">
                   <Briefcase className="w-6 h-6 text-[#1A365D] group-hover:text-white transition-colors" />
                 </div>
                 <div className="flex-1 min-w-0">
