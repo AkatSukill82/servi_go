@@ -1,0 +1,45 @@
+{
+  "name": "Favorite",
+  "type": "object",
+  "description": "Professionnels mis en favoris par les clients",
+  "properties": {
+    "customer_email": {
+      "type": "string",
+      "description": "Email du client"
+    },
+    "professional_id": {
+      "type": "string",
+      "description": "ID du professionnel (User.id)"
+    },
+    "professional_name": {
+      "type": "string"
+    },
+    "professional_category": {
+      "type": "string"
+    },
+    "professional_photo_url": {
+      "type": "string"
+    },
+    "professional_rating": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "customer_email",
+    "professional_id"
+  ],
+  "rls": {
+    "create": {
+      "data.customer_email": "{{user.email}}"
+    },
+    "read": {
+      "data.customer_email": "{{user.email}}"
+    },
+    "update": {
+      "data.customer_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.customer_email": "{{user.email}}"
+    }
+  }
+}

@@ -10,46 +10,42 @@ export function useFavorites() {
     queryFn: () => base44.auth.me(),
   });
 
-  const favorites = user?.favorite_professionals || [];
-
-  const isFavorite = (proId) => favorites.includes(proId);
-
-  const toggleMutation = useMutation({
-    mutationFn: async (proId) => {
-      const current = user?.favorite_professionals || [];
-      const updated = current.includes(proId)
-        ? current.filter(id => id !== proId)
-        : [...current, proId];
-      await base44.auth.updateMe({ favorite_professionals: updated });
-      return updated;
-    },
-    onMutate: async (proId) => {
-      await queryClient.cancelQueries({ queryKey: ['currentUser'] });
-      const previous = queryClient.getQueryData(['currentUser']);
-      queryClient.setQueryData(['currentUser'], (old) => {
-        if (!old) return old;
-        const current = old.favorite_professionals || [];
-        const updated = current.includes(proId)
-          ? current.filter(id => id !== proId)
-          : [...current, proId];
-        return { ...old, favorite_professionals: updated };
-      });
-      return { previous };
-    },
-    onError: (_err, _proId, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['currentUser'], context.previous);
-      }
-      toast.error('Erreur lors de la mise à jour des favoris');
-    },
-    onSuccess: (updated, proId) => {
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      const added = updated.includes(proId);
-      toast.success(added ? 'Ajouté aux favoris ⭐' : 'Retiré des favoris');
-    },
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites', user?.email],
+    queryFn: () => base44.entities.Favorite.filter({ customer_email: user.email }, '-created_date'),
+    enabled: !!user?.email,
+    staleTime: 60000,
   });
 
-  const toggleFavorite = (proId) => toggleMutation.mutate(proId);
+  const isFavorite = (proId) => favorites.some(f => f.professional_id === proId);
+
+  const toggleMutation = useMutation({
+    mutationFn: async (pro) => {
+      const proId = typeof pro === 'string' ? pro : pro.id;
+      const existing = favorites.find(f => f.professional_id === proId);
+      if (existing) {
+        await base44.entities.Favorite.delete(existing.id);
+        return { added: false };
+      } else {
+        await base44.entities.Favorite.create({
+          customer_email: user.email,
+          professional_id: proId,
+          professional_name: typeof pro === 'object' ? (pro.full_name || pro.name || '') : '',
+          professional_category: typeof pro === 'object' ? (pro.category_name || '') : '',
+          professional_photo_url: typeof pro === 'object' ? (pro.photo_url || '') : '',
+          professional_rating: typeof pro === 'object' ? (pro.rating || null) : null,
+        });
+        return { added: true };
+      }
+    },
+    onSuccess: ({ added }) => {
+      queryClient.invalidateQueries({ queryKey: ['favorites', user?.email] });
+      toast.success(added ? 'Ajouté aux favoris ⭐' : 'Retiré des favoris');
+    },
+    onError: () => toast.error('Erreur lors de la mise à jour des favoris'),
+  });
+
+  const toggleFavorite = (pro) => toggleMutation.mutate(pro);
 
   return { favorites, isFavorite, toggleFavorite, isLoading: toggleMutation.isPending };
 }
