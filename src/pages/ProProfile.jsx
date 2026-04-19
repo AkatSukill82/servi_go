@@ -280,8 +280,15 @@ export default function ProProfile() {
             onClick={async () => {
               const val = !form.available;
               setForm(f => ({ ...f, available: val }));
+              // Sauvegarder sur le profil utilisateur
               await base44.auth.updateMe({ available: val });
+              // Sauvegarder aussi sur l'entité Professional (utilisée pour l'attribution des missions)
+              const pros = await base44.entities.Professional.filter({ email: user.email }, '-created_date', 1);
+              if (pros.length > 0) {
+                await base44.entities.Professional.update(pros[0].id, { available: val });
+              }
               queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+              toast.success(val ? 'Vous êtes maintenant disponible ✓' : 'Vous êtes maintenant hors ligne');
             }}
             style={{
               position: 'relative',
