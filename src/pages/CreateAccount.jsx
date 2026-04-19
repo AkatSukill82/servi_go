@@ -102,8 +102,8 @@ function StepTypeSelection({ onSelect }) {
           className="w-full bg-white rounded-2xl border-2 border-[#E2E8F0] hover:border-[#1A365D] hover:shadow-lg transition-all duration-200 p-5 text-left group"
         >
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#EBF8FF] flex items-center justify-center shrink-0 group-hover:bg-[#1A365D] transition-colors">
-              <Wrench className="w-7 h-7 text-[#1A365D] group-hover:text-white transition-colors" />
+            <div className="w-14 h-14 rounded-2xl bg-[#1A365D] flex items-center justify-center shrink-0 group-hover:bg-[#0F2444] transition-colors">
+              <Wrench className="w-7 h-7 text-white transition-colors" />
             </div>
             <div className="flex-1">
               <p className="font-bold text-[#1A365D] text-lg">Professionnel</p>
@@ -629,7 +629,7 @@ export default function CreateAccount() {
   return (
     <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
       {/* Header */}
-      <div className="bg-[#1A1A2E] px-5 pt-8 pb-5 text-center shrink-0">
+      <div className="bg-[#1A1A2E] px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
         <div className="flex justify-center mb-3">
           <ServiGoIcon size={40} white />
         </div>
