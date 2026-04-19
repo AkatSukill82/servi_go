@@ -35,6 +35,14 @@ export default function ProDashboard() {
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   const proCategory = user?.category_name;
 
+  // Gate: redirect if independence charter not signed
+  useEffect(() => {
+    if (!user) return;
+    if (!user.independence_charter_signed) {
+      navigate('/IndependenceCharter', { replace: true });
+    }
+  }, [user, navigate]);
+
   const { data: subscription } = useQuery({
     queryKey: ['proSubscription', user?.email],
     queryFn: () => {

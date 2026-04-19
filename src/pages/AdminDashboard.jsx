@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket, FileText, Shield } from 'lucide-react';
 import SupportTicketsTab from '@/components/admin/SupportTicketsTab';
+import DAC7Tab from '@/components/admin/DAC7Tab';
+import IndependenceTab from '@/components/admin/IndependenceTab';
 import { formatPrice, formatDateFr } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +20,8 @@ const TABS = [
   { key: 'blacklist', label: 'Blacklist', icon: Ban },
   { key: 'reports', label: 'Rapports', icon: Flag },
   { key: 'tickets', label: 'Tickets', icon: Ticket },
+  { key: 'dac7', label: 'DAC7', icon: FileText },
+  { key: 'independence', label: 'Indép.', icon: Shield },
 ];
 
 const REASON_LABELS = {
@@ -690,7 +694,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-6 gap-1.5 mb-5">
+      <div className="grid grid-cols-4 gap-1.5 mb-5">
         {TABS.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setTab(key)}
             className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border transition-colors ${
@@ -717,6 +721,8 @@ export default function AdminDashboard() {
       {tab === 'blacklist' && <BlacklistTab />}
       {tab === 'reports' && <ReportsTab />}
       {tab === 'tickets' && <SupportTicketsTab />}
+      {tab === 'dac7' && <DAC7Tab />}
+      {tab === 'independence' && <IndependenceTab />}
     </div>
     </div>
   );

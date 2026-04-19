@@ -31,6 +31,8 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import Landing from './pages/Landing';
 import AccountTypeSelection from './pages/AccountTypeSelection';
 import ServiBot from './pages/ServiBot';
+import IndependenceCharter from './pages/IndependenceCharter';
+import DAC7Form from './pages/DAC7Form';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -97,6 +99,10 @@ const AuthenticatedApp = () => {
       <Route path="/Invoices" element={<AppLayout />} />
       <Route path="/Map" element={<AppLayout />} />
       <Route path="/Emergency" element={<AppLayout />} />
+
+      {/* Pro legal & fiscal pages */}
+      <Route path="/IndependenceCharter" element={<IndependenceCharter />} />
+      <Route path="/DAC7Form" element={<DAC7Form />} />
 
       {/* Legal pages */}
       <Route path="/cgu" element={<CGUFull />} />
