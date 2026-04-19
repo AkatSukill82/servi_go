@@ -116,8 +116,15 @@ export default function AppLayout() {
   }, []);
 
   if (loading) {
+    const isDark = document.documentElement.classList.contains('dark') ||
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const bg = isDark ? '#0a0a0a' : '#ffffff';
+    const textColor = isDark ? '#ffffff' : '#0F172A';
+    const spinnerTrack = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(15,23,42,0.12)';
+    const spinnerTop = '#FF6B35';
+
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: '#1A1A2E' }}>
+      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg, width: '100vw', height: '100vh' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -128,8 +135,8 @@ export default function AppLayout() {
             <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#FF6B35"/>
             <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
           </svg>
-          <span className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>ServiGo</span>
-          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid rgba(255,255,255,0.2)', borderTopColor: '#FF6B35' }} />
+          <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: textColor }}>ServiGo</span>
+          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `3px solid ${spinnerTrack}`, borderTopColor: spinnerTop }} />
         </motion.div>
       </div>
     );
