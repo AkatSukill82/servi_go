@@ -125,8 +125,8 @@ export default function Home() {
               className="w-full h-14 pl-11 pr-12 rounded-xl border border-border bg-card text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent transition shadow-card"
               style={{ fontSize: 16 }}
             />
-            <button className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground tap-scale">
-              <Mic className="w-5 h-5" />
+            <button className="absolute right-3 top-1/2 -translate-y-1/2 tap-scale w-9 h-9 rounded-lg bg-[#4F46E5]/10 flex items-center justify-center">
+              <Mic className="w-5 h-5 text-[#4F46E5]" />
             </button>
           </div>
 
@@ -234,7 +234,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {filteredCategories.map((category, index) => (
                   <ServiceCard
                     key={category.id}
