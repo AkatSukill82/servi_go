@@ -302,7 +302,7 @@ export default function ProProfile() {
               flexShrink: 0,
               transition: 'background-color 0.2s ease',
               minHeight: 'unset',
-              minWidth: 'unset',
+              minWidth: '48px',
             }}
           >
             <span style={{
@@ -315,6 +315,7 @@ export default function ProProfile() {
               backgroundColor: '#FFFFFF',
               boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
               transition: 'left 0.2s ease',
+              display: 'block',
             }} />
           </button>
         </div>
