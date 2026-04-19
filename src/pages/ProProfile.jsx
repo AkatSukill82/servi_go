@@ -269,9 +269,12 @@ export default function ProProfile() {
 
         {/* Toggle disponibilité */}
         <div className="flex items-center justify-between mt-4 bg-muted rounded-xl px-4 py-2.5">
-          <div>
-            <p className="text-sm font-medium">Disponible pour des missions</p>
-            <p className="text-xs text-muted-foreground">{form.available ? 'Vous recevez des nouvelles demandes' : 'Vous êtes hors ligne'}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{form.available ? '🟢' : '⚫'}</span>
+            <div>
+              <p className="text-sm font-medium">Disponible pour des missions</p>
+              <p className="text-xs text-muted-foreground">{form.available ? 'Vous recevez des nouvelles demandes' : 'Vous êtes hors ligne'}</p>
+            </div>
           </div>
           <button
             onClick={async () => {
@@ -306,18 +309,6 @@ export default function ProProfile() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
               transition: 'left 0.2s ease',
             }} />
-            {form.available && (
-              <span style={{
-                position: 'absolute',
-                top: '-3px',
-                right: '-3px',
-                width: '10px',
-                height: '10px',
-                borderRadius: '50%',
-                backgroundColor: '#34D399',
-                animation: 'pulse 2s infinite',
-              }} />
-            )}
           </button>
         </div>
 
