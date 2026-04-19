@@ -45,7 +45,8 @@ const TAB_COMPONENTS = {
 const STACK_COMPONENTS = {
   '/ServiceRequest': ServiceRequest,
   '/ProSubscription': ProSubscription,
-  // ServiBot désactivé temporairement
+  '/Map': Map,
+  '/Emergency': lazy(() => import('@/pages/Emergency')),
 };
 
 const TabSpinner = () => (
