@@ -394,8 +394,8 @@ export default function Profile() {
             <Button
               variant="outline"
               onClick={async () => {
-                await base44.auth.logout();
-                window.location.href = '/login';
+                await base44.auth.logout('/se-connecter');
+                        window.location.href = '/se-connecter';
               }}
               className="w-full h-12 rounded-xl text-sm text-muted-foreground"
             >
