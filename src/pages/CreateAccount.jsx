@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -613,6 +613,18 @@ function ProSignup({ onBack }) {
 
 export default function CreateAccount() {
   const [userType, setUserType] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(async (authed) => {
+      if (authed) {
+        const user = await base44.auth.me();
+        if (user?.role === 'admin') navigate('/AdminDashboard', { replace: true });
+        else if (user?.user_type === 'professionnel') navigate('/ProDashboard', { replace: true });
+        else navigate('/Home', { replace: true });
+      }
+    });
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
