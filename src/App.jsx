@@ -69,8 +69,8 @@ const AuthenticatedApp = () => {
   return (
     <ErrorBoundary>
     <Routes>
-      {/* Root → Landing page for unauthenticated users */}
-      <Route path="/" element={<Landing />} />
+      {/* Root → Signup page */}
+      <Route path="/" element={<CreateAccount />} />
 
       {/* Public pages (no layout) */}
       <Route path="/SelectUserType" element={<SelectUserType />} />
