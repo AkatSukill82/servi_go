@@ -220,13 +220,13 @@ export default function Landing() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => base44.auth.redirectToLogin('/Home')}
+              onClick={() => navigate('/se-connecter')}
               className="hidden md:block text-sm font-semibold text-[#1A365D] hover:underline"
             >
               Se connecter
             </button>
             <button
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/creer-compte')}
               className="bg-[#1A365D] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#2D4A7A] transition-colors shadow-sm"
             >
               Commencer
@@ -241,7 +241,7 @@ export default function Landing() {
             <a href="#categories" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Services</a>
             <a href="#how" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Comment ça marche</a>
             <a href="#reviews" onClick={() => setMenuOpen(false)} className="block text-sm font-medium text-[#4A5568]">Avis clients</a>
-            <button onClick={() => base44.auth.redirectToLogin('/Home')} className="block w-full text-left text-sm font-semibold text-[#2B6CB0]">Se connecter</button>
+            <button onClick={() => navigate('/se-connecter')} className="block w-full text-left text-sm font-semibold text-[#2B6CB0]">Se connecter</button>
           </div>
         )}
       </nav>
@@ -282,7 +282,7 @@ export default function Landing() {
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <button
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/creer-compte')}
               className="flex items-center justify-center gap-2 bg-white text-[#1A365D] font-bold px-8 py-4 rounded-2xl hover:bg-[#EBF8FF] transition-all duration-200 shadow-lg text-base group"
             >
               <Home className="w-5 h-5" />
@@ -360,14 +360,14 @@ export default function Landing() {
                   key={cat.id}
                   category={cat}
                   index={i}
-                  onClick={() => base44.auth.redirectToLogin('/Home')}
+                  onClick={() => navigate('/se-connecter')}
                 />
               ))}
             </div>
           )}
           <div className="text-center mt-8">
             <button
-              onClick={() => base44.auth.redirectToLogin('/Home')}
+              onClick={() => navigate('/se-connecter')}
               className="inline-flex items-center gap-2 bg-[#1A365D] text-white font-bold px-8 py-3.5 rounded-2xl hover:bg-[#2D4A7A] transition-colors shadow-md"
             >
               Faire une demande <ArrowRight className="w-4 h-4" />
@@ -410,13 +410,13 @@ export default function Landing() {
           <p className="text-white/80 mb-8 text-lg">Rejoignez des milliers de clients satisfaits et trouvez votre artisan dès aujourd'hui.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => base44.auth.redirectToLogin('/Home')}
+              onClick={() => navigate('/se-connecter')}
               className="bg-white text-[#1A365D] font-bold px-8 py-4 rounded-2xl hover:bg-[#EBF8FF] transition-colors shadow-lg text-base"
             >
               Se connecter
             </button>
             <button
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/creer-compte')}
               className="border-2 border-white text-white font-bold px-8 py-4 rounded-2xl hover:bg-white/10 transition-colors text-base"
             >
               Créer un compte
@@ -441,8 +441,8 @@ export default function Landing() {
             <div>
               <p className="font-bold mb-3 text-sm uppercase tracking-wide text-white/50">Services</p>
               <div className="space-y-2 text-sm text-white/70">
-                <p className="hover:text-white cursor-pointer" onClick={() => base44.auth.redirectToLogin('/Home')}>Trouver un artisan</p>
-                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/signup')}>Devenir artisan</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/se-connecter')}>Trouver un artisan</p>
+                <p className="hover:text-white cursor-pointer" onClick={() => navigate('/creer-compte')}>Devenir artisan</p>
                 <p className="hover:text-white cursor-pointer">Comment ça marche</p>
               </div>
             </div>

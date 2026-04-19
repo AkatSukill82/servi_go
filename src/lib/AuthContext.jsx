@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    base44.auth.redirectToLogin('/Home');
+    window.location.href = '/se-connecter';
   };
 
   return (

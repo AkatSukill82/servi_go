@@ -33,6 +33,8 @@ import AccountTypeSelection from './pages/AccountTypeSelection';
 import ServiBot from './pages/ServiBot';
 import IndependenceCharter from './pages/IndependenceCharter';
 import DAC7Form from './pages/DAC7Form';
+import AuthLogin from './pages/AuthLogin';
+import CreateAccount from './pages/CreateAccount';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -99,6 +101,10 @@ const AuthenticatedApp = () => {
       <Route path="/Invoices" element={<AppLayout />} />
       <Route path="/Map" element={<AppLayout />} />
       <Route path="/Emergency" element={<AppLayout />} />
+
+      {/* Auth pages — custom login & signup */}
+      <Route path="/se-connecter" element={<AuthLogin />} />
+      <Route path="/creer-compte" element={<CreateAccount />} />
 
       {/* Pro legal & fiscal pages */}
       <Route path="/IndependenceCharter" element={<IndependenceCharter />} />

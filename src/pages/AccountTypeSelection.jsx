@@ -83,7 +83,7 @@ export default function AccountTypeSelection() {
           <p className="text-center text-sm text-muted-foreground">
             Déjà un compte ?{' '}
             <button
-              onClick={() => base44.auth.redirectToLogin('/Home')}
+              onClick={() => { window.location.href = '/se-connecter'; }}
               className="text-[#FF6B35] font-semibold hover:underline"
             >
               Se connecter
