@@ -3,7 +3,6 @@ import { Plus, Trash2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -131,10 +130,36 @@ export default function AvailabilityEditor({ userEmail }) {
             <p className="font-semibold text-sm">{day.day_label}</p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{day.is_day_off ? 'Repos' : 'Disponible'}</span>
-              <Switch
-                checked={!day.is_day_off}
-                onCheckedChange={(val) => updateDay(dayIndex, { is_day_off: !val })}
-              />
+              <button
+                onClick={() => updateDay(dayIndex, { is_day_off: !day.is_day_off })}
+                style={{
+                  position: 'relative',
+                  width: '48px',
+                  height: '28px',
+                  borderRadius: '14px',
+                  backgroundColor: !day.is_day_off ? '#10B981' : '#6B7280',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  flexShrink: 0,
+                  transition: 'background-color 0.2s ease',
+                  minHeight: 'unset',
+                  minWidth: '48px',
+                }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: !day.is_day_off ? '22px' : '2px',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  backgroundColor: '#FFFFFF',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  transition: 'left 0.2s ease',
+                  display: 'block',
+                }} />
+              </button>
             </div>
           </div>
 
