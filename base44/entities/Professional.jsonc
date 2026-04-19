@@ -1,0 +1,100 @@
+{
+  "name": "Professional",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nom complet du professionnel"
+    },
+    "category_name": {
+      "type": "string",
+      "description": "Nom de la cat\u00e9gorie"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Note moyenne sur 5"
+    },
+    "reviews_count": {
+      "type": "number"
+    },
+    "latitude": {
+      "type": "number"
+    },
+    "longitude": {
+      "type": "number"
+    },
+    "address": {
+      "type": "string"
+    },
+    "available": {
+      "type": "boolean",
+      "default": true
+    },
+    "base_price": {
+      "type": "number",
+      "description": "Prix de base en euros"
+    },
+    "hourly_rate": {
+      "type": "number"
+    },
+    "verification_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected"
+      ],
+      "default": "pending"
+    },
+    "pro_description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "category_name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "user_condition": {}
+    },
+    "update": {
+      "$or": [
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

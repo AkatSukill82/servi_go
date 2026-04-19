@@ -584,6 +584,23 @@ function ProSignup({ onBack }) {
         last_updated: today,
       });
 
+      // Create Professional entity profile
+      try {
+        await base44.entities.Professional.create({
+          name: `${proData.first_name} ${proData.last_name}`.trim(),
+          email: user.email,
+          phone: proData.phone?.trim() || '',
+          address: proData.address?.trim() || '',
+          photo_url: proData.photo_url || '',
+          category_name: proData.category_name,
+          pro_description: proData.description?.trim() || '',
+          available: true,
+          verification_status: 'pending',
+        });
+      } catch (e) {
+        console.warn('Professional profile creation failed (non-blocking):', e.message);
+      }
+
       toast.success('Compte professionnel créé avec succès ! 🎉');
       navigate('/ProDashboard', { replace: true });
     } catch (err) {
