@@ -121,7 +121,7 @@ export default function Home() {
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Que cherchez-vous ? Plombier, déménageur…"
+              placeholder="Que cherchez-vous ?"
               className="w-full h-14 pl-11 pr-12 rounded-xl border border-border bg-card text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent transition shadow-card"
               style={{ fontSize: 16 }}
             />
