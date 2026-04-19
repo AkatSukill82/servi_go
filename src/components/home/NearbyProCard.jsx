@@ -43,8 +43,19 @@ export default function NearbyProCard({ pro, index, onPress }) {
       {/* Rating */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
-          <span className="text-xs font-semibold">{pro.rating?.toFixed(1) || '—'}</span>
+          {pro.rating >= 4.5 ? (
+            <span className="flex items-center gap-1 bg-yellow-400/15 text-yellow-600 font-bold text-xs px-2 py-0.5 rounded-full border border-yellow-400/30">
+              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+              {pro.rating?.toFixed(1)}
+            </span>
+          ) : pro.rating > 0 ? (
+            <>
+              <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
+              <span className="text-xs font-semibold">{pro.rating?.toFixed(1)}</span>
+            </>
+          ) : (
+            <span className="text-xs text-muted-foreground">Nouveau</span>
+          )}
           {pro.reviews_count > 0 && (
             <span className="text-xs text-muted-foreground">({pro.reviews_count})</span>
           )}

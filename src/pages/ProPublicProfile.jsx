@@ -174,10 +174,15 @@ export default function ProPublicProfile() {
             </div>
             <p className="text-sm text-white/80 mt-0.5">{pro.category_name || 'Artisan ServiGo'}</p>
             {avgRating && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <StarRating rating={Number(avgRating)} />
                 <span className="text-sm font-bold">{avgRating}</span>
                 <span className="text-xs text-white/70">({reviews.length} avis)</span>
+                {Number(avgRating) >= 4.5 && (
+                  <span className="flex items-center gap-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    ⭐ Top Pro
+                  </span>
+                )}
               </div>
             )}
             {pro.address && (

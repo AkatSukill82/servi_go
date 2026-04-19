@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Home, ClipboardList, MessageCircle, User } from 'lucide-react';
+import { Home, ClipboardList, Heart, MessageCircle, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const MISSION_TYPES = ['new_mission','mission_accepted','mission_refused','contract_to_sign','contract_signed','pro_en_route','mission_started','mission_completed','dispute_opened','dispute_resolved'];
@@ -79,6 +79,7 @@ export default function BottomNav() {
   const navItems = [
     { path: '/Home',           icon: Home,          label: 'Accueil',   badge: 0 },
     { path: '/MissionHistory', icon: ClipboardList, label: 'Missions',  badge: missionBadge },
+    { path: '/Favorites',      icon: Heart,         label: 'Favoris',   badge: 0 },
     { path: '/Messages',       icon: MessageCircle, label: 'Messages',  badge: messageBadge },
     { path: '/Profile',        icon: User,          label: 'Profil',    badge: profileIncomplete },
   ];
@@ -88,7 +89,7 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="w-full flex items-center justify-around h-14 px-1">
+      <div className="w-full flex items-center justify-around h-14 px-0.5">
         {navItems.map((item) => (
           <NavItem
             key={item.path}
