@@ -5,15 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
-import { Loader2, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AuthLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -33,19 +32,19 @@ export default function AuthLogin() {
     else navigate('/Home', { replace: true });
   };
 
-  const handleLogin = async (e) => {
+  const handleSendLink = async (e) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      toast.error('Veuillez remplir tous les champs');
+    if (!email.trim()) {
+      toast.error('Veuillez entrer votre email');
       return;
     }
     setLoading(true);
     try {
-      await base44.auth.login(email.trim(), password);
-      const user = await base44.auth.me();
-      redirectByRole(user);
+      await base44.auth.sendMagicLink(email.trim(), window.location.origin + '/Home');
+      setSent(true);
     } catch (err) {
-      toast.error('Email ou mot de passe incorrect');
+      toast.error('Erreur lors de l\'envoi. Vérifiez votre email.');
+    } finally {
       setLoading(false);
     }
   };
@@ -72,55 +71,58 @@ export default function AuthLogin() {
       {/* Form */}
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-10">
         <div className="w-full max-w-md">
-          <form onSubmit={handleLogin} className="bg-white rounded-2xl shadow-md border border-[#E2E8F0] p-6 space-y-5">
-            <h2 className="text-xl font-bold text-[#1A365D] text-center">Se connecter</h2>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs text-[#4A5568]">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#CBD5E0]" />
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="votre@email.com"
-                  className="h-12 rounded-xl pl-10"
-                  autoComplete="email"
-                  inputMode="email"
-                />
+          {sent ? (
+            <div className="bg-white rounded-2xl shadow-md border border-[#E2E8F0] p-8 text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
+              <h2 className="text-xl font-bold text-[#1A365D]">Vérifiez vos emails !</h2>
+              <p className="text-sm text-[#718096] leading-relaxed">
+                Un lien de connexion a été envoyé à <strong>{email}</strong>.<br />
+                Cliquez sur le lien dans l'email pour accéder à votre compte.
+              </p>
+              <p className="text-xs text-[#A0AEC0]">Vérifiez aussi vos spams si vous ne trouvez pas l'email.</p>
+              <button
+                onClick={() => setSent(false)}
+                className="text-sm text-[#2B6CB0] underline underline-offset-2"
+              >
+                Renvoyer avec un autre email
+              </button>
             </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs text-[#4A5568]">Mot de passe</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#CBD5E0]" />
-                <Input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="h-12 rounded-xl pl-10 pr-10"
-                  autoComplete="current-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(s => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#CBD5E0] hover:text-[#718096]"
-                >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+          ) : (
+            <form onSubmit={handleSendLink} className="bg-white rounded-2xl shadow-md border border-[#E2E8F0] p-6 space-y-5">
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-[#1A365D]">Se connecter</h2>
+                <p className="text-xs text-[#718096] mt-1">Nous vous enverrons un lien magique par email</p>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold text-base"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Se connecter'}
-            </Button>
-          </form>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-[#4A5568]">Adresse email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#CBD5E0]" />
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="votre@email.com"
+                    className="h-12 rounded-xl pl-10"
+                    autoComplete="email"
+                    inputMode="email"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold text-base"
+              >
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Envoyer le lien de connexion'}
+              </Button>
+            </form>
+          )}
 
           <div className="mt-6 text-center space-y-3">
             <p className="text-sm text-[#718096]">Pas encore de compte ?</p>
