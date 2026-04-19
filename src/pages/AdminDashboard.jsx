@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket, FileText, Shield } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket, FileText, Shield, Mail } from 'lucide-react';
 import SupportTicketsTab from '@/components/admin/SupportTicketsTab';
 import DAC7Tab from '@/components/admin/DAC7Tab';
 import IndependenceTab from '@/components/admin/IndependenceTab';
@@ -22,6 +22,7 @@ const TABS = [
   { key: 'tickets', label: 'Tickets', icon: Ticket },
   { key: 'dac7', label: 'DAC7', icon: FileText },
   { key: 'independence', label: 'Indép.', icon: Shield },
+  { key: 'email', label: 'Email', icon: Mail },
 ];
 
 const REASON_LABELS = {
@@ -723,6 +724,29 @@ export default function AdminDashboard() {
       {tab === 'tickets' && <SupportTicketsTab />}
       {tab === 'dac7' && <DAC7Tab />}
       {tab === 'independence' && <IndependenceTab />}
+      {tab === 'email' && (
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl border border-border p-5 text-center space-y-3">
+            <Mail className="w-10 h-10 mx-auto text-primary opacity-70" />
+            <p className="font-semibold">Test d'envoi d'email</p>
+            <p className="text-sm text-muted-foreground">Envoyez un email de test pour vérifier la configuration.</p>
+            <button onClick={() => window.location.href = '/AdminTestEmail'} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl text-sm">
+              <Mail className="w-4 h-4" /> Ouvrir le test email
+            </button>
+          </div>
+          <div className="bg-muted/40 rounded-xl border border-border p-4 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Automations actives</p>
+            {[
+              '✅ Nouvelle demande client → Email de confirmation',
+              '🎉 Mission acceptée → Email au client',
+              '📝 Contrat créé → Invitation à signer',
+              '🚀 Abonnement Pro actif → Email de bienvenue',
+            ].map((item, i) => (
+              <p key={i} className="text-sm text-foreground">{item}</p>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
     </div>
   );

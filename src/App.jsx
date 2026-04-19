@@ -35,6 +35,7 @@ import IndependenceCharter from './pages/IndependenceCharter';
 import DAC7Form from './pages/DAC7Form';
 import AuthLogin from './pages/AuthLogin';
 import CreateAccount from './pages/CreateAccount';
+import AdminTestEmail from './pages/AdminTestEmail';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
       <Route path="/AdminDashboard" element={<AdminDashboard />} />
+      <Route path="/AdminTestEmail" element={<AdminTestEmail />} />
       <Route path="/CGU" element={<CGU />} />
       <Route path="/EidVerification" element={<EidVerification />} />
       <Route path="/Support" element={<Support />} />
