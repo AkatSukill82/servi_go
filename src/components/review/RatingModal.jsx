@@ -28,7 +28,7 @@ export default function RatingModal({ request, onSubmit, onClose, isSubmitting }
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', damping: 25 }}
-          className="bg-card w-full max-w-md rounded-t-3xl p-6 pb-10 space-y-5"
+          className="bg-card w-full max-w-md rounded-t-3xl p-6 pb-10 space-y-5 overflow-y-auto max-h-[90vh]"
           onClick={e => e.stopPropagation()}
         >
           {/* Handle */}

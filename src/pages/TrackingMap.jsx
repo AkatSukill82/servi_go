@@ -29,8 +29,12 @@ const clientIcon = L.divIcon({
 function FitBounds({ points }) {
   const map = useMap();
   useEffect(() => {
+    // Force map to recalculate its size (fixes blank tile issues in app shell)
+    map.invalidateSize();
     if (points.length >= 2) {
       map.fitBounds(points, { padding: [80, 60] });
+    } else if (points.length === 1) {
+      map.setView(points[0], 14);
     }
   }, [points.length]);
   return null;
@@ -47,7 +51,7 @@ export default function TrackingMap() {
 
   const { data: request } = useQuery({
     queryKey: ['trackRequest', requestId],
-    queryFn: () => base44.entities.ServiceRequest.filter({ id: requestId }).then(r => r[0]),
+    queryFn: () => base44.entities.ServiceRequestV2.filter({ id: requestId }).then(r => r[0]),
     enabled: !!requestId,
     refetchInterval: 10000,
   });
