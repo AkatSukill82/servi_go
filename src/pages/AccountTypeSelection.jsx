@@ -9,10 +9,10 @@ export default function AccountTypeSelection() {
   return (
     <div
       className="bg-background flex flex-col"
-      style={{ minHeight: '100dvh' }}>
-      
+      style={{ minHeight: '100dvh' }}
+    >
       {/* Header — taille fluide */}
-      <div className="bg-[#000000] pt-10 pb-8 px-5 text-center shrink-0">
+      <div className="bg-[#1A1A2E] px-5 pt-10 pb-8 text-center shrink-0">
         <div className="flex justify-center mb-3">
           <ServiGoIcon size={48} white />
         </div>
@@ -36,9 +36,9 @@ export default function AccountTypeSelection() {
 
           {/* Particulier card */}
           <button
-            onClick={() => navigate('/Register', { state: { preselectedType: 'particulier' } })}
-            className="w-full bg-card rounded-2xl border-2 border-border hover:border-[#FF6B35] hover:shadow-lg active:scale-[0.98] transition-all duration-200 p-4 sm:p-5 text-left group">
-            
+            onClick={() => navigate('/Register?type=particulier')}
+            className="w-full bg-card rounded-2xl border-2 border-border hover:border-[#FF6B35] hover:shadow-lg active:scale-[0.98] transition-all duration-200 p-4 sm:p-5 text-left group"
+          >
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#FFF0EB] flex items-center justify-center shrink-0 group-hover:bg-[#FF6B35] transition-colors">
                 <User className="w-5 h-5 sm:w-6 sm:h-6 text-[#FF6B35] group-hover:text-white transition-colors" />
@@ -58,9 +58,9 @@ export default function AccountTypeSelection() {
 
           {/* Professionnel card */}
           <button
-            onClick={() => {window.location.href = 'https://servi-go-pro.base44.app';}}
-            className="w-full bg-card rounded-2xl border-2 border-border hover:border-[#1A365D] hover:shadow-lg active:scale-[0.98] transition-all duration-200 p-4 sm:p-5 text-left group">
-            
+            onClick={() => { window.location.href = 'https://servi-go-pro.base44.app'; }}
+            className="w-full bg-card rounded-2xl border-2 border-border hover:border-[#1A365D] hover:shadow-lg active:scale-[0.98] transition-all duration-200 p-4 sm:p-5 text-left group"
+          >
             <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
               <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-[#EBF8FF] flex items-center justify-center shrink-0 group-hover:bg-[#1A365D] transition-colors">
                 <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-[#1A365D] group-hover:text-white transition-colors" />
@@ -88,9 +88,9 @@ export default function AccountTypeSelection() {
           <p className="text-center text-sm text-muted-foreground">
             Déjà un compte ?{' '}
             <button
-              onClick={() => {window.location.href = '/se-connecter';}}
-              className="text-[#FF6B35] font-semibold hover:underline">
-              
+              onClick={() => { window.location.href = '/se-connecter'; }}
+              className="text-[#FF6B35] font-semibold hover:underline"
+            >
               Se connecter
             </button>
           </p>
@@ -105,6 +105,6 @@ export default function AccountTypeSelection() {
         {" · "}
         <span>© 2026 ServiGo</span>
       </div>
-    </div>);
-
+    </div>
+  );
 }
