@@ -131,9 +131,9 @@ export default function AppLayout() {
           transition={{ duration: 0.3 }}
           className="flex flex-col items-center gap-4"
         >
-          <svg width="80" height="80" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#FF6B35"/>
-            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: textColor }}>ServiGo</span>
           <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `3px solid ${spinnerTrack}`, borderTopColor: spinnerTop }} />
