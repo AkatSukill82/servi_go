@@ -14,16 +14,28 @@ delete L.Icon.Default.prototype._getIconUrl;
 
 const proIcon = L.divIcon({
   className: '',
-  html: `<div style="width:42px;height:42px;background:#0a0a0a;border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);font-size:18px;">🔧</div>`,
-  iconSize: [42, 42],
-  iconAnchor: [21, 21],
+  html: `
+    <div style="position:relative;width:52px;height:52px;">
+      <div style="width:52px;height:52px;background:linear-gradient(135deg,#6C5CE7,#a78bfa);border-radius:50%;border:3px solid white;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(108,92,231,0.5);font-size:22px;">🚗</div>
+      <span style="position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;background:#00B894;border-radius:50%;border:2px solid white;display:block;animation:pulse 1.5s infinite;"></span>
+    </div>
+    <style>@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:0.6}}</style>
+  `,
+  iconSize: [52, 52],
+  iconAnchor: [26, 26],
 });
 
 const clientIcon = L.divIcon({
   className: '',
-  html: `<div style="width:42px;height:42px;background:#ffffff;border-radius:50%;border:3px solid #0a0a0a;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.2);font-size:18px;">🏠</div>`,
-  iconSize: [42, 42],
-  iconAnchor: [21, 21],
+  html: `
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <div style="width:52px;height:52px;background:white;border-radius:50%;border:3px solid #6C5CE7;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(108,92,231,0.25);font-size:24px;">🏠</div>
+      <div style="width:3px;height:10px;background:#6C5CE7;border-radius:2px;margin-top:-2px;"></div>
+      <div style="width:10px;height:4px;background:#6C5CE7;border-radius:2px;margin-top:-1px;"></div>
+    </div>
+  `,
+  iconSize: [52, 64],
+  iconAnchor: [26, 64],
 });
 
 function FitBounds({ points }) {
@@ -46,6 +58,7 @@ export default function TrackingMap() {
   const requestId = urlParams.get('requestId');
   const [route, setRoute] = useState([]);
   const [eta, setEta] = useState(null); // minutes
+  const [clientGeoPos, setClientGeoPos] = useState(null);
   const { requestPermission, notify } = useNotifications();
   const notified5min = useRef(false);
 
@@ -63,33 +76,62 @@ export default function TrackingMap() {
     refetchInterval: 5000,
   });
 
+  // Geocode address to coordinates if no GPS coords stored
+  const geocodeAddress = async (address) => {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+    const data = await res.json();
+    if (data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    return null;
+  };
+
   useEffect(() => {
-    if (!proUser?.latitude || !proUser?.longitude || !request?.customer_latitude) return;
-    const { latitude: fromLat, longitude: fromLon } = proUser;
-    const { customer_latitude: toLat, customer_longitude: toLon } = request;
-    fetch(`https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`)
-      .then(r => r.json())
-      .then(data => {
-        const route0 = data?.routes?.[0];
-        if (route0?.geometry?.coordinates) {
-          setRoute(route0.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
-        }
-        if (route0?.duration) {
-          const mins = Math.ceil(route0.duration / 60);
-          setEta(mins);
-          if (mins <= 5 && !notified5min.current) {
-            notified5min.current = true;
-            requestPermission().then(() => {
-              notify('🚗 Professionnel proche !', `${request?.professional_name || 'Le professionnel'} arrive dans ${mins} min`);
-            });
+    if (!proUser?.latitude && !proUser?.longitude) return;
+    if (!request?.customer_latitude && !request?.customer_address) return;
+
+    const fetchRoute = async () => {
+      const fromLat = proUser?.latitude;
+      const fromLon = proUser?.longitude;
+      let toLat = request?.customer_latitude;
+      let toLon = request?.customer_longitude;
+
+      // Fallback: geocode address if no GPS coords
+      if (!toLat && request?.customer_address) {
+        const coords = await geocodeAddress(request.customer_address);
+        if (coords) { [toLat, toLon] = coords; }
+      }
+      if (!fromLat || !toLat) return;
+
+      // Save geocoded client pos for marker
+      if (!request?.customer_latitude && toLat) {
+        setClientGeoPos([toLat, toLon]);
+      }
+
+      fetch(`https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`)
+        .then(r => r.json())
+        .then(data => {
+          const route0 = data?.routes?.[0];
+          if (route0?.geometry?.coordinates) {
+            setRoute(route0.geometry.coordinates.map(([lng, lat]) => [lat, lng]));
           }
-        }
-      })
-      .catch(() => {
-        setRoute([[fromLat, fromLon], [toLat, toLon]]);
-        setEta(null);
-      });
-  }, [proUser?.latitude, proUser?.longitude, request?.customer_latitude]);
+          if (route0?.duration) {
+            const mins = Math.ceil(route0.duration / 60);
+            setEta(mins);
+            if (mins <= 5 && !notified5min.current) {
+              notified5min.current = true;
+              requestPermission().then(() => {
+                notify('🚗 Professionnel proche !', `${request?.professional_name || 'Le professionnel'} arrive dans ${mins} min`);
+              });
+            }
+          }
+        })
+        .catch(() => {
+          setRoute([[fromLat, fromLon], [toLat, toLon]]);
+          setEta(null);
+        });
+    };
+
+    fetchRoute();
+  }, [proUser?.latitude, proUser?.longitude, request?.customer_latitude, request?.customer_address]);
 
   if (!request) {
     return (
@@ -100,7 +142,9 @@ export default function TrackingMap() {
   }
 
   const proPos = proUser?.latitude ? [proUser.latitude, proUser.longitude] : null;
-  const clientPos = request.customer_latitude ? [request.customer_latitude, request.customer_longitude] : null;
+  const clientPos = request.customer_latitude
+    ? [request.customer_latitude, request.customer_longitude]
+    : clientGeoPos || null;
   const allPoints = [proPos, clientPos].filter(Boolean);
   const centerPos = clientPos || proPos || [50.8503, 4.3517];
   const isCompleted = request.status === 'completed';
@@ -121,7 +165,14 @@ export default function TrackingMap() {
         />
         {allPoints.length >= 2 && <FitBounds points={allPoints} />}
         {route.length > 1 && (
-          <Polyline positions={route} color="#0a0a0a" weight={3.5} opacity={0.7} dashArray="10,6" />
+          <>
+            {/* Shadow */}
+            <Polyline positions={route} color="#6C5CE7" weight={8} opacity={0.15} />
+            {/* Main route */}
+            <Polyline positions={route} color="#6C5CE7" weight={4} opacity={0.9} />
+            {/* Animated dashes */}
+            <Polyline positions={route} color="white" weight={2} opacity={0.6} dashArray="12,18" />
+          </>
         )}
         {proPos && <Marker position={proPos} icon={proIcon} />}
         {clientPos && <Marker position={clientPos} icon={clientIcon} />}
