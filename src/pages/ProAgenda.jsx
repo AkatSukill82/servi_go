@@ -320,14 +320,14 @@ export default function ProAgenda() {
                   <button
                     key={key}
                     onClick={() => setSelectedDay(day)}
-                    className={`flex flex-col items-center py-1.5 rounded-xl transition-colors ${
+                    className={`flex flex-col items-center justify-center py-1.5 rounded-xl transition-colors gap-0.5 ${
                       isSelected ? 'bg-primary text-primary-foreground' :
                       isCurrentDay ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
                     }`}
                   >
                     <span className="text-xs font-medium">{format(day, 'd')}</span>
                     {count > 0 && (
-                      <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isSelected ? 'bg-primary-foreground/80' : 'bg-primary'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-primary-foreground/80' : 'bg-primary'}`} />
                     )}
                   </button>
                 );
