@@ -17,22 +17,65 @@ Deno.serve(async (req) => {
     const CUST_NAME = user.full_name || 'Utilisateur Test';
     const CUST_PHONE = '+32 470 00 11 22';
     const CUST_ADDR = 'Rue de la Loi 16, 1000 Bruxelles';
+    // Coordonnées GPS réelles — Rue de la Loi, Bruxelles
+    const CUST_LAT = 50.8467;
+    const CUST_LON = 4.3653;
 
     const P1 = 'jp.dubois@demo.com';
     const P2 = 'marc.lecomte@demo.com';
     const P3 = 'sophie.renard@demo.com';
 
+    // Coordonnées GPS des pros (quartiers différents de Bruxelles)
+    // P1 Jean-Pierre : Ixelles
+    const P1_LAT = 50.8280, P1_LON = 4.3700;
+    const P1_ADDR = 'Avenue Louise 120, 1050 Ixelles';
+    // P2 Marc : Molenbeek
+    const P2_LAT = 50.8540, P2_LON = 4.3260;
+    const P2_ADDR = 'Rue de Birmingham 50, 1080 Molenbeek-Saint-Jean';
+    // P3 Sophie : Etterbeek
+    const P3_LAT = 50.8360, P3_LON = 4.3880;
+    const P3_ADDR = 'Chaussée de Wavre 88, 1040 Etterbeek';
+
+    // Créer / mettre à jour les profils User des pros demo
+    const existingUsers = await db.entities.User.filter({});
+    const upsertPro = async (email, name, lat, lon, addr, category) => {
+      const existing = existingUsers.find(u => u.email === email);
+      const data = {
+        full_name: name,
+        email,
+        latitude: lat,
+        longitude: lon,
+        address: addr,
+        category_name: category,
+        available: true,
+        verification_status: 'verified',
+        rating: 4.8,
+        reviews_count: 12,
+        user_type: 'professionnel',
+      };
+      if (existing) {
+        await db.entities.User.update(existing.id, data);
+      }
+      // Note: on ne peut pas créer d'utilisateurs via SDK, seulement les mettre à jour s'ils existent
+    };
+    await upsertPro(P1, 'Jean-Pierre Dubois', P1_LAT, P1_LON, P1_ADDR, 'Plombier');
+    await upsertPro(P2, 'Marc Lecomte', P2_LAT, P2_LON, P2_ADDR, 'Électricien');
+    await upsertPro(P3, 'Sophie Renard', P3_LAT, P3_LON, P3_ADDR, 'Nettoyage');
+    console.log('Pro users GPS updated');
+
     console.log('Starting seed for:', CUST);
 
     // --- ServiceRequestV2 ---
+    // sr1 : Plombier — statut "pro_en_route" pour voir le tracking en action
     const sr1 = await db.entities.ServiceRequestV2.create({
       category_name: 'Plombier',
       professional_email: P1, professional_name: 'Jean-Pierre Dubois',
       customer_email: CUST, customer_name: CUST_NAME,
       customer_first_name: CUST_NAME.split(' ')[0], customer_last_name: CUST_NAME.split(' ')[1] || '',
       customer_phone: CUST_PHONE, customer_address: CUST_ADDR,
+      customer_latitude: CUST_LAT, customer_longitude: CUST_LON,
       scheduled_date: '2026-04-25', scheduled_time: '10:00',
-      estimated_price: 120, status: 'contract_signed',
+      estimated_price: 120, status: 'pro_en_route',
       answers: [{ question: 'Type de problème ?', answer: "Fuite sous l'évier" }],
     });
     const sr2 = await db.entities.ServiceRequestV2.create({
@@ -41,6 +84,7 @@ Deno.serve(async (req) => {
       customer_email: CUST, customer_name: CUST_NAME,
       customer_first_name: CUST_NAME.split(' ')[0], customer_last_name: CUST_NAME.split(' ')[1] || '',
       customer_phone: CUST_PHONE, customer_address: CUST_ADDR,
+      customer_latitude: CUST_LAT, customer_longitude: CUST_LON,
       scheduled_date: '2026-04-28', scheduled_time: '14:00',
       estimated_price: 90, status: 'contract_pending',
       answers: [{ question: 'Type de panne ?', answer: 'Disjoncteur qui saute' }],
@@ -51,6 +95,7 @@ Deno.serve(async (req) => {
       customer_email: CUST, customer_name: CUST_NAME,
       customer_first_name: CUST_NAME.split(' ')[0], customer_last_name: CUST_NAME.split(' ')[1] || '',
       customer_phone: CUST_PHONE, customer_address: CUST_ADDR,
+      customer_latitude: CUST_LAT, customer_longitude: CUST_LON,
       scheduled_date: '2026-04-10', scheduled_time: '09:00',
       estimated_price: 210, final_price: 210, status: 'completed',
       review_requested: true,
@@ -62,6 +107,7 @@ Deno.serve(async (req) => {
       customer_email: CUST, customer_name: CUST_NAME,
       customer_first_name: CUST_NAME.split(' ')[0], customer_last_name: CUST_NAME.split(' ')[1] || '',
       customer_phone: CUST_PHONE, customer_address: CUST_ADDR,
+      customer_latitude: CUST_LAT, customer_longitude: CUST_LON,
       scheduled_date: '2026-03-15', scheduled_time: '09:00',
       estimated_price: 80, final_price: 80, status: 'completed',
       review_requested: true,
@@ -116,6 +162,12 @@ Deno.serve(async (req) => {
     await db.entities.Review.create({ request_id: 'rnd4', professional_email: P3, customer_name: 'Lucas Fontaine', customer_email: 'lucas.fontaine@test.com', rating: 4, comment: "Très bonne prestation, appartement nickel.", category_name: 'Nettoyage' });
     await db.entities.Review.create({ request_id: 'rnd5', professional_email: P1, customer_name: 'Julien Moreau', customer_email: 'julien.moreau@test.com', rating: 5, comment: "Fuite réparée en 1h30. Très pro !", category_name: 'Plombier' });
     console.log('Reviews done');
+
+    // --- Professional profiles avec GPS ---
+    await db.entities.Professional.create({ name: 'Jean-Pierre Dubois', category_name: 'Plombier', email: P1, phone: '+32 470 12 34 56', latitude: P1_LAT, longitude: P1_LON, address: P1_ADDR, available: true, verification_status: 'verified', rating: 4.9, reviews_count: 47, base_price: 80, hourly_rate: 55, pro_description: 'Plombier certifié avec 15 ans d\'expérience. Spécialisé en urgences et rénovations.' });
+    await db.entities.Professional.create({ name: 'Marc Lecomte', category_name: 'Électricien', email: P2, phone: '+32 478 98 76 54', latitude: P2_LAT, longitude: P2_LON, address: P2_ADDR, available: true, verification_status: 'verified', rating: 4.8, reviews_count: 31, base_price: 75, hourly_rate: 60, pro_description: 'Électricien agréé CERGA. Installations, dépannages et mise en conformité.' });
+    await db.entities.Professional.create({ name: 'Sophie Renard', category_name: 'Nettoyage', email: P3, phone: '+32 465 43 21 09', latitude: P3_LAT, longitude: P3_LON, address: P3_ADDR, available: true, verification_status: 'verified', rating: 4.9, reviews_count: 89, base_price: 30, hourly_rate: 25, pro_description: 'Nettoyage professionnel particuliers et bureaux. Produits éco-certifiés.' });
+    console.log('Professional profiles done');
 
     // --- Subscriptions ---
     await db.entities.ProSubscription.create({ professional_email: P1, professional_name: 'Jean-Pierre Dubois', plan: 'monthly', price: 10, status: 'active', started_date: '2026-03-01', renewal_date: '2026-05-01', missions_received: 12, auto_renew: true, payment_method: 'stripe' });
