@@ -198,7 +198,7 @@ export default function AppLayout() {
               className="absolute inset-0 overflow-y-auto"
               style={{
                 display: isActive ? 'block' : 'none',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)',
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 70px)',
               }}
               ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
             >
@@ -219,7 +219,7 @@ export default function AppLayout() {
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="absolute inset-0 overflow-y-auto bg-background"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)' }}
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 70px)' }}
             >
               <Suspense fallback={<TabSpinner />}>
                 <StackComponent />
