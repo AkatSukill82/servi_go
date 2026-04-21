@@ -9,7 +9,6 @@ import { ThemeProvider } from '@/lib/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 // Pages
-import SelectUserType from './pages/SelectUserType';
 import Chat from './pages/Chat';
 import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
@@ -29,7 +28,6 @@ import CGV from './pages/CGV';
 import PolitiqueCookies from './pages/PolitiqueCookies';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import Landing from './pages/Landing';
-import AccountTypeSelection from './pages/AccountTypeSelection';
 import ServiBot from './pages/ServiBot';
 import IndependenceCharter from './pages/IndependenceCharter';
 import DAC7Form from './pages/DAC7Form';
@@ -74,8 +72,6 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<CreateAccount />} />
 
       {/* Public pages (no layout) */}
-      <Route path="/SelectUserType" element={<SelectUserType />} />
-      <Route path="/signup" element={<AccountTypeSelection />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
