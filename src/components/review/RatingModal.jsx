@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 
 export default function RatingModal({ request, onSubmit, onClose, isSubmitting }) {
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState('');
+  const dragControls = useDragControls();
 
   const handleSubmit = () => {
     if (rating === 0) return;
@@ -16,26 +17,41 @@ export default function RatingModal({ request, onSubmit, onClose, isSubmitting }
 
   return (
     <AnimatePresence>
+      {/* Overlay — z-40 so navbar (z-50) stays on top */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
-        style={{ touchAction: 'none' }}
+        className="fixed inset-0 bg-black/40 z-40"
         onClick={onClose}
-      >
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: 'spring', damping: 25 }}
-          className="bg-card w-full max-w-md rounded-t-3xl p-6 pb-10 space-y-5 overflow-y-auto overscroll-contain"
-          style={{ maxHeight: '90dvh', touchAction: 'pan-y' }}
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Handle */}
-          <div className="w-10 h-1 bg-muted rounded-full mx-auto" />
+      />
 
+      {/* Sheet — z-40 so navbar stays visible */}
+      <motion.div
+        drag="y"
+        dragControls={dragControls}
+        dragConstraints={{ top: 0 }}
+        dragElastic={{ top: 0, bottom: 0.4 }}
+        onDragEnd={(_, info) => {
+          if (info.offset.y > 80) onClose();
+        }}
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+        className="fixed bottom-0 left-0 right-0 z-40 bg-card rounded-t-3xl w-full max-w-md mx-auto"
+        style={{ touchAction: 'none', paddingBottom: 'calc(env(safe-area-inset-bottom) + 72px)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Drag handle */}
+        <div
+          className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+          onPointerDown={e => dragControls.start(e)}
+        >
+          <div className="w-10 h-1.5 bg-muted rounded-full" />
+        </div>
+
+        <div className="px-6 pb-6 space-y-5">
           <div className="text-center space-y-1">
             <h2 className="text-xl font-bold">Évaluer la mission</h2>
             <p className="text-sm text-muted-foreground">
@@ -70,7 +86,6 @@ export default function RatingModal({ request, onSubmit, onClose, isSubmitting }
             </p>
           )}
 
-          {/* Comment */}
           <Textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
@@ -91,7 +106,7 @@ export default function RatingModal({ request, onSubmit, onClose, isSubmitting }
               {isSubmitting ? 'Envoi...' : 'Envoyer'}
             </Button>
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     </AnimatePresence>
   );
