@@ -646,12 +646,12 @@ export default function CreateAccount() {
   return (
     <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
       {/* Header */}
-      <div className="bg-[#1A1A2E] px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+      <div className="bg-[#FF6B35] px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
         <div className="flex justify-center mb-3">
           <ServiGoIcon size={40} white />
         </div>
         <h1 className="text-white font-black text-lg">ServiGo</h1>
-        <p className="text-white/60 text-xs mt-0.5">Créer un compte</p>
+        <p className="text-white/70 text-xs mt-0.5">Créer un compte</p>
       </div>
 
       {/* Scrollable content */}
