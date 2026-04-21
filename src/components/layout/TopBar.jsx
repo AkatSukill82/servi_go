@@ -4,6 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { Bell, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
+
+const BRAND = '#6C5CE7';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -34,7 +37,6 @@ export default function TopBar({ title, subtitle }) {
   const unreadCount = notifs.length;
 
   const markAllRead = async () => {
-    // Sequential updates to avoid rate limiting
     for (const n of notifs) {
       await base44.entities.Notification.update(n.id, { is_read: true });
     }
@@ -50,35 +52,50 @@ export default function TopBar({ title, subtitle }) {
 
   return (
     <>
-      <div
-        className="sticky top-0 z-30 bg-card/95 backdrop-blur-md border-b border-border/50"
-        style={{ paddingTop: 0 }}
-      >
-        <div className="flex items-center justify-between px-4 h-14">
-          {/* Left: title + subtitle */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-semibold tracking-[-0.01em] truncate">{title}</h1>
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/40"
+        style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="flex items-center gap-3 px-4 h-16">
+
+          {/* Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-9 h-9 rounded-2xl flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)', boxShadow: '0 2px 10px rgba(108,92,231,0.3)' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.2)"/>
+                <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <span className="text-base font-black tracking-tight" style={{ color: BRAND }}>ServiGo</span>
+          </div>
+
+          {/* Greeting + location — centered */}
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-sm font-bold truncate text-foreground leading-tight">{title}</p>
             {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 leading-none mt-0.5">
-                <MapPin className="w-3 h-3 shrink-0" /> {subtitle}
+              <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-0.5 leading-none mt-0.5">
+                <MapPin className="w-2.5 h-2.5 shrink-0" style={{ color: BRAND }} />
+                <span className="truncate">{subtitle}</span>
               </p>
             )}
           </div>
 
-          {/* Right: notification bell */}
-          <div className="relative">
+          {/* Bell */}
+          <div className="relative shrink-0">
             <button
               onClick={() => setNotifOpen(o => !o)}
-              className="w-10 h-10 rounded-full flex items-center justify-center tap-scale relative bg-muted/60"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center tap-scale relative"
+              style={{ background: unreadCount > 0 ? `${BRAND}12` : 'hsl(var(--muted))' }}
             >
-              <Bell className="w-5 h-5 text-foreground" strokeWidth={1.8} />
+              <Bell className="w-5 h-5" style={{ color: unreadCount > 0 ? BRAND : undefined }} strokeWidth={1.8} />
               {unreadCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-[#EF4444] rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
+                  style={{ background: '#E17055' }}>
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
           </div>
+
         </div>
       </div>
 
@@ -94,33 +111,40 @@ export default function TopBar({ title, subtitle }) {
               onClick={() => setNotifOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.95 }}
+              initial={{ opacity: 0, y: -8, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="fixed top-[calc(env(safe-area-inset-top)+56px)] right-3 z-50 w-80 bg-card border border-border rounded-xl shadow-float overflow-hidden"
+              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="fixed top-[calc(env(safe-area-inset-top)+64px)] right-3 z-50 w-80 bg-card border border-border rounded-2xl overflow-hidden"
+              style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.14)' }}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <p className="text-sm font-semibold">Notifications</p>
+                <p className="text-sm font-bold">Notifications</p>
                 {unreadCount > 0 && (
-                  <button onClick={markAllRead} className="text-xs text-[#4F46E5] font-medium">Tout marquer lu</button>
+                  <button onClick={markAllRead} className="text-xs font-semibold" style={{ color: BRAND }}>Tout marquer lu</button>
                 )}
               </div>
-              <div className="max-h-80 overflow-y-auto divide-y divide-border/50">
+              <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
                 {notifs.length === 0 ? (
-                  <div className="py-8 text-center">
-                    <Bell className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" strokeWidth={1.5} />
+                  <div className="py-10 text-center">
+                    <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" strokeWidth={1.5} />
                     <p className="text-sm text-muted-foreground">Aucune nouvelle notification</p>
                   </div>
                 ) : notifs.map(n => (
                   <button
                     key={n.id}
                     onClick={() => handleNotifClick(n)}
-                    className="w-full px-4 py-3 text-left hover:bg-[#4F46E5]/5 transition-colors bg-[#4F46E5]/5"
+                    className="w-full px-4 py-3 text-left transition-colors hover:bg-muted/50"
+                    style={{ background: `${BRAND}06` }}
                   >
-                    <p className="text-sm font-medium text-foreground leading-tight">{n.title}</p>
-                    {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
-                    <p className="text-[10px] text-muted-foreground/70 mt-1">{timeAgo(n.created_date)}</p>
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: BRAND }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground leading-tight">{n.title}</p>
+                        {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                        <p className="text-[10px] text-muted-foreground/60 mt-1">{timeAgo(n.created_date)}</p>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>
