@@ -227,7 +227,7 @@ export default function ProProfile() {
           <div className="relative shrink-0">
             <Avatar className="w-20 h-20 border-4 border-white shadow-md">
               <AvatarImage src={form.photo_url || user?.photo_url} />
-              <AvatarFallback className="bg-[#534AB7] text-white text-xl font-bold">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">{initials}</AvatarFallback>
             </Avatar>
             <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center cursor-pointer shadow-md">
               <Camera className="w-3.5 h-3.5 text-white" />
