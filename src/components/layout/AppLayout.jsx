@@ -198,7 +198,7 @@ export default function AppLayout() {
               className="absolute inset-0 overflow-y-auto"
               style={{
                 display: isActive ? 'block' : 'none',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 70px)',
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)',
               }}
               ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
             >
