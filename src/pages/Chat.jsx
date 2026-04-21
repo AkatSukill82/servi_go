@@ -230,7 +230,7 @@ export default function Chat() {
           <p className="font-semibold truncate">{otherParty.name || '...'}</p>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">{otherParty.label}</span>
-            {statusInfo && <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-indigo-100 text-indigo-700">{statusInfo.label}</span>}
+            {statusInfo && <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-indigo-100 text-indigo-700 text-align">{statusInfo.label}</span>}
           </div>
         </div>
         <div className="flex gap-1 items-center">
