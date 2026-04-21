@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 import MissionProgress from '@/components/mission/MissionProgress';
+import TopBar from '@/components/layout/TopBar';
 
 const getTimeSinceCreated = (createdDate) => {
   if (!createdDate) return 0;
@@ -34,6 +35,21 @@ export default function ProDashboard() {
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   const proCategory = user?.category_name;
+
+  const firstName = (() => {
+    if (user?.first_name) return user.first_name;
+    const handle = (user?.full_name || '');
+    const letters = handle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
+    if (letters.length >= 2) return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
+    return '';
+  })();
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Bonjour';
+    if (h < 18) return 'Bon après-midi';
+    return 'Bonsoir';
+  })();
 
   // Gate: redirect if independence charter not signed (skip in preview)
   useEffect(() => {
@@ -254,7 +270,14 @@ export default function ProDashboard() {
   const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
 
   return (
-    <div className="px-4 sm:px-6 pt-7 pb-4 space-y-5 bg-white min-h-full">
+    <div className="min-h-full bg-background">
+      {/* Top bar */}
+      <TopBar
+        title={firstName ? `${greeting}, ${firstName} 👋` : greeting}
+        subtitle={user?.address?.split(',')[0] || user?.category_name || 'Professionnel'}
+      />
+
+      <div className="px-4 sm:px-6 pt-4 pb-4 space-y-5">
 
       {/* Upcoming mission reminder */}
       {upcomingJob && (
@@ -267,19 +290,7 @@ export default function ProDashboard() {
         </div>
       )}
 
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-          {(() => { if (user?.first_name) return `Bonjour, ${user.first_name} 👋`; const h = (user?.full_name||'').includes('@') ? user.full_name.split('@')[0] : (user?.full_name||''); const s = h.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0]||''; return s.length>=2 ? `Bonjour, ${s[0].toUpperCase()+s.slice(1).toLowerCase()} 👋` : 'Dashboard Pro'; })()}
-        </h1>
-        <div className="flex items-center justify-between mt-1">
-          <p className="text-gray-500 text-sm">{user?.category_name || 'Professionnel'}</p>
-          {user?.verification_status === 'verified'
-            ? <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-3 py-1"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
-            : <button onClick={() => navigate('/ProProfile')} className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-full px-3 py-1">Vérifier →</button>
-          }
-        </div>
-      </div>
+
 
       {/* Earnings card */}
       <div className="rounded-3xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)', boxShadow: '0 8px 24px rgba(108,92,231,0.25)' }}>
@@ -599,6 +610,7 @@ export default function ProDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }
