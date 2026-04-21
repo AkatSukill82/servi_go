@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, Zap, X, MapPin, Star, ChevronRight, Bell, AlertCircle } from 'lucide-react';
+import {
+  Search, Zap, X, MapPin, Star, ChevronRight, Shield,
+  FileText, CreditCard, Mic, AlertCircle
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useI18n } from '@/hooks/useI18n';
 import ServiceCard from '@/components/home/ServiceCard';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import PullToRefresh from '@/components/ui/PullToRefresh';
+import TopBar from '@/components/layout/TopBar';
 import HomeSkeleton from '@/components/home/HomeSkeleton';
+import NearbyProCard from '@/components/home/NearbyProCard';
+import { formatPrice } from '@/utils/formatters';
 
-const VIOLET = '#6C5CE7';
+const ICON_MAP_NAMES = {
+  Wrench: '🔧', Droplets: '💧', Paintbrush: '🖌️', Truck: '🚚',
+  Scissors: '✂️', Leaf: '🌿', Hammer: '🔨', Plug: '⚡', Home: '🏠', Zap: '⚡',
+};
 
 export default function Home() {
   const [viewingPro, setViewingPro] = useState(null);
@@ -19,8 +29,12 @@ export default function Home() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useI18n();
 
-  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['serviceCategories'],
@@ -31,14 +45,15 @@ export default function Home() {
   const { data: nearbyPros = [] } = useQuery({
     queryKey: ['nearbyPros'],
     queryFn: () => base44.entities.User.filter(
-      { user_type: 'professionnel', available: true, verification_status: 'verified' }, '-rating', 8
+      { user_type: 'professionnel', available: true, verification_status: 'verified' },
+      '-rating', 10
     ),
     staleTime: 3 * 60 * 1000,
   });
 
   const { data: recentReviews = [] } = useQuery({
     queryKey: ['recentReviews'],
-    queryFn: () => base44.entities.Review.list('-created_date', 4),
+    queryFn: () => base44.entities.Review.list('-created_date', 3),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -64,7 +79,10 @@ export default function Home() {
 
   const cancelMutation = useMutation({
     mutationFn: (id) => base44.entities.ServiceRequestV2.update(id, { status: 'cancelled', cancelled_by: 'customer' }),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['unfinishedRequest'] }); setConfirmCancel(false); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['unfinishedRequest'] });
+      setConfirmCancel(false);
+    },
   });
 
   const handleRefresh = () => {
@@ -73,157 +91,136 @@ export default function Home() {
   };
 
   const filteredCategories = searchQuery.trim()
-    ? categories.filter(c => c.name?.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? categories.filter(c =>
+        c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     : categories;
 
   const firstName = (() => {
     if (user?.first_name) return user.first_name;
-    const handle = user?.full_name || '';
+    const handle = (user?.full_name || '');
     const letters = handle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
-    return letters.length >= 2 ? letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase() : '';
+    if (letters.length >= 2) return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
+    return '';
   })();
-
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bonjour' : 'Bonsoir';
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-4">
         <OnboardingModal />
 
-        {/* ── HEADER ─────────────────────────────────────── */}
-        <div className="px-5 pt-6 pb-4">
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <p className="text-[13px] text-muted-foreground font-medium">
-                <MapPin className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />
-                {user?.address?.split(',')[0] || 'Belgique'}
-              </p>
-              <h1 className="text-[26px] font-bold text-foreground mt-0.5 tracking-tight leading-tight">
-                {firstName ? `${greeting}, ${firstName}` : 'Trouvez un expert'}
-              </h1>
-            </div>
-            {/* Notification bell */}
-            <button
-              className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mt-1 shrink-0"
-              onClick={() => navigate('/Profile')}
-            >
-              {user?.photo_url
-                ? <img src={user.photo_url} alt="" className="w-full h-full rounded-full object-cover" />
-                : <span className="text-[15px] font-bold text-gray-600">{(user?.full_name || 'U')[0].toUpperCase()}</span>
-              }
-            </button>
-          </div>
+        {/* Top bar */}
+        <TopBar title={firstName ? `Bonjour ${firstName} 👋` : 'Accueil'} subtitle={user?.address?.split(',')[0] || 'Belgique'} />
 
-          {/* ── SEARCH ── */}
+        <div className="px-4 sm:px-6 pt-4 space-y-5">
+
+          {/* ── Search bar ── */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Quel service cherchez-vous ?"
-              className="w-full h-[52px] pl-11 pr-4 rounded-2xl bg-muted text-foreground text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#6C5CE7]/30 transition-all"
-              style={{ fontSize: 15 }}
+              placeholder="Que cherchez-vous ?"
+              className="w-full h-14 pl-11 pr-12 rounded-xl border border-border bg-card text-foreground text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent transition shadow-card"
+              style={{ fontSize: 16 }}
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
-            )}
+            <button className="absolute right-3 top-1/2 -translate-y-1/2 tap-scale w-9 h-9 rounded-lg bg-[#4F46E5]/10 flex items-center justify-center">
+              <Mic className="w-5 h-5 text-[#4F46E5]" />
+            </button>
           </div>
-        </div>
 
-        {/* ── ACTIVE MISSION BANNER ── */}
-        <AnimatePresence>
-          {activeRequest && (
-            <motion.button
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
-              className="mx-5 mb-4 w-[calc(100%-40px)] rounded-2xl overflow-hidden"
-              style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)' }}
-            >
-              <div className="px-4 py-3.5 flex items-center gap-3">
-                <span className="w-2.5 h-2.5 rounded-full bg-white animate-pulse shrink-0" />
-                <div className="flex-1 text-left">
-                  <p className="text-[13px] font-semibold text-white">Mission en cours — {activeRequest.professional_name}</p>
-                  <p className="text-[11px] text-white/70 mt-0.5">Suivre en temps réel →</p>
-                </div>
-              </div>
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* ── PENDING REQUEST ── */}
-        <AnimatePresence>
-          {unfinishedRequest && dismissedId !== unfinishedRequest.id && !activeRequest && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="mx-5 mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4"
-            >
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-[13px] font-semibold text-foreground">En attente — {unfinishedRequest.category_name}</p>
-                  <p className="text-[12px] text-muted-foreground mt-0.5">Recherche d'un professionnel…</p>
-                </div>
-                <button onClick={() => setDismissedId(unfinishedRequest.id)} className="p-1">
-                  <X className="w-3.5 h-3.5 text-gray-400" />
-                </button>
-              </div>
-              {!confirmCancel ? (
-                <button onClick={() => setConfirmCancel(true)} className="mt-2 text-[12px] font-medium text-amber-600 underline underline-offset-2">
-                  Annuler cette demande
-                </button>
-              ) : (
-                <div className="mt-2 flex gap-2">
-                  <button onClick={() => setConfirmCancel(false)} className="flex-1 text-[12px] font-medium border border-border rounded-xl py-2 bg-card text-foreground">Non</button>
-                  <button
-                    onClick={() => cancelMutation.mutate(unfinishedRequest.id)}
-                    disabled={cancelMutation.isPending}
-                    className="flex-1 text-[12px] font-semibold rounded-xl py-2 bg-red-500 text-white disabled:opacity-60"
-                  >
-                    {cancelMutation.isPending ? '…' : 'Annuler'}
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* ── SOS URGENT ── */}
-        <div className="px-5 mb-5">
+          {/* ── SOS Banner ── */}
           <motion.button
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/Emergency')}
-            className="w-full rounded-2xl overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #EF4444, #F97316)' }}
+            className="w-full rounded-xl overflow-hidden shadow-card"
           >
-            <div className="px-5 py-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                <Zap className="w-5 h-5 text-white fill-white" />
+            <div className="bg-[#EF4444] px-4 py-4 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <Zap className="w-6 h-6 text-white fill-white" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[15px] font-bold text-white leading-tight">Intervention urgente</p>
-                <p className="text-[12px] text-white/75 mt-0.5">Professionnel disponible sous 1h</p>
+                <p className="text-base font-semibold text-white leading-tight">Besoin urgent ?</p>
+                <p className="text-sm text-white/80">Intervention prioritaire sous 1h</p>
               </div>
-              <span className="shrink-0 bg-white/20 text-white text-[11px] font-bold px-2.5 py-1 rounded-full">+50%</span>
+              <span className="shrink-0 bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-pill border border-white/30">+50% tarif</span>
             </div>
           </motion.button>
-        </div>
 
-        <div className="px-5 space-y-7 pb-6">
+          {/* ── Active mission banner ── */}
+          <AnimatePresence>
+            {activeRequest && (
+              <motion.button
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
+                className="w-full rounded-xl overflow-hidden border border-[#10B981]/30 shadow-card"
+              >
+                <div className="bg-[#10B981]/10 px-4 py-3 flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse shrink-0" />
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-[#10B981]">Mission en cours — {activeRequest.professional_name}</p>
+                    <p className="text-xs text-muted-foreground">Suivre en temps réel →</p>
+                  </div>
+                </div>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
-          {/* ── SERVICES ── */}
+          {/* ── Unfinished request ── */}
+          <AnimatePresence>
+            {unfinishedRequest && dismissedId !== unfinishedRequest.id && !activeRequest && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 p-4"
+              >
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Demande en attente — {unfinishedRequest.category_name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Recherche d'un professionnel en cours…</p>
+                  </div>
+                  <button onClick={() => setDismissedId(unfinishedRequest.id)} className="tap-scale p-1">
+                    <X className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+                {!confirmCancel ? (
+                  <button
+                    onClick={() => setConfirmCancel(true)}
+                    className="mt-3 text-xs font-medium text-[#F59E0B] underline underline-offset-2"
+                  >
+                    Annuler cette demande
+                  </button>
+                ) : (
+                  <div className="mt-3 flex gap-2">
+                    <button onClick={() => setConfirmCancel(false)} className="flex-1 text-xs font-medium border border-border rounded-lg py-2 bg-card">Non, garder</button>
+                    <button
+                      onClick={() => cancelMutation.mutate(unfinishedRequest.id)}
+                      disabled={cancelMutation.isPending}
+                      className="flex-1 text-xs font-semibold rounded-lg py-2 bg-[#EF4444] text-white disabled:opacity-60"
+                    >
+                      {cancelMutation.isPending ? 'Annulation…' : 'Oui, annuler'}
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Services ── */}
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[17px] font-bold text-foreground">Nos services</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold tracking-[-0.01em]">Nos services</h2>
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-[12px] font-medium" style={{ color: VIOLET }}>
-                  Tout voir
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="text-xs text-[#4F46E5] font-medium flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Effacer
                 </button>
               )}
             </div>
@@ -231,12 +228,13 @@ export default function Home() {
             {isLoading ? (
               <HomeSkeleton />
             ) : filteredCategories.length === 0 ? (
-              <div className="flex flex-col items-center py-10 text-center">
-                <Search className="w-8 h-8 text-muted-foreground/40 mb-2" strokeWidth={1.5} />
-                <p className="text-[14px] font-medium text-muted-foreground">Aucun service trouvé</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Search className="w-10 h-10 text-muted-foreground/50 mb-3" strokeWidth={1.5} />
+                <p className="text-sm font-medium text-foreground">Aucun service trouvé</p>
+                <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {filteredCategories.map((category, index) => (
                   <ServiceCard
                     key={category.id}
@@ -249,52 +247,51 @@ export default function Home() {
             )}
           </section>
 
-          {/* ── TOP RATED PROS ── */}
+          {/* ── Nearby Pros carousel ── */}
           {nearbyPros.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-[17px] font-bold text-foreground">Pros les mieux notés</h2>
-                <button className="text-[12px] font-medium flex items-center gap-1" style={{ color: VIOLET }}>
-                  Voir tout <ChevronRight className="w-3.5 h-3.5" />
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-semibold tracking-[-0.01em]">Pros près de chez vous</h2>
+                <button className="text-xs text-[#4F46E5] font-medium flex items-center gap-1">
+                  Voir tout <ChevronRight className="w-3 h-3" />
                 </button>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+              <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
                 {nearbyPros.map((pro, i) => (
-                  <ProCard key={pro.id} pro={pro} index={i} onPress={() => setViewingPro(pro)} />
+                  <NearbyProCard key={pro.id} pro={pro} index={i} onPress={() => setViewingPro(pro)} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* ── RECENT REVIEWS ── */}
+          {/* ── Recent reviews ── */}
           {recentReviews.length > 0 && (
             <section>
-              <h2 className="text-[17px] font-bold text-foreground mb-4">Ce que disent nos clients</h2>
+              <h2 className="text-base font-semibold tracking-[-0.01em] mb-3">Avis récents</h2>
               <div className="space-y-3">
                 {recentReviews.map((review, i) => (
                   <motion.div
                     key={review.id}
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    className="bg-muted/60 rounded-2xl p-4"
+                    transition={{ delay: i * 0.08 }}
+                    className="bg-card rounded-xl p-4 shadow-card border border-border/50"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0" style={{ background: VIOLET }}>
+                      <div className="w-9 h-9 rounded-full bg-[#4F46E5]/10 flex items-center justify-center text-sm font-bold text-[#4F46E5] shrink-0">
                         {(review.customer_name || 'C')[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-foreground truncate">{review.customer_name || 'Client'}</p>
-                        <p className="text-[11px] text-muted-foreground">{review.category_name}</p>
+                        <p className="text-sm font-medium truncate">{review.customer_name || 'Client'}</p>
+                        <p className="text-xs text-muted-foreground">{review.category_name}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        {[...Array(5)].map((_, j) => (
-                          <Star key={j} className={`w-3 h-3 ${j < review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200 fill-gray-200'}`} />
-                        ))}
+                        <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
+                        <span className="text-xs font-semibold">{review.rating}</span>
                       </div>
                     </div>
                     {review.comment && (
-                      <p className="text-[13px] text-muted-foreground leading-relaxed">"{review.comment}"</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">"{review.comment}"</p>
                     )}
                   </motion.div>
                 ))}
@@ -302,19 +299,35 @@ export default function Home() {
             </section>
           )}
 
-          {/* ── TRUST BADGES ── */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { emoji: '✅', label: 'Pros vérifiés' },
-              { emoji: '📋', label: 'Contrat inclus' },
-              { emoji: '🔒', label: 'Paiement sécurisé' },
-            ].map(({ emoji, label }) => (
-              <div key={label} className="bg-muted/60 rounded-2xl p-3 flex flex-col items-center gap-1.5 text-center">
-                <span className="text-xl">{emoji}</span>
-                <span className="text-[11px] font-medium text-muted-foreground leading-tight">{label}</span>
-              </div>
-            ))}
+          {/* ── Trust footer ── */}
+          <div className="bg-card rounded-xl p-4 border border-border/50 shadow-card">
+            <div className="flex items-center justify-around gap-2">
+              {[
+                { icon: Shield,    label: 'Pros vérifiés' },
+                { icon: FileText,  label: 'Contrat inclus' },
+                { icon: CreditCard, label: 'Paiement sécurisé' },
+              ].map(({ icon: Icon, label }) => (
+                <div key={label} className="flex flex-col items-center gap-1.5 text-center">
+                  <div className="w-9 h-9 rounded-full bg-[#4F46E5]/10 flex items-center justify-center">
+                    <Icon className="w-4.5 h-4.5 text-[#4F46E5]" strokeWidth={2} />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium leading-tight">{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* Identity pending */}
+          {user && user.eid_status !== 'verified' && user.eid_status !== undefined && (
+            <div className="rounded-xl border border-[#F59E0B]/30 bg-[#F59E0B]/5 px-4 py-3 flex items-center gap-3">
+              <span className="text-lg shrink-0">⚠️</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground">Identité non vérifiée</p>
+                <p className="text-xs text-muted-foreground">Certaines fonctionnalités sont limitées</p>
+              </div>
+              <button onClick={() => navigate('/EidVerification')} className="text-xs font-bold text-[#4F46E5] shrink-0">Vérifier</button>
+            </div>
+          )}
 
         </div>
       </div>
@@ -331,37 +344,5 @@ export default function Home() {
         />
       )}
     </PullToRefresh>
-  );
-}
-
-// ── Inline ProCard ─────────────────────────────────────────────────────────────
-function ProCard({ pro, index, onPress }) {
-  return (
-    <motion.button
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
-      onClick={onPress}
-      className="flex-none w-[148px] snap-start bg-card rounded-2xl overflow-hidden border border-border shadow-sm active:scale-[0.97] transition-transform text-left"
-    >
-      {/* Avatar */}
-      <div className="w-full h-[110px] bg-muted flex items-center justify-center overflow-hidden">
-        {pro.photo_url
-          ? <img src={pro.photo_url} alt="" className="w-full h-full object-cover" />
-          : <span className="text-3xl font-bold text-muted-foreground/40">{(pro.full_name || '?')[0].toUpperCase()}</span>
-        }
-      </div>
-      <div className="p-3">
-        <p className="text-[13px] font-bold text-foreground truncate">{pro.full_name || pro.name || 'Pro'}</p>
-        <p className="text-[11px] text-muted-foreground truncate">{pro.category_name}</p>
-        {pro.rating && (
-          <div className="flex items-center gap-1 mt-1.5">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            <span className="text-[12px] font-semibold text-foreground">{pro.rating}</span>
-            {pro.reviews_count && <span className="text-[11px] text-muted-foreground">({pro.reviews_count})</span>}
-          </div>
-        )}
-      </div>
-    </motion.button>
   );
 }

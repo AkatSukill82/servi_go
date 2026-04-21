@@ -22,12 +22,11 @@ export default function AuthLogin() {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center gap-3">
-      <div className="w-12 h-12 rounded-2xl bg-[#FF6B35] flex items-center justify-center mb-2">
-        <ServiGoIcon size={28} white />
-      </div>
-      <span className="text-gray-900 font-bold text-xl">ServiGo</span>
-      <Loader2 className="w-5 h-5 animate-spin text-gray-400 mt-1" />
+    <div className="fixed inset-0 bg-[#1A1A2E] flex flex-col items-center justify-center gap-4">
+      <ServiGoIcon size={52} white />
+      <span className="text-white font-black text-2xl">ServiGo</span>
+      <Loader2 className="w-7 h-7 animate-spin text-white/60 mt-2" />
+      <p className="text-white/40 text-sm">Redirection vers la connexion...</p>
     </div>
   );
 }

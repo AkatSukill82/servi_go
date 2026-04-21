@@ -2,18 +2,18 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Home, CalendarCheck, Heart, MessageCircle, User } from 'lucide-react';
+import { Home, ClipboardList, Heart, MessageCircle, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const VIOLET = '#6C5CE7';
 const MISSION_TYPES = ['new_mission','mission_accepted','mission_refused','contract_to_sign','contract_signed','pro_en_route','mission_started','mission_completed','dispute_opened','dispute_resolved'];
 const MESSAGE_TYPES = ['message_received'];
 
-function Badge({ count }) {
+function NavBadge({ count }) {
   if (!count) return null;
+  const label = count > 9 ? '9+' : String(count);
   return (
-    <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] rounded-full text-[9px] font-bold text-white flex items-center justify-center px-0.5 leading-none" style={{ background: '#EF4444' }}>
-      {count > 9 ? '9+' : count}
+    <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] bg-[#EF4444] rounded-full flex items-center justify-center text-[8px] font-bold text-white px-0.5 leading-none">
+      {label}
     </span>
   );
 }
@@ -22,27 +22,24 @@ function NavItem({ path, icon: Icon, label, badge, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center justify-center flex-1 h-full gap-0.5 relative tap-scale"
+      className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center tap-scale relative"
     >
       <div className="relative">
         {isActive && (
           <motion.div
-            layoutId="bottomnav-bg"
-            className="absolute -inset-2.5 rounded-2xl"
-            style={{ background: `${VIOLET}15` }}
-            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+            layoutId="nav-indicator"
+            className="absolute -inset-2 bg-[#4F46E5]/10 rounded-xl"
+            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
           />
         )}
         <Icon
-          className="relative z-10 transition-colors"
-          style={{ width: 22, height: 22, color: isActive ? VIOLET : '#9CA3AF', strokeWidth: isActive ? 2.2 : 1.7 }}
+          style={{ width: 22, height: 22, position: 'relative', zIndex: 1 }}
+          strokeWidth={isActive ? 2.2 : 1.6}
+          className={isActive ? 'text-[#4F46E5]' : 'text-muted-foreground'}
         />
-        <Badge count={badge} />
+        <NavBadge count={badge} />
       </div>
-      <span
-        className="text-[10px] font-semibold transition-colors"
-        style={{ color: isActive ? VIOLET : '#9CA3AF' }}
-      >
+      <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-[#4F46E5]' : 'text-muted-foreground'}`}>
         {label}
       </span>
     </button>
@@ -80,11 +77,11 @@ export default function BottomNav() {
   }, [location.pathname, user?.email]);
 
   const navItems = [
-    { path: '/Home',           icon: Home,          label: 'Accueil',  badge: 0 },
-    { path: '/MissionHistory', icon: CalendarCheck, label: 'Missions', badge: missionBadge },
-    { path: '/Favorites',      icon: Heart,         label: 'Favoris',  badge: 0 },
-    { path: '/Messages',       icon: MessageCircle, label: 'Messages', badge: messageBadge },
-    { path: '/Profile',        icon: User,          label: 'Profil',   badge: profileIncomplete },
+    { path: '/Home',           icon: Home,          label: 'Accueil',   badge: 0 },
+    { path: '/MissionHistory', icon: ClipboardList, label: 'Missions',  badge: missionBadge },
+    { path: '/Favorites',      icon: Heart,         label: 'Favoris',   badge: 0 },
+    { path: '/Messages',       icon: MessageCircle, label: 'Messages',  badge: messageBadge },
+    { path: '/Profile',        icon: User,          label: 'Profil',    badge: profileIncomplete },
   ];
 
   return (
@@ -92,7 +89,7 @@ export default function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="flex items-stretch h-[58px]">
+      <div className="w-full flex items-center justify-around h-14 px-0.5">
         {navItems.map((item) => (
           <NavItem
             key={item.path}

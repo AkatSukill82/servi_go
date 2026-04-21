@@ -116,27 +116,27 @@ export default function AppLayout() {
   }, []);
 
   if (loading) {
-    const isDark = document.documentElement.classList.contains('dark');
+    const isDark = document.documentElement.classList.contains('dark') ||
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
     const bg = isDark ? '#0a0a0a' : '#ffffff';
-    const textColor = isDark ? '#ffffff' : '#111827';
+    const textColor = isDark ? '#ffffff' : '#0F172A';
+    const spinnerTrack = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(15,23,42,0.12)';
+    const spinnerTop = '#FF6B35';
 
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg }}>
+      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg, width: '100vw', height: '100vh' }}>
         <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
+          initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col items-center gap-5"
+          transition={{ duration: 0.3 }}
+          className="flex flex-col items-center gap-4"
         >
-          {/* Logo mark */}
-          <div className="w-20 h-20 rounded-[28px] flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a29bfe)' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.25)" />
-              <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <span className="text-[26px] font-bold tracking-tight" style={{ color: textColor, fontFamily: 'Inter, system-ui, sans-serif' }}>ServiGo</span>
-          <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2.5px solid rgba(108,92,231,0.2)', borderTopColor: '#6C5CE7' }} />
+          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#FF6B35"/>
+            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: textColor }}>ServiGo</span>
+          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `3px solid ${spinnerTrack}`, borderTopColor: spinnerTop }} />
         </motion.div>
       </div>
     );
@@ -194,7 +194,7 @@ export default function AppLayout() {
               className="absolute inset-0 overflow-y-auto"
               style={{
                 display: isActive ? 'block' : 'none',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 62px)',
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)',
               }}
               ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
             >
@@ -215,7 +215,7 @@ export default function AppLayout() {
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="absolute inset-0 overflow-y-auto bg-background"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 62px)' }}
+              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 56px)' }}
             >
               <Suspense fallback={<TabSpinner />}>
                 <StackComponent />
