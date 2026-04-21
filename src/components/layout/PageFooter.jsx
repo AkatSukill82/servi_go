@@ -2,7 +2,7 @@ import React from 'react';
 
 export default function PageFooter() {
   return (
-    <div className="text-center pb-4 pt-2 text-xs text-muted-foreground space-y-1.5">
+    <div className="text-center pb-10 pt-6 text-xs text-muted-foreground space-y-1.5">
       <div>
         <a href="/mentions-legales" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Mentions légales</a>
         {" · "}
