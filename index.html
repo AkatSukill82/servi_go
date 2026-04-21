@@ -36,29 +36,16 @@
     <link rel="manifest" href="/manifest.json" />
 
     <title>ServiGo</title>
-    <style>html,body,#root{background-color:#ffffff;margin:0;padding:0;min-height:100vh;}@media(prefers-color-scheme:dark){html,body,#root{background-color:#000000;}}</style>
+    <style>html,body,#root{background-color:#ffffff;margin:0;padding:0;min-height:100vh;}</style>
   <script>
   (function(){
     try {
-      var v = localStorage.getItem('sg_dark');
-      if (v === null) {
-        var old = localStorage.getItem('servigo_dark_mode');
-        if (old === 'true') { v = '1'; localStorage.setItem('sg_dark', '1'); }
-        // Also detect system preference if no stored preference
-        if (v === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          v = '1';
-        }
-      }
-      var isDark = v === '1';
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-        document.documentElement.setAttribute('data-theme', 'dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-        document.documentElement.setAttribute('data-theme', 'light');
-      }
+      // Force light mode always
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      localStorage.setItem('sg_dark', '0');
       var meta = document.getElementById('theme-color-meta');
-      if (meta) meta.setAttribute('content', isDark ? '#000000' : '#ffffff');
+      if (meta) meta.setAttribute('content', '#ffffff');
     } catch(e){}
   })();
   </script>

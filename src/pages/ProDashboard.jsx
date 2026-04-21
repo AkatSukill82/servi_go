@@ -253,7 +253,7 @@ export default function ProDashboard() {
   const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
 
   return (
-    <div className="px-4 sm:px-6 pt-7 pb-4 space-y-5">
+    <div className="px-4 sm:px-6 pt-7 pb-4 space-y-5 bg-white min-h-full">
 
       {/* Upcoming mission reminder */}
       {upcomingJob && (
@@ -267,15 +267,39 @@ export default function ProDashboard() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--accent-blue)' }}>Dashboard Pro</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{user?.category_name || 'Professionnel'} · {(() => { if (user?.first_name) return user.first_name; const h = (user?.full_name||'').includes('@') ? user.full_name.split('@')[0] : (user?.full_name||''); const s = h.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0]||''; return s.length>=2 ? s[0].toUpperCase()+s.slice(1).toLowerCase() : (user?.email||'').split('@')[0]; })()}</p>
+      <div>
+        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+          {(() => { if (user?.first_name) return `Bonjour, ${user.first_name} 👋`; const h = (user?.full_name||'').includes('@') ? user.full_name.split('@')[0] : (user?.full_name||''); const s = h.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0]||''; return s.length>=2 ? `Bonjour, ${s[0].toUpperCase()+s.slice(1).toLowerCase()} 👋` : 'Dashboard Pro'; })()}
+        </h1>
+        <div className="flex items-center justify-between mt-1">
+          <p className="text-gray-500 text-sm">{user?.category_name || 'Professionnel'}</p>
+          {user?.verification_status === 'verified'
+            ? <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-full px-3 py-1"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
+            : <button onClick={() => navigate('/ProProfile')} className="text-xs font-semibold text-gray-500 border border-gray-200 rounded-full px-3 py-1">Vérifier →</button>
+          }
         </div>
-        {user?.verification_status === 'verified'
-          ? <span className="flex items-center gap-1.5 text-xs font-semibold text-[#38A169] bg-green-50 border border-green-200 rounded-full px-3 py-1.5"><ShieldCheck className="w-3.5 h-3.5" />Vérifié</span>
-          : <button onClick={() => navigate('/ProProfile')} className="text-xs font-medium text-muted-foreground border border-border rounded-full px-3 py-1.5">Vérifier →</button>
-        }
+      </div>
+
+      {/* Earnings card */}
+      <div className="rounded-3xl p-5 text-white" style={{ background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)', boxShadow: '0 8px 24px rgba(108,92,231,0.25)' }}>
+        <p className="text-white/70 text-sm font-medium">Missions terminées</p>
+        <p className="text-5xl font-black mt-1">{completedJobs.length}</p>
+        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/20">
+          <div>
+            <p className="text-white/70 text-xs">Note</p>
+            <p className="text-white font-bold text-lg">{user?.rating ? user.rating.toFixed(1) : '—'} ⭐</p>
+          </div>
+          <div className="w-px h-8 bg-white/20" />
+          <div>
+            <p className="text-white/70 text-xs">En cours</p>
+            <p className="text-white font-bold text-lg">{activeJobs.length}</p>
+          </div>
+          <div className="w-px h-8 bg-white/20" />
+          <div>
+            <p className="text-white/70 text-xs">Avis</p>
+            <p className="text-white font-bold text-lg">{user?.reviews_count || 0}</p>
+          </div>
+        </div>
       </div>
 
       {/* Identity pending banner */}
@@ -346,18 +370,7 @@ export default function ProDashboard() {
 
       {activeTab === 'missions' && (
         <>
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <div className="flex items-center gap-1.5 mb-2"><TrendingUp className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Missions terminées</p></div>
-              <p className="text-3xl font-bold tracking-tight">{completedJobs.length}</p>
-            </div>
-            <div className="bg-card rounded-xl p-4 border border-border">
-              <div className="flex items-center gap-1.5 mb-2"><Star className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.8} /><p className="text-xs text-muted-foreground font-medium">Note moyenne</p></div>
-              <p className="text-3xl font-bold tracking-tight">{user?.rating ? user.rating.toFixed(1) : '—'}</p>
-              {user?.reviews_count > 0 && <p className="text-xs text-muted-foreground mt-1">{user.reviews_count} avis</p>}
-            </div>
-          </div>
+          {/* Stats removed — shown in earnings card above */}
 
           {/* Locked preview for inactive subscription */}
           {!hasActiveSubscription && incomingRequests.length > 0 && (
@@ -404,7 +417,7 @@ export default function ProDashboard() {
                     const isAssigned = assignedRequests.some(a => a.id === req.id);
                     const createdMinutesAgo = isAssigned ? getTimeSinceCreated(req.created_date) : null;
                     return (
-                      <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-card rounded-xl p-4 border border-border">
+                      <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -449,7 +462,7 @@ export default function ProDashboard() {
               <h2 className="text-sm font-semibold mb-3">Missions en cours</h2>
               <div className="space-y-3">
                 {activeJobs.map(job => (
-                  <div key={job.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
+                  <div key={job.id} className="bg-white rounded-2xl p-4 space-y-3" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-semibold text-sm">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
@@ -490,7 +503,7 @@ export default function ProDashboard() {
               <h2 className="text-sm font-semibold mb-3">Missions récentes</h2>
               <div className="space-y-2">
                 {completedJobs.slice(0, 5).map(job => (
-                  <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)} className="w-full bg-card rounded-xl px-4 py-3 border border-border flex items-center gap-3 active:scale-[0.98] transition-transform">
+                  <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)} className="w-full bg-white rounded-2xl px-4 py-3 flex items-center gap-3 active:scale-[0.98] transition-transform" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0 text-xs font-bold">{(job.customer_first_name || job.customer_name || 'C')[0]}</div>
                     <div className="flex-1 text-left min-w-0">
                       <p className="text-sm font-medium truncate">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
@@ -513,7 +526,7 @@ export default function ProDashboard() {
               <h2 className="text-sm font-semibold mb-3">Avis clients</h2>
               <div className="space-y-2">
                 {myReviews.map(review => (
-                  <div key={review.id} className="bg-card rounded-xl p-3.5 border border-border">
+                  <div key={review.id} className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                     <div className="flex items-center justify-between mb-1.5">
                       <p className="text-sm font-medium">{review.customer_name || 'Client'}</p>
                       <div className="flex gap-0.5">

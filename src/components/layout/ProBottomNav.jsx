@@ -24,26 +24,18 @@ function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-0.5 flex-1 py-1.5 min-h-[52px] justify-center tap-scale relative"
+      className="flex flex-col items-center gap-1 flex-1 py-2 min-h-[52px] justify-center tap-scale relative"
     >
       <div className="relative flex items-center justify-center">
-        {isActive && (
-          <motion.div
-            layoutId="pro-nav-pill"
-            className="absolute inset-0 -m-2.5 rounded-2xl"
-            style={{ background: `${BRAND}18` }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-          />
-        )}
         <Icon
-          style={{ color: isActive ? BRAND : undefined, width: 22, height: 22, position: 'relative', zIndex: 1 }}
-          strokeWidth={isActive ? 2.2 : 1.6}
+          strokeWidth={isActive ? 2.3 : 1.6}
+          style={{ color: isActive ? BRAND : '#9CA3AF', width: 22, height: 22 }}
         />
         <NavBadge count={badge} />
       </div>
       <span
-        className="text-[10px] font-semibold transition-colors"
-        style={{ color: isActive ? BRAND : undefined, opacity: isActive ? 1 : 0.5 }}
+        className="text-[10px] font-semibold"
+        style={{ color: isActive ? BRAND : '#9CA3AF' }}
       >
         {label}
       </span>
@@ -91,10 +83,10 @@ export default function ProBottomNav() {
 
   return (
     <nav
-      className="shrink-0 bg-card border-t border-border/60 backdrop-blur-xl"
+      className="shrink-0 bg-white border-t border-gray-100"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom)',
-        boxShadow: '0 -1px 0 rgba(108,92,231,0.07), 0 -8px 24px rgba(108,92,231,0.04)',
+        boxShadow: '0 -1px 0 #f0f0f0',
       }}
     >
       <div className="w-full flex items-center justify-around px-1" style={{ height: 56 }}>

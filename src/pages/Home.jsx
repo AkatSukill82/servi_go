@@ -108,7 +108,7 @@ export default function Home() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-full bg-background pb-4">
+      <div className="min-h-full bg-white pb-4">
         <OnboardingModal />
 
         {/* Top bar */}
@@ -117,32 +117,41 @@ export default function Home() {
           subtitle={user?.address?.split(',')[0] || 'Belgique'}
         />
 
-        <div className="px-4 sm:px-5 pt-5 space-y-6">
+        <div className="px-4 sm:px-5 pt-6 space-y-7">
 
-          {/* ── Hero Search ── */}
-          <div className="space-y-3">
+          {/* ── Hero greeting + search (Uber style) ── */}
+          <div className="space-y-4">
+            <div>
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-tight">
+                {firstName ? `${greeting},\n${firstName} 👋` : `${greeting} 👋`}
+              </h1>
+              <p className="text-gray-500 text-sm mt-1 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: BRAND }} />
+                {user?.address?.split(',')[0] || 'Belgique'}
+              </p>
+            </div>
+
+            {/* Search bar */}
             <div className="relative">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
-                style={{ color: BRAND }}
-              />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="De quel service avez-vous besoin ?"
-                className="w-full h-14 pl-12 pr-14 rounded-2xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none transition"
-                style={{ fontSize: 15, boxShadow: searchQuery ? `0 0 0 2px ${BRAND}40` : '0 2px 12px rgba(108,92,231,0.08)' }}
+                placeholder="Que cherchez-vous ?"
+                className="w-full h-14 pl-12 pr-12 rounded-2xl text-gray-900 text-base focus:outline-none focus:ring-2 transition"
+                style={{
+                  background: '#F5F5F5',
+                  fontSize: 15,
+                  outline: 'none',
+                  boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none',
+                }}
               />
               {searchQuery ? (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-muted flex items-center justify-center tap-scale"
-                >
-                  <X className="w-4 h-4 text-muted-foreground" />
+                <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center tap-scale">
+                  <X className="w-4 h-4 text-gray-500" />
                 </button>
               ) : (
-                <button className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center tap-scale"
-                  style={{ background: `${BRAND}12` }}>
+                <button className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: `${BRAND}15` }}>
                   <Mic className="w-4 h-4" style={{ color: BRAND }} />
                 </button>
               )}
@@ -153,21 +162,20 @@ export default function Home() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => navigate('/Emergency')}
-            className="w-full rounded-2xl overflow-hidden tap-scale"
-            style={{ boxShadow: '0 4px 20px rgba(225,112,85,0.2)' }}
+            className="w-full rounded-3xl overflow-hidden tap-scale"
+            style={{ background: 'linear-gradient(135deg, #E17055, #d63031)', boxShadow: '0 8px 24px rgba(225,112,85,0.25)' }}
           >
-            <div className="px-5 py-4 flex items-center gap-4"
-              style={{ background: 'linear-gradient(135deg, #E17055, #d63031)' }}>
-              <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
-                <Zap className="w-6 h-6 text-white fill-white" />
+            <div className="px-5 py-5 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                <Zap className="w-7 h-7 text-white fill-white" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-base font-bold text-white leading-tight">Urgence à domicile ?</p>
-                <p className="text-sm text-white/75">Intervention prioritaire sous 1h</p>
+                <p className="text-lg font-black text-white leading-tight">Urgence à domicile ?</p>
+                <p className="text-sm text-white/80 mt-0.5">Intervention prioritaire sous 1h</p>
               </div>
-              <span className="shrink-0 bg-white/20 text-white text-xs font-black px-3 py-1 rounded-full border border-white/30 whitespace-nowrap">
-                +50%
-              </span>
+              <div className="shrink-0 bg-white/25 rounded-2xl px-3 py-1.5">
+                <span className="text-white text-xs font-black">+50%</span>
+              </div>
             </div>
           </motion.button>
 
@@ -243,12 +251,12 @@ export default function Home() {
 
           {/* ── Services ── */}
           <section>
-            <div className="flex items-center justify-between mb-3.5">
-              <h2 className="text-base font-black tracking-tight">Nos services</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-black text-gray-900 tracking-tight">Nos services</h2>
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-xs font-bold flex items-center gap-1"
+                <button onClick={() => setSearchQuery('')} className="text-sm font-bold flex items-center gap-1"
                   style={{ color: BRAND }}>
-                  <X className="w-3 h-3" /> Effacer
+                  <X className="w-3.5 h-3.5" /> Effacer
                 </button>
               )}
             </div>
@@ -280,9 +288,9 @@ export default function Home() {
           {/* ── Nearby Pros ── */}
           {nearbyPros.length > 0 && (
             <section>
-              <div className="flex items-center justify-between mb-3.5">
-                <h2 className="text-base font-black tracking-tight">Top professionnels</h2>
-                <button className="text-xs font-bold flex items-center gap-1" style={{ color: BRAND }}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-black text-gray-900 tracking-tight">Top professionnels</h2>
+                <button className="text-sm font-bold flex items-center gap-1" style={{ color: BRAND }}>
                   Voir tout <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -297,7 +305,7 @@ export default function Home() {
           {/* ── Recent reviews ── */}
           {recentReviews.length > 0 && (
             <section>
-              <h2 className="text-base font-black tracking-tight mb-3.5">Avis récents</h2>
+              <h2 className="text-xl font-black text-gray-900 tracking-tight mb-4">Avis récents</h2>
               <div className="space-y-3">
                 {recentReviews.map((review, i) => (
                   <motion.div
@@ -305,8 +313,8 @@ export default function Home() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08 }}
-                    className="bg-card rounded-2xl p-4 border border-border/50"
-                    style={{ boxShadow: '0 2px 10px rgba(108,92,231,0.05)' }}
+                    className="bg-white rounded-2xl p-4"
+                    style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}
                   >
                     <div className="flex items-center gap-3 mb-2.5">
                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
@@ -332,8 +340,7 @@ export default function Home() {
           )}
 
           {/* ── Trust strip ── */}
-          <div className="rounded-2xl p-4 border border-border/40 bg-card"
-            style={{ boxShadow: '0 2px 12px rgba(108,92,231,0.05)' }}>
+          <div className="rounded-3xl p-5 bg-white" style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}>
             <div className="flex items-center justify-around gap-2">
               {[
                 { icon: Shield,     label: 'Pros vérifiés' },
