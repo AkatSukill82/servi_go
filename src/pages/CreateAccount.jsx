@@ -40,13 +40,31 @@ const PRO_STEPS = ['Infos', 'Activité', 'Charte', 'DAC7'];
 
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
-function ProgressBar({ current, total }) {
+function ProgressBar({ current, total, labels }) {
   return (
-    <div className="w-full h-1 bg-gray-100 rounded-full mb-2">
-      <div
-        className="h-full bg-[#FF6B35] rounded-full transition-all duration-500"
-        style={{ width: `${((current - 1) / (total - 1)) * 100}%` }}
-      />
+    <div className="w-full mb-6">
+      <div className="flex items-center justify-between mb-3">
+        {labels.map((label, i) => (
+          <div key={i} className="flex flex-col items-center flex-1">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold transition-all ${
+              i < current - 1
+                ? 'bg-gray-900 text-white'
+                : i === current - 1
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100 text-gray-400'
+            }`}>
+              {i < current - 1 ? <CheckCircle className="w-3.5 h-3.5" /> : i + 1}
+            </div>
+            <span className="text-[9px] text-gray-400 mt-1 text-center leading-tight hidden sm:block">{label}</span>
+          </div>
+        ))}
+      </div>
+      <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gray-900 rounded-full transition-all duration-500"
+          style={{ width: `${((current - 1) / (total - 1)) * 100}%` }}
+        />
+      </div>
     </div>
   );
 }
@@ -292,11 +310,11 @@ function ProStep2({ data, onChange, onNext, onBack }) {
 
       {/* Photo */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
-          {data.photo_url ? <img src={data.photo_url} alt="" className="w-full h-full object-cover" /> : <Camera className="w-6 h-6 text-gray-400" />}
+        <div className="w-16 h-16 rounded-2xl bg-gray-100 border border-dashed border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
+          {data.photo_url ? <img src={data.photo_url} alt="" className="w-full h-full object-cover" /> : <Camera className="w-5 h-5 text-gray-400" />}
         </div>
-        <label className="flex-1">
-          <div className="text-sm font-medium text-gray-700 px-4 py-2.5 rounded-xl border border-gray-200 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+        <label className="flex-1 cursor-pointer">
+          <div className="text-xs font-medium text-gray-700 px-3 py-2.5 rounded-xl border border-gray-200 text-center bg-gray-50 hover:bg-gray-100 transition-colors">
             {data.photo_url ? 'Changer la photo' : 'Ajouter une photo'}
           </div>
           <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
@@ -324,7 +342,7 @@ function ProStep2({ data, onChange, onNext, onBack }) {
       </div>
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-gray-600">Description de vos services</label>
-        <Textarea value={data.description} onChange={e => onChange('description', e.target.value)} placeholder="Décrivez vos compétences..." className="rounded-xl border-gray-200 bg-gray-50 resize-none" rows={3} />
+        <Textarea value={data.description} onChange={e => onChange('description', e.target.value)} placeholder="Décrivez vos compétences..." className="rounded-xl resize-none border-gray-200 bg-gray-50" rows={3} />
       </div>
       <button onClick={() => validate() && onNext()} className="w-full rounded-2xl bg-gray-900 text-white font-semibold text-base flex items-center justify-center gap-2" style={{ height: 52 }}>
         Continuer <ArrowRight className="w-4 h-4" />
@@ -351,23 +369,22 @@ function ProStep3({ data, onChange, onNext, onBack }) {
       <div className="pt-2">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Étape 3 / 4</p>
         <h2 className="text-2xl font-bold text-gray-900">Charte d'indépendance</h2>
-        <p className="text-sm text-gray-500 mt-1">Déclaration obligatoire — renouvelable chaque année.</p>
+        <p className="text-gray-500 text-sm mt-1">Déclaration obligatoire, renouvelable annuellement.</p>
       </div>
 
-      <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Confirmations</p>
+      <div className="space-y-2">
         {INDEPENDENCE_ITEMS.map(item => (
-          <label key={item.key} className="flex items-start gap-3 cursor-pointer">
-            <div onClick={() => setCheck(item.key, !checks[item.key])} className={`w-5 h-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${checks[item.key] ? 'bg-gray-900 border-gray-900' : 'border-gray-300'}`}>
+          <label key={item.key} onClick={() => setCheck(item.key, !checks[item.key])} className="flex items-start gap-3 cursor-pointer p-3 rounded-xl hover:bg-gray-50 transition-colors">
+            <div className={`w-5 h-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${checks[item.key] ? 'bg-gray-900 border-gray-900' : 'border-gray-300'}`}>
               {checks[item.key] && <CheckCircle className="w-3 h-3 text-white" />}
             </div>
-            <span className="text-sm leading-relaxed text-gray-700">{item.label}{item.required && <span className="text-red-400 ml-1">*</span>}</span>
+            <span className="text-sm leading-relaxed text-gray-700">{item.label}{item.required && <span className="text-[#FF6B35] ml-1">*</span>}</span>
           </label>
         ))}
       </div>
 
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-gray-900">Assurance RC Pro *</p>
+      <div className="border-t border-gray-100 pt-4 space-y-4">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Assurance RC Pro *</p>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">Nom de l'assureur</label>
           <Input value={data.insurance_company || ''} onChange={e => onChange('insurance_company', e.target.value)} placeholder="AXA, Allianz..." className="h-12 rounded-xl border-gray-200 bg-gray-50" />
@@ -379,7 +396,7 @@ function ProStep3({ data, onChange, onNext, onBack }) {
       </div>
 
       <button onClick={() => validate() && onNext()} className="w-full rounded-2xl bg-gray-900 text-white font-semibold text-base flex items-center justify-center gap-2" style={{ height: 52 }}>
-        Je confirme mon statut <ArrowRight className="w-4 h-4" />
+        Je confirme <ArrowRight className="w-4 h-4" />
       </button>
     </div>
   );
@@ -397,11 +414,11 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
       <div className="pt-2">
         <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Étape 4 / 4</p>
         <h2 className="text-2xl font-bold text-gray-900">Données fiscales</h2>
-        <p className="text-sm text-gray-500 mt-1">Obligatoire — Directive DAC7 (SPF Finances belge).</p>
+        <p className="text-gray-500 text-sm mt-1">Requis par la directive européenne DAC7.</p>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Identité</p>
+      <div className="space-y-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Identité</p>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">Date de naissance *</label>
           <Input type="date" value={data.date_of_birth || ''} onChange={e => onChange('date_of_birth', e.target.value)} className="h-12 rounded-xl border-gray-200 bg-gray-50" />
@@ -415,8 +432,8 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Adresse</p>
+      <div className="space-y-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Adresse</p>
         <Input value={data.address_street || ''} onChange={e => onChange('address_street', e.target.value)} placeholder="Rue et numéro" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         <div className="grid grid-cols-2 gap-3">
           <Input value={data.address_postal_code || ''} onChange={e => onChange('address_postal_code', e.target.value)} placeholder="Code postal" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
@@ -424,8 +441,8 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fiscal</p>
+      <div className="space-y-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fiscal</p>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">NIF / Numéro national *</label>
           <Input value={data.tin_number || ''} onChange={e => onChange('tin_number', e.target.value)} placeholder="XX.XX.XX-XXX.XX" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
@@ -439,20 +456,17 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
         </div>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Bancaire</p>
+      <div className="space-y-4">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Banque</p>
         <div className="space-y-1.5">
           <label className="text-xs font-medium text-gray-600">IBAN *</label>
           <Input value={data.iban || ''} onChange={e => onChange('iban', e.target.value)} placeholder="BE68 5390 0754 7034" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-600">BIC / SWIFT</label>
-          <Input value={data.bic || ''} onChange={e => onChange('bic', e.target.value)} placeholder="GEBABEBB" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
-        </div>
+        <Input value={data.bic || ''} onChange={e => onChange('bic', e.target.value)} placeholder="BIC / SWIFT" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
       </div>
 
       <button onClick={() => validate() && onSubmit()} disabled={loading} className="w-full rounded-2xl bg-[#FF6B35] text-white font-semibold text-base flex items-center justify-center gap-2 disabled:opacity-60" style={{ height: 52 }}>
-        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Finaliser mon inscription <CheckCircle className="w-4 h-4" /></>}
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Finaliser l'inscription <CheckCircle className="w-4 h-4" /></>}
       </button>
     </div>
   );
@@ -582,7 +596,7 @@ function ProSignup({ onBack }) {
 
   return (
     <div>
-      <ProgressBar current={step} total={4} />
+      <ProgressBar current={step} total={4} labels={PRO_STEPS} />
       {step === 1 && <ProStep1 data={proData} onChange={set} onNext={() => setStep(2)} onBack={onBack} />}
       {step === 2 && <ProStep2 data={proData} onChange={set} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
       {step === 3 && <ProStep3 data={proData} onChange={set} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
