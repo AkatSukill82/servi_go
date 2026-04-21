@@ -226,7 +226,7 @@ export default function Profile() {
         )}
       </div>
 
-      <div className="px-4 pb-8 space-y-4 mt-1">
+      <div className="px-4 pb-0 space-y-4 mt-1">
         {/* ─── ONGLET INFOS ─── */}
         {tab === 'infos' &&
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
