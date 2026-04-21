@@ -35,11 +35,10 @@ export default function ProDashboard() {
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   const proCategory = user?.category_name;
 
-  // Gate: redirect if independence charter not signed
-  // Skip in preview/development
+  // Gate: redirect if independence charter not signed (skip in preview)
   useEffect(() => {
-    if (!user || typeof window === 'undefined') return;
-    const isPreview = window.location.hostname.includes('preview') || window.location.hostname.includes('localhost');
+    if (!user) return;
+    const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('preview');
     if (!isPreview && !user.independence_charter_signed) {
       navigate('/IndependenceCharter', { replace: true });
     }
