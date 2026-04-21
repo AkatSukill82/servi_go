@@ -210,13 +210,13 @@ export default function Chat() {
 
 
   return (
-    <div className="flex flex-col bg-background" style={{ height: viewportHeight }}>
+    <div className="flex flex-col bg-background overflow-hidden" style={{ height: viewportHeight }}>
       {showRating &&
       <RatingModal request={request} onSubmit={(data) => reviewMutation.mutate(data)} onClose={() => setShowRating(false)} isSubmitting={reviewMutation.isPending} />
       }
 
       {/* Header */}
-      <div className="bg-card border-b border-border/50 shadow-sm"
+      <div className="flex-shrink-0 bg-card border-b border-border/50 shadow-sm"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
         {/* Top row: back + identity + actions */}
         <div className="flex items-center gap-2 px-3 pb-3">
@@ -273,7 +273,7 @@ export default function Chat() {
 
       {/* Mission recap */}
       {request &&
-      <div className="px-4 py-2 bg-primary/5 border-b border-border/30">
+      <div className="flex-shrink-0 px-4 py-2 bg-primary/5 border-b border-border/30">
           <p className="text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{request.category_name}</span>
             {request.customer_address && <> · <span>{request.customer_address}</span></>}
@@ -286,14 +286,16 @@ export default function Chat() {
 
       {/* Mission progress bar */}
       {request &&
-      <div className="px-4 py-2 border-b border-border/30 bg-background">
+      <div className="flex-shrink-0 px-4 py-2 border-b border-border/30 bg-background">
           <MissionProgress status={request.status} compact />
         </div>
       }
 
       {/* Contract panel */}
       {showContract && requestId && user &&
-      <ContractPanel requestId={requestId} userEmail={user.email} userType={user.user_type} />
+      <div className="flex-shrink-0">
+       <ContractPanel requestId={requestId} userEmail={user.email} userType={user.user_type} />
+      </div>
       }
 
       {/* Messages */}
@@ -356,11 +358,11 @@ export default function Chat() {
 
       {/* Input bar */}
       {isFinished ?
-      <div className="px-4 py-4 bg-card border-t border-border/50 text-center" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+      <div className="flex-shrink-0 px-4 py-4 bg-card border-t border-border/50 text-center" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
           <p className="text-xs text-muted-foreground">🔒 Cette mission est terminée — la conversation est archivée</p>
         </div> :
 
-      <div className="px-4 py-3 bg-card border-t border-border/50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+      <div className="flex-shrink-0 px-4 py-3 bg-card border-t border-border/50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
           <div className="flex items-center gap-2">
             <button onClick={() => fileInputRef.current?.click()} disabled={sending} aria-label="Photo"
           className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0">
