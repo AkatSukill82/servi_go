@@ -100,16 +100,13 @@
       "type": "string"
     },
     "customer_ip": {
-      "type": "string",
-      "description": "IP du client lors de la signature (preuve juridique)"
+      "type": "string"
     },
     "pro_ip": {
-      "type": "string",
-      "description": "IP du professionnel lors de la signature"
+      "type": "string"
     },
     "special_conditions": {
-      "type": "string",
-      "description": "Conditions particuli\u00e8res ajout\u00e9es par le pro"
+      "type": "string"
     },
     "cancellation_policy": {
       "type": "string",
@@ -124,15 +121,13 @@
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Photos prises avant intervention (URLs)"
+      }
     },
     "photos_after": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Photos prises apr\u00e8s intervention (URLs)"
+      }
     },
     "completion_confirmed_customer": {
       "type": "boolean",
@@ -155,20 +150,17 @@
     },
     "withdrawal_right_waived": {
       "type": "boolean",
-      "default": false,
-      "description": "Le client renonce \u00e0 son droit de r\u00e9tractation pour d\u00e9but d'ex\u00e9cution imm\u00e9diat"
+      "default": false
     },
     "withdrawal_deadline": {
-      "type": "string",
-      "description": "Date limite de r\u00e9tractation (14 jours apr\u00e8s signature)"
+      "type": "string"
     },
     "odr_link": {
       "type": "string",
       "default": "https://ec.europa.eu/consumers/odr"
     },
     "terms_version": {
-      "type": "string",
-      "description": "Version des CGU/CGV accept\u00e9es lors de la signature"
+      "type": "string"
     },
     "mediation_clause": {
       "type": "string",
@@ -181,7 +173,16 @@
   ],
   "rls": {
     "create": {
-      "data.professional_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "read": {
       "$or": [

@@ -1,0 +1,111 @@
+{
+  "name": "Conversation",
+  "description": "Thread de conversation entre un client et un professionnel \u2014 peut exister avant ou sans mission",
+  "type": "object",
+  "properties": {
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "professional_email": {
+      "type": "string"
+    },
+    "professional_name": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "ID de la mission associ\u00e9e (optionnel)"
+    },
+    "last_message_at": {
+      "type": "string"
+    },
+    "last_message_preview": {
+      "type": "string"
+    },
+    "unread_count_customer": {
+      "type": "number",
+      "default": 0
+    },
+    "unread_count_pro": {
+      "type": "number",
+      "default": 0
+    },
+    "is_archived_customer": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_archived_pro": {
+      "type": "boolean",
+      "default": false
+    },
+    "deleted_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "customer_email",
+    "professional_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

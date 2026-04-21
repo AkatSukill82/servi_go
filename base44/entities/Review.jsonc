@@ -35,11 +35,31 @@
   ],
   "rls": {
     "create": {
-      "data.customer_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
-    "read": {},
+    "read": {
+      "user_condition": {}
+    },
     "update": {
-      "data.customer_email": "{{user.email}}"
+      "$or": [
+        {
+          "data.customer_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "$or": [
