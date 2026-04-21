@@ -343,7 +343,7 @@ export default function ProProfile() {
         ))}
       </div>
 
-      <div className="px-4 pb-8 space-y-3 mt-1">
+      <div className="px-4 pb-0 space-y-3 mt-1">
 
         {/* ─── ONGLET INFOS ─── */}
         {activeTab === 'infos' && (
