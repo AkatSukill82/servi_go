@@ -11,6 +11,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Pages
 import SelectUserType from './pages/SelectUserType';
 import Chat from './pages/Chat';
+import MissionHistory from './pages/MissionHistory';
 import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';

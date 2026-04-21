@@ -11,25 +11,25 @@
     --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
 
     /* Brand */
-    --color-primary:   #0F172A;
-    --color-accent:    #4F46E5;
-    --color-accent-hover: #4338CA;
-    --color-success:   #10B981;
-    --color-warning:   #F59E0B;
-    --color-danger:    #EF4444;
+    --color-primary:   #6C5CE7;
+    --color-accent:    #6C5CE7;
+    --color-accent-hover: #5A4BD1;
+    --color-success:   #00B894;
+    --color-warning:   #FDCB6E;
+    --color-danger:    #E17055;
 
     /* Neutrals – Light */
-    --color-bg:        #FFFFFF;
-    --color-bg-soft:   #F8FAFC;
-    --color-border:    #E2E8F0;
-    --color-text:      #0F172A;
-    --color-text-muted:#64748B;
+    --color-bg:        #F7F6FF;
+    --color-bg-soft:   #F0EEFF;
+    --color-border:    #E8E4F8;
+    --color-text:      #1a1730;
+    --color-text-muted:#6B6490;
     --color-surface:   #FFFFFF;
-    --color-chip-bg:   #F1F5F9;
+    --color-chip-bg:   #F0EEFF;
 
     /* Shadows */
-    --shadow-card:     0 1px 3px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.06);
-    --shadow-float:    0 4px 16px rgba(15,23,42,0.12);
+    --shadow-card:     0 1px 4px rgba(108,92,231,0.06), 0 8px 24px rgba(108,92,231,0.06);
+    --shadow-float:    0 4px 24px rgba(108,92,231,0.14);
 
     /* Radius */
     --radius-sm:  8px;
@@ -39,26 +39,26 @@
     --radius-pill: 9999px;
 
     /* Shadcn tokens – Light */
-    --background:          0 0% 100%;
-    --foreground:          222 47% 11%;
+    --background:          0 0% 98%;
+    --foreground:          260 20% 10%;
     --card:                0 0% 100%;
-    --card-foreground:     222 47% 11%;
+    --card-foreground:     260 20% 10%;
     --popover:             0 0% 100%;
-    --popover-foreground:  222 47% 11%;
-    --primary:             222 47% 11%;
+    --popover-foreground:  260 20% 10%;
+    --primary:             256 74% 62%;
     --primary-foreground:  0 0% 100%;
-    --secondary:           214 32% 91%;
-    --secondary-foreground:222 47% 11%;
-    --muted:               210 40% 96%;
-    --muted-foreground:    215 25% 40%;
-    --accent:              243 75% 59%;
+    --secondary:           250 30% 96%;
+    --secondary-foreground:260 20% 10%;
+    --muted:               250 25% 96%;
+    --muted-foreground:    256 15% 52%;
+    --accent:              256 74% 62%;
     --accent-foreground:   0 0% 100%;
-    --destructive:         0 84% 60%;
+    --destructive:         14 82% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border:              214 32% 91%;
-    --input:               214 32% 91%;
-    --ring:                243 75% 59%;
-    --radius:              0.75rem;
+    --border:              250 25% 92%;
+    --input:               250 25% 92%;
+    --ring:                256 74% 62%;
+    --radius:              0.875rem;
 
     /* Sidebar */
     --sidebar-background: 0 0% 99%;
@@ -73,35 +73,34 @@
 
   /* ── Dark mode ── */
   [data-theme="dark"], .dark {
-    --color-bg:        #0a0a0a;
-    --color-bg-soft:   #111111;
-    --color-border:    #2a2a2a;
-    --color-text:      #ffffff;
-    --color-text-muted:#9ca3af;
-    --color-surface:   #1a1a1a;
-    --color-chip-bg:   #222222;
-    --shadow-card:     0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+    --color-bg:        #0d0c14;
+    --color-bg-soft:   #131220;
+    --color-border:    #2a2838;
+    --color-text:      #f0eeff;
+    --color-text-muted:#9b97b8;
+    --color-surface:   #1a1928;
+    --color-chip-bg:   #1e1d2e;
+    --shadow-card:     0 1px 3px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.4);
 
-    /* In dark mode: primary is the accent indigo, so text on it is white */
-    --background:          0 0% 4%;
-    --foreground:          0 0% 96%;
-    --card:                0 0% 10%;
-    --card-foreground:     0 0% 96%;
-    --popover:             0 0% 8%;
-    --popover-foreground:  0 0% 96%;
-    --primary:             243 75% 59%;          /* indigo #4F46E5 — same in dark */
-    --primary-foreground:  0 0% 100%;            /* white text on indigo */
-    --secondary:           0 0% 14%;
-    --secondary-foreground:0 0% 90%;
-    --muted:               0 0% 12%;
-    --muted-foreground:    0 0% 58%;
-    --accent:              243 75% 59%;
+    --background:          258 18% 8%;
+    --foreground:          258 20% 94%;
+    --card:                258 18% 11%;
+    --card-foreground:     258 20% 94%;
+    --popover:             258 18% 9%;
+    --popover-foreground:  258 20% 94%;
+    --primary:             256 74% 65%;
+    --primary-foreground:  0 0% 100%;
+    --secondary:           258 18% 16%;
+    --secondary-foreground:258 20% 85%;
+    --muted:               258 18% 14%;
+    --muted-foreground:    258 15% 55%;
+    --accent:              256 74% 65%;
     --accent-foreground:   0 0% 100%;
-    --destructive:         0 84% 50%;
+    --destructive:         14 82% 50%;
     --destructive-foreground: 0 0% 100%;
-    --border:              0 0% 18%;
-    --input:               0 0% 14%;
-    --ring:                243 75% 59%;
+    --border:              258 18% 20%;
+    --input:               258 18% 16%;
+    --ring:                256 74% 65%;
 
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 85%;

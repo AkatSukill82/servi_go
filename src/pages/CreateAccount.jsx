@@ -646,7 +646,7 @@ export default function CreateAccount() {
   return (
     <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
       {/* Header */}
-      <div className="bg-[#1A1A2E] px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
+      <div className="px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)', background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)' }}>
         <div className="flex justify-center mb-3">
           <ServiGoIcon size={40} white />
         </div>

@@ -8,38 +8,43 @@ import { motion } from 'framer-motion';
 const MISSION_TYPES = ['new_mission','mission_accepted','mission_refused','contract_to_sign','contract_signed','pro_en_route','mission_started','mission_completed','dispute_opened','dispute_resolved'];
 const MESSAGE_TYPES = ['message_received'];
 
+const BRAND = '#6C5CE7';
+
 function NavBadge({ count }) {
   if (!count) return null;
   const label = count > 9 ? '9+' : String(count);
   return (
-    <span className="absolute -top-2 -right-3 min-w-[14px] h-[14px] bg-[#EF4444] rounded-full flex items-center justify-center text-[8px] font-bold text-white px-0.5 leading-none">
+    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] bg-[#E17055] rounded-full flex items-center justify-center text-[8px] font-bold text-white px-0.5 leading-none shadow-sm">
       {label}
     </span>
   );
 }
 
-function NavItem({ path, icon: Icon, label, badge, isActive, onClick }) {
+function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[44px] min-h-[44px] justify-center tap-scale relative"
+      className="flex flex-col items-center gap-0.5 flex-1 py-1.5 min-h-[52px] justify-center tap-scale relative"
     >
-      <div className="relative">
+      <div className="relative flex items-center justify-center">
         {isActive && (
           <motion.div
-            layoutId="pro-nav-indicator"
-            className="absolute -inset-2 bg-[#4F46E5]/10 rounded-xl"
+            layoutId="pro-nav-pill"
+            className="absolute inset-0 -m-2.5 rounded-2xl"
+            style={{ background: `${BRAND}18` }}
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
           />
         )}
         <Icon
-          style={{ width: 22, height: 22, position: 'relative', zIndex: 1 }}
+          style={{ color: isActive ? BRAND : undefined, width: 22, height: 22, position: 'relative', zIndex: 1 }}
           strokeWidth={isActive ? 2.2 : 1.6}
-          className={isActive ? 'text-[#4F46E5]' : 'text-muted-foreground'}
         />
         <NavBadge count={badge} />
       </div>
-      <span className={`text-[10px] font-medium transition-colors ${isActive ? 'text-[#4F46E5]' : 'text-muted-foreground'}`}>
+      <span
+        className="text-[10px] font-semibold transition-colors"
+        style={{ color: isActive ? BRAND : undefined, opacity: isActive ? 1 : 0.5 }}
+      >
         {label}
       </span>
     </button>
@@ -86,10 +91,13 @@ export default function ProBottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="shrink-0 bg-card border-t border-border/60 backdrop-blur-xl"
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        boxShadow: '0 -1px 0 rgba(108,92,231,0.07), 0 -8px 24px rgba(108,92,231,0.04)',
+      }}
     >
-      <div className="w-full flex items-center justify-around h-14 px-1">
+      <div className="w-full flex items-center justify-around px-1" style={{ height: 56 }}>
         {navItems.map((item) => (
           <NavItem
             key={item.path}

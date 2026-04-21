@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, CheckCircle } from 'lucide-react';
+import { Star, BadgeCheck } from 'lucide-react';
+
+const BRAND = '#6C5CE7';
 
 export default function NearbyProCard({ pro, index, onPress }) {
   return (
@@ -9,62 +11,58 @@ export default function NearbyProCard({ pro, index, onPress }) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.06 }}
       onClick={onPress}
-      className="snap-start shrink-0 w-[200px] bg-card rounded-xl border border-border/50 p-4 text-left shadow-card tap-scale"
+      className="snap-start shrink-0 w-[168px] bg-card rounded-2xl border border-border/50 overflow-hidden text-left tap-scale"
+      style={{ boxShadow: '0 2px 12px rgba(108,92,231,0.07)' }}
     >
-      {/* Avatar */}
-      <div className="flex items-center gap-3 mb-3">
-        <div className="relative">
-          <div className="w-14 h-14 rounded-full overflow-hidden bg-muted shrink-0">
-            {pro.photo_url ? (
-              <img
-                src={pro.photo_url}
-                alt={pro.full_name || pro.name}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-xl font-bold text-muted-foreground">
-                {(pro.full_name || pro.email || 'P')[0].toUpperCase()}
-              </div>
-            )}
+      {/* Avatar area */}
+      <div className="relative h-[88px] w-full overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${BRAND}18, #a78bfa18)` }}>
+        {pro.photo_url ? (
+          <img
+            src={pro.photo_url}
+            alt={pro.full_name || pro.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-3xl font-black"
+            style={{ color: BRAND }}>
+            {(pro.full_name || pro.email || 'P')[0].toUpperCase()}
           </div>
-          {pro.verification_status === 'verified' && (
-            <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#10B981] rounded-full flex items-center justify-center border-2 border-card">
-              <CheckCircle className="w-3 h-3 text-white fill-white" strokeWidth={0} />
-            </div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{pro.full_name || pro.name || 'Professionnel'}</p>
-          <p className="text-xs text-muted-foreground truncate">{pro.category_name}</p>
-        </div>
+        )}
+        {/* Verified badge */}
+        {pro.verification_status === 'verified' && (
+          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
+            <BadgeCheck className="w-4 h-4" style={{ color: BRAND }} />
+          </div>
+        )}
       </div>
 
-      {/* Rating */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
-          {pro.rating >= 4.5 ? (
-            <span className="flex items-center gap-1 bg-yellow-400/15 text-yellow-600 font-bold text-xs px-2 py-0.5 rounded-full border border-yellow-400/30">
-              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-              {pro.rating?.toFixed(1)}
-            </span>
-          ) : pro.rating > 0 ? (
-            <>
-              <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
-              <span className="text-xs font-semibold">{pro.rating?.toFixed(1)}</span>
-            </>
+      {/* Info */}
+      <div className="p-3 space-y-1">
+        <p className="text-sm font-bold truncate text-foreground leading-tight">
+          {pro.full_name || pro.name || 'Professionnel'}
+        </p>
+        <p className="text-xs text-muted-foreground truncate">{pro.category_name}</p>
+
+        <div className="flex items-center justify-between pt-1">
+          {pro.rating >= 1 ? (
+            <div className="flex items-center gap-1">
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-bold text-foreground">{pro.rating?.toFixed(1)}</span>
+              {pro.reviews_count > 0 && (
+                <span className="text-[10px] text-muted-foreground">({pro.reviews_count})</span>
+              )}
+            </div>
           ) : (
-            <span className="text-xs text-muted-foreground">Nouveau</span>
+            <span className="text-[11px] font-semibold" style={{ color: BRAND }}>Nouveau</span>
           )}
-          {pro.reviews_count > 0 && (
-            <span className="text-xs text-muted-foreground">({pro.reviews_count})</span>
+          {pro.base_price > 0 && (
+            <span className="text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
+              {String(pro.base_price).replace('.', ',')} €
+            </span>
           )}
         </div>
-        {pro.base_price > 0 && (
-          <span className="text-xs font-medium text-muted-foreground">
-            dès {String(pro.base_price).replace('.', ',')} €
-          </span>
-        )}
       </div>
     </motion.button>
   );

@@ -2,83 +2,128 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Clock, CheckCircle, MessageCircle, Star } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, ChevronRight } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 import RatingModal from '@/components/review/RatingModal';
 import { toast } from 'sonner';
+
+const BRAND = '#6C5CE7';
 
 const ACTIVE_STATUSES = ['searching', 'pending_pro', 'accepted', 'contract_pending', 'contract_signed', 'pro_en_route', 'in_progress'];
 const DONE_STATUSES = ['completed', 'cancelled', 'disputed'];
 
 const STATUS_CONFIG = {
-  searching:        { label: 'Recherche...', cls: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' },
-  pending_pro:      { label: 'En attente', cls: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400' },
-  accepted:         { label: 'Acceptée', cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
-  contract_pending: { label: 'Contrat envoyé', cls: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' },
-  contract_signed:  { label: 'Contrat signé', cls: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400' },
-  pro_en_route:     { label: 'En route', cls: 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400' },
-  in_progress:      { label: 'En cours', cls: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' },
-  completed:        { label: 'Terminée ✓', cls: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' },
-  cancelled:        { label: 'Annulée', cls: 'bg-muted text-muted-foreground' },
-  disputed:         { label: 'En litige', cls: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' },
+  searching:        { label: 'Recherche...', dot: '#F59E0B', bg: 'rgba(245,158,11,0.1)', text: '#D97706' },
+  pending_pro:      { label: 'En attente',   dot: '#FDCB6E', bg: 'rgba(253,203,110,0.12)', text: '#B7870A' },
+  accepted:         { label: 'Acceptée',     dot: '#6C5CE7', bg: 'rgba(108,92,231,0.1)',  text: '#6C5CE7' },
+  contract_pending: { label: 'Contrat',      dot: '#A78BFA', bg: 'rgba(167,139,250,0.1)', text: '#7C3AED' },
+  contract_signed:  { label: 'Signé',        dot: '#6C5CE7', bg: 'rgba(108,92,231,0.1)',  text: '#6C5CE7' },
+  pro_en_route:     { label: 'En route',     dot: '#0EA5E9', bg: 'rgba(14,165,233,0.1)',  text: '#0284C7' },
+  in_progress:      { label: 'En cours',     dot: '#6C5CE7', bg: 'rgba(108,92,231,0.1)',  text: '#6C5CE7' },
+  completed:        { label: 'Terminée',     dot: '#00B894', bg: 'rgba(0,184,148,0.1)',   text: '#00897B' },
+  cancelled:        { label: 'Annulée',      dot: '#94A3B8', bg: 'rgba(148,163,184,0.1)', text: '#64748B' },
+  disputed:         { label: 'En litige',    dot: '#E17055', bg: 'rgba(225,112,85,0.1)',  text: '#C0392B' },
 };
 
-function MissionCard({ req, onRate }) {
+function StatusBadge({ status }) {
+  const cfg = STATUS_CONFIG[status] || { label: status, dot: '#94A3B8', bg: 'rgba(148,163,184,0.1)', text: '#64748B' };
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+      style={{ background: cfg.bg, color: cfg.text }}>
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: cfg.dot }} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function MissionCard({ req, onRate, index }) {
   const navigate = useNavigate();
-  const sc = STATUS_CONFIG[req.status] || { label: req.status, cls: 'bg-gray-100 text-gray-500' };
   const canRate = req.status === 'completed' && !req.review_id && req.review_requested;
   const dateStr = req.scheduled_date
     ? format(parseISO(req.scheduled_date), 'd MMM yyyy', { locale: fr })
     : null;
+  const isActive = ACTIVE_STATUSES.includes(req.status);
 
   return (
-    <div className="bg-card rounded-xl border border-border/50 p-4 space-y-3 shadow-card tap-scale">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm truncate">{req.category_name}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {req.professional_name || <span className="italic">En recherche de professionnel...</span>}
-          </p>
-          {dateStr && <p className="text-xs text-muted-foreground mt-0.5">📅 {dateStr}</p>}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="bg-card rounded-2xl border border-border/60 overflow-hidden"
+      style={{ boxShadow: '0 2px 12px rgba(108,92,231,0.06)' }}
+    >
+      {/* Top accent bar for active missions */}
+      {isActive && (
+        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${BRAND}, #a78bfa)` }} />
+      )}
+
+      <div className="p-4 space-y-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-base text-foreground truncate">{req.category_name}</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              {req.professional_name || <span className="italic text-xs">Recherche d'un professionnel...</span>}
+            </p>
+            {dateStr && (
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                <span>📅</span> {dateStr}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            {req.estimated_price > 0 && (
+              <p className="text-base font-bold" style={{ color: BRAND }}>{req.estimated_price} €</p>
+            )}
+            <StatusBadge status={req.status} />
+          </div>
         </div>
-        <div className="text-right shrink-0">
-          {req.estimated_price > 0 && <p className="text-sm font-bold text-primary">{req.estimated_price} €</p>}
-          <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${sc.cls}`}>{sc.label}</span>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-0.5">
+          <button
+            onClick={() => navigate(`/Chat?requestId=${req.id}`)}
+            className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl border border-border text-sm font-semibold text-foreground transition-colors hover:bg-muted/50 tap-scale"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Chat
+          </button>
+          {canRate && (
+            <button
+              onClick={() => onRate(req)}
+              className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-xl text-sm font-bold text-white tap-scale"
+              style={{ background: 'linear-gradient(135deg, #FDCB6E, #F59E0B)' }}
+            >
+              <Star className="w-4 h-4 fill-white" />
+              Noter
+            </button>
+          )}
         </div>
       </div>
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1 rounded-xl h-9 text-xs"
-          onClick={() => navigate(`/Chat?requestId=${req.id}`)}>
-          <MessageCircle className="w-3.5 h-3.5 mr-1" /> Voir le chat
-        </Button>
-        {canRate && (
-          <Button size="sm" className="flex-1 rounded-xl h-9 text-xs bg-yellow-500 hover:bg-yellow-600"
-            onClick={() => onRate(req)}>
-            <Star className="w-3.5 h-3.5 mr-1" /> Laisser un avis
-          </Button>
-        )}
-      </div>
-    </div>
+    </motion.div>
   );
 }
 
 function EmptyState({ label, isActive }) {
   const navigate = useNavigate();
   return (
-    <div className="flex flex-col items-center justify-center py-20 gap-3 text-center">
-      <div className="w-20 h-20 rounded-full bg-[#4F46E5]/10 flex items-center justify-center">
-        <FileText className="w-10 h-10 text-[#4F46E5]" strokeWidth={1.5} />
+    <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+        style={{ background: `${BRAND}12` }}>
+        <ClipboardList className="w-9 h-9" style={{ color: BRAND }} strokeWidth={1.5} />
       </div>
-      <p className="text-base font-semibold text-foreground">{label}</p>
-      <p className="text-sm text-muted-foreground max-w-xs">
-        {isActive ? 'Réservez votre premier service en quelques clics' : 'Vos missions terminées apparaîtront ici'}
-      </p>
+      <div className="space-y-1">
+        <p className="text-base font-bold text-foreground">{label}</p>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          {isActive ? 'Réservez votre premier service en quelques clics' : 'Vos missions terminées apparaîtront ici'}
+        </p>
+      </div>
       {isActive && (
         <button
           onClick={() => navigate('/Home')}
-          className="mt-3 bg-[#4F46E5] text-white text-sm font-semibold px-6 py-3 rounded-pill tap-scale"
+          className="mt-1 text-white text-sm font-bold px-8 py-3 rounded-2xl tap-scale"
+          style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)` }}
         >
           Trouver un artisan
         </button>
@@ -88,7 +133,6 @@ function EmptyState({ label, isActive }) {
 }
 
 export default function MissionHistory() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('active');
   const [ratingTarget, setRatingTarget] = useState(null);
@@ -146,29 +190,43 @@ export default function MissionHistory() {
         />
       )}
 
-      <div
-        className="sticky top-0 z-20 bg-card/95 backdrop-blur-md border-b border-border/50 px-4 py-4"
-        style={{ paddingTop: '16px' }}
-      >
-        <h1 className="text-xl font-semibold tracking-[-0.02em]">Missions</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">{requests.length} mission{requests.length !== 1 ? 's' : ''} au total</p>
+      {/* Header */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40 px-5 py-4">
+        <h1 className="text-2xl font-black tracking-tight text-foreground">Mes missions</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {requests.length} mission{requests.length !== 1 ? 's' : ''} au total
+        </p>
       </div>
 
       <div className="px-4 pt-4 space-y-4">
-        {/* Tabs */}
-        <div className="flex gap-2">
+        {/* Tab switcher */}
+        <div className="flex gap-2 p-1 bg-muted/60 rounded-2xl">
           {[
             { key: 'active', label: 'En cours', count: active.length, icon: Clock },
-            { key: 'done', label: 'Terminées', count: done.length, icon: CheckCircle },
+            { key: 'done',   label: 'Terminées', count: done.length, icon: CheckCircle },
           ].map(({ key, label, count, icon: Icon }) => (
-            <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border transition-colors min-h-[44px] ${
-                tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-muted-foreground'
-              }`}>
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={tab === key ? {
+                background: 'white',
+                color: BRAND,
+                boxShadow: '0 2px 8px rgba(108,92,231,0.12)',
+              } : {
+                color: 'hsl(var(--muted-foreground))',
+              }}
+            >
               <Icon className="w-4 h-4" />
               {label}
               {count > 0 && (
-                <span className={`text-xs font-bold rounded-full px-1.5 ${tab === key ? 'bg-white/25 text-white' : 'bg-muted text-foreground'}`}>{count}</span>
+                <span className="text-[10px] font-black rounded-full px-1.5 py-0.5"
+                  style={tab === key
+                    ? { background: `${BRAND}15`, color: BRAND }
+                    : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }
+                  }>
+                  {count}
+                </span>
               )}
             </button>
           ))}
@@ -178,25 +236,30 @@ export default function MissionHistory() {
         {isLoading ? (
           <div className="space-y-3">
             {[1,2,3].map(i => (
-              <div key={i} className="bg-card rounded-xl border border-border/50 p-4 space-y-3">
+              <div key={i} className="bg-card rounded-2xl border border-border/50 p-4 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 shimmer rounded-lg w-2/5" />
-                    <div className="h-3 shimmer rounded-lg w-3/5" />
+                    <div className="h-5 shimmer rounded-xl w-2/5" />
+                    <div className="h-3 shimmer rounded-xl w-3/5" />
                   </div>
-                  <div className="h-5 shimmer rounded-pill w-16" />
+                  <div className="h-6 shimmer rounded-full w-20" />
                 </div>
-                <div className="h-9 shimmer rounded-lg" />
+                <div className="h-10 shimmer rounded-xl" />
               </div>
             ))}
           </div>
         ) : displayed.length === 0 ? (
-          <EmptyState label={tab === 'active' ? 'Aucune mission en cours' : 'Aucune mission terminée'} isActive={tab === 'active'} />
+          <EmptyState
+            label={tab === 'active' ? 'Aucune mission en cours' : 'Aucune mission terminée'}
+            isActive={tab === 'active'}
+          />
         ) : (
           <div className="space-y-3">
-            {displayed.map(req => (
-              <MissionCard key={req.id} req={req} onRate={setRatingTarget} />
-            ))}
+            <AnimatePresence>
+              {displayed.map((req, i) => (
+                <MissionCard key={req.id} req={req} onRate={setRatingTarget} index={i} />
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>

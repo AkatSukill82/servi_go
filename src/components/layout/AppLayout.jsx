@@ -5,19 +5,19 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 
 
-import BottomNav from './BottomNav';
+import BottomNav from './BottomNav.jsx';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
-import ProBottomNav from './ProBottomNav';
+import ProBottomNav from './ProBottomNav.jsx';
 import { useTheme } from '@/lib/ThemeContext';
 
 // Lazy load — chaque page chargée uniquement à la première visite
-const Home        = lazy(() => import('@/pages/Home'));
+const Home        = lazy(() => import('@/pages/Home.jsx'));
 const Map         = lazy(() => import('@/pages/Map'));
 const Emergency   = lazy(() => import('@/pages/Emergency'));
 const Favorites   = lazy(() => import('@/pages/Favorites'));
 const Profile     = lazy(() => import('@/pages/Profile'));
 const Messages    = lazy(() => import('@/pages/Messages'));
-const MissionHistory = lazy(() => import('@/pages/MissionHistory'));
+const MissionHistory = lazy(() => import('@/pages/MissionHistory.jsx'));
 const ProDashboard = lazy(() => import('@/pages/ProDashboard'));
 const Invoices    = lazy(() => import('@/pages/Invoices'));
 const ProProfile  = lazy(() => import('@/pages/ProProfile'));
@@ -120,23 +120,27 @@ export default function AppLayout() {
       window.matchMedia('(prefers-color-scheme: dark)').matches;
     const bg = isDark ? '#0a0a0a' : '#ffffff';
     const textColor = isDark ? '#ffffff' : '#0F172A';
-    const spinnerTrack = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(15,23,42,0.12)';
-    const spinnerTop = '#FF6B35';
+    const spinnerTrack = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(108,92,231,0.15)';
+    const spinnerTop = '#6C5CE7';
 
     return (
       <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg, width: '100vw', height: '100vh' }}>
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex flex-col items-center gap-4"
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="flex flex-col items-center gap-5"
         >
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#FF6B35"/>
-            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: textColor }}>ServiGo</span>
-          <div className="w-8 h-8 rounded-full animate-spin" style={{ border: `3px solid ${spinnerTrack}`, borderTopColor: spinnerTop }} />
+          {/* Logo mark */}
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)', boxShadow: '0 8px 32px rgba(108,92,231,0.35)' }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.25)"/>
+              <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span className="text-2xl font-black tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: textColor }}>ServiGo</span>
+          <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2.5px solid ${spinnerTrack}`, borderTopColor: '#6C5CE7' }} />
         </motion.div>
       </div>
     );
