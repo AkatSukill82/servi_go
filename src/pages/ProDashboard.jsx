@@ -36,9 +36,11 @@ export default function ProDashboard() {
   const proCategory = user?.category_name;
 
   // Gate: redirect if independence charter not signed
+  // Skip in preview/development
   useEffect(() => {
-    if (!user) return;
-    if (!user.independence_charter_signed) {
+    if (!user || typeof window === 'undefined') return;
+    const isPreview = window.location.hostname.includes('preview') || window.location.hostname.includes('localhost');
+    if (!isPreview && !user.independence_charter_signed) {
       navigate('/IndependenceCharter', { replace: true });
     }
   }, [user, navigate]);
