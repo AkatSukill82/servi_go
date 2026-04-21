@@ -61,10 +61,10 @@ export default function TopBar({ title, subtitle }) {
           </div>
 
           {/* Title + subtitle */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-center">
             <h1 className="text-base font-black tracking-tight truncate text-foreground leading-tight">{title}</h1>
             {subtitle && (
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1 leading-none mt-0.5">
+              <p className="text-[11px] text-muted-foreground flex items-center justify-center gap-1 leading-none mt-0.5">
                 <MapPin className="w-3 h-3 shrink-0" style={{ color: BRAND }} />
                 <span className="truncate">{subtitle}</span>
               </p>
