@@ -54,11 +54,11 @@ export default function Home() {
   const { data: activeRequest } = useQuery({
     queryKey: ['activeRequest', user?.email],
     queryFn: () => base44.entities.ServiceRequestV2.filter(
-      { customer_email: user.email, status: 'accepted' }, '-created_date', 1
-    ).then(r => r[0] || null),
+      { customer_email: user.email }, '-created_date', 10
+    ).then(r => r.find(req => ['accepted', 'pro_en_route', 'in_progress'].includes(req.status)) || null),
     enabled: !!user?.email,
-    staleTime: 60000,
-    refetchInterval: 60000,
+    staleTime: 30000,
+    refetchInterval: 30000,
   });
 
   const { data: unfinishedRequest } = useQuery({
@@ -187,16 +187,20 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
-                className="w-full rounded-2xl overflow-hidden border tap-scale"
-                style={{ borderColor: '#00B89440', boxShadow: '0 4px 16px rgba(0,184,148,0.1)' }}
+                className="w-full rounded-2xl overflow-hidden tap-scale"
+                style={{ background: 'linear-gradient(135deg, #00B894, #00cba6)', boxShadow: '0 4px 16px rgba(0,184,148,0.25)' }}
               >
-                <div className="bg-card px-4 py-3.5 flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00B894] animate-pulse shrink-0" />
-                  <div className="flex-1 text-left">
-                    <p className="text-sm font-bold text-[#00B894]">Mission en cours</p>
-                    <p className="text-xs text-muted-foreground">{activeRequest.professional_name} · Suivre →</p>
+                <div className="px-4 py-3.5 flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0 text-lg">
+                    {activeRequest.status === 'pro_en_route' ? '🚗' : activeRequest.status === 'in_progress' ? '🔧' : '📍'}
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-bold text-white">
+                      {activeRequest.status === 'pro_en_route' ? 'Technicien en route' : activeRequest.status === 'in_progress' ? 'Mission en cours' : 'Mission acceptée'}
+                    </p>
+                    <p className="text-xs text-white/80">{activeRequest.professional_name} · {activeRequest.category_name} · Voir sur la carte →</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-white/70" />
                 </div>
               </motion.button>
             )}
