@@ -216,44 +216,58 @@ export default function Chat() {
       }
 
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 pt-4 pb-3 bg-card border-b border-border/50 shadow-sm"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
-        <BackButton fallback="/Home" />
-        {request?.professional_photo_url && !isPro ?
-        <img src={request.professional_photo_url} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 border border-border" /> :
+      <div className="bg-card border-b border-border/50 shadow-sm"
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+        {/* Top row: back + identity + actions */}
+        <div className="flex items-center gap-2 px-3 pb-3">
+          <BackButton fallback="/Home" />
 
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm shrink-0">
-            {(otherParty.name || '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+          {/* Avatar */}
+          <div className="shrink-0">
+            {request?.professional_photo_url && !isPro ?
+              <img src={request.professional_photo_url} alt="" className="w-10 h-10 rounded-full object-cover border border-border" /> :
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-sm">
+                {(otherParty.name || '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+              </div>
+            }
           </div>
-        }
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold truncate">{otherParty.name || '...'}</p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{otherParty.label}</span>
-            {statusInfo && <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-indigo-100 text-indigo-700 text-center">{statusInfo.label}</span>}
-          </div>
-        </div>
-        <div className="flex gap-1 items-center">
-          {isCustomer && request?.professional_id && <FavoriteButton proId={request.professional_id} />}
-          {request?.status === 'accepted' &&
-          <Button variant="ghost" size="icon" className="rounded-full min-w-[44px] min-h-[44px]" onClick={() => navigate(`/TrackingMap?requestId=${requestId}`)}>
-              <MapPin className="w-5 h-5 text-primary" />
-            </Button>
-          }
-          {request?.status === 'completed' && isCustomer && !request?.review_id &&
-          <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-3" onClick={() => setShowRating(true)}>
-              <Star className="w-4 h-4 mr-1" /> Noter
-            </Button>
-          }
-          {otherParty.email &&
-          <ReportButton
-            user={user}
-            reportedEmail={otherParty.email}
-            reportedName={otherParty.name}
-            reportedType={otherParty.type}
-            requestId={requestId} />
 
-          }
+          {/* Name + status */}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm truncate leading-tight">{otherParty.name || '...'}</p>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <span className="text-xs text-muted-foreground">{otherParty.label}</span>
+              {statusInfo && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-primary/10 text-primary">
+                  {statusInfo.label}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1 shrink-0">
+            {isCustomer && request?.professional_id && <FavoriteButton proId={request.professional_id} />}
+            {request?.status === 'accepted' && (
+              <Button variant="ghost" size="icon" className="rounded-full min-w-[40px] min-h-[40px]" onClick={() => navigate(`/TrackingMap?requestId=${requestId}`)}>
+                <MapPin className="w-4.5 h-4.5 text-primary" />
+              </Button>
+            )}
+            {request?.status === 'completed' && isCustomer && !request?.review_id && (
+              <Button size="sm" className="rounded-xl bg-yellow-500 hover:bg-yellow-600 text-xs px-2.5 h-8" onClick={() => setShowRating(true)}>
+                <Star className="w-3.5 h-3.5 mr-1 fill-white" /> Noter
+              </Button>
+            )}
+            {otherParty.email && (
+              <ReportButton
+                user={user}
+                reportedEmail={otherParty.email}
+                reportedName={otherParty.name}
+                reportedType={otherParty.type}
+                requestId={requestId}
+              />
+            )}
+          </div>
         </div>
       </div>
 
