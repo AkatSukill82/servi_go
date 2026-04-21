@@ -260,13 +260,13 @@ export default function ProAgenda() {
         <div className="flex bg-muted rounded-xl p-1 gap-1">
           <button
             onClick={() => setViewMode('month')}
-            className={`p-1.5 rounded-lg transition-colors ${viewMode === 'month' ? 'bg-card shadow-sm' : ''}`}
+            className={`flex-1 flex items-center justify-center p-1.5 rounded-lg transition-colors ${viewMode === 'month' ? 'bg-card shadow-sm' : ''}`}
           >
             <Calendar className="w-4 h-4 text-foreground" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-card shadow-sm' : ''}`}
+            className={`flex-1 flex items-center justify-center p-1.5 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-card shadow-sm' : ''}`}
           >
             <List className="w-4 h-4 text-foreground" />
           </button>
