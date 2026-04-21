@@ -305,7 +305,12 @@ export default function Home() {
           {/* ── Recent reviews ── */}
           {recentReviews.length > 0 && (
             <section>
-              <h2 className="text-xl font-black text-gray-900 tracking-tight mb-4">Avis récents</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-black text-gray-900 tracking-tight">Avis récents</h2>
+                <button onClick={() => navigate('/ProReviews')} className="text-sm font-bold flex items-center gap-1" style={{ color: BRAND }}>
+                  Voir tout <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
               <div className="space-y-3">
                 {recentReviews.map((review, i) => (
                   <motion.div

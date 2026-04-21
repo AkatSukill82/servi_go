@@ -570,19 +570,26 @@ export default function ProDashboard() {
                 className="flex-1 rounded-xl"
                 onClick={async () => {
                   const job = showProReviewModal;
-                  await base44.entities.ProReview.create({
-                    request_id: job.id,
-                    professional_email: user.email,
-                    professional_name: user.full_name,
-                    customer_email: job.customer_email,
-                    customer_name: job.customer_name || `${job.customer_first_name || ''} ${job.customer_last_name || ''}`.trim(),
-                    rating: proRating,
-                    comment: proComment,
-                    category_name: job.category_name,
-                    is_visible: true,
-                  });
-                  setShowProReviewModal(null);
-                  toast.success('Avis envoyé !');
+                  try {
+                    await base44.entities.ProReview.create({
+                      request_id: job.id,
+                      professional_email: user.email,
+                      professional_name: user.full_name,
+                      customer_email: job.customer_email,
+                      customer_name: job.customer_name || `${job.customer_first_name || ''} ${job.customer_last_name || ''}`.trim(),
+                      rating: proRating,
+                      comment: proComment,
+                      category_name: job.category_name,
+                      is_visible: true,
+                    });
+                    setShowProReviewModal(null);
+                    setProRating(5);
+                    setProComment('');
+                    toast.success('Avis envoyé !');
+                  } catch (err) {
+                    toast.error('Erreur lors de l\'envoi de l\'avis');
+                    console.error(err);
+                  }
                 }}
               >
                 Soumettre mon avis

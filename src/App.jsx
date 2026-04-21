@@ -37,6 +37,7 @@ import DAC7Form from './pages/DAC7Form';
 import AuthLogin from './pages/AuthLogin';
 import CreateAccount from './pages/CreateAccount';
 import AdminTestEmail from './pages/AdminTestEmail';
+import ProReviews from './pages/ProReviews';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -124,6 +125,7 @@ const AuthenticatedApp = () => {
       <Route path="/ProPublicProfile" element={<ProPublicProfile />} />
       <Route path="/TrackingMap" element={<TrackingMap />} />
 
+      <Route path="/ProReviews" element={<ProReviews />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </ErrorBoundary>
