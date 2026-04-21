@@ -194,8 +194,11 @@
   .fluid-title { font-size: clamp(1.125rem, 4vw, 1.5rem); }
   .fluid-body  { font-size: clamp(0.8125rem, 2.5vw, 0.9375rem); }
 
-  /* Word-break safety */
-  * { word-break: break-word; overflow-wrap: break-word; }
+  /* Word-break safety — exclude buttons and badges */
+  *:not(button):not([role="button"]):not(a):not(.badge):not([class*="rounded-full"]):not([class*="rounded-pill"]) {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
 
   /* Tap feedback */
   .tap-scale {

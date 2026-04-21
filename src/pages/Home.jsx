@@ -291,7 +291,7 @@ export default function Home() {
                       </div>
                     </div>
                     {review.comment && (
-                      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">"{review.comment}"</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">"{review.comment}"</p>
                     )}
                   </motion.div>
                 ))}
