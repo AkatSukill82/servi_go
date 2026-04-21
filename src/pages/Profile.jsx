@@ -340,48 +340,48 @@ export default function Profile() {
         {/* Mode nuit + Déconnexion + Footer — toujours en dernier */}
         {tab === 'infos' &&
         <div className="space-y-2 pt-2">
-            <div className="flex items-center justify-between bg-card rounded-2xl border border-border/50 shadow-sm px-5 py-4 hidden">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
-                <div>
-                  <p className="text-sm font-medium">Mode nuit</p>
-                  <p className="text-xs text-muted-foreground">Thème sombre pour les yeux</p>
-                </div>
-              </div>
-              <button
-              onClick={() => {
-                const next = !dark;
-                setDark(next);
-                base44.auth.updateMe({ dark_mode: next }).catch(() => {});
-              }}
-              style={{
-                position: 'relative',
-                width: '48px',
-                height: '28px',
-                borderRadius: '14px',
-                backgroundColor: dark ? '#4F46E5' : '#D1D5DB',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                flexShrink: 0,
-                transition: 'background-color 0.2s ease',
-                minHeight: 'unset',
-                minWidth: 'unset'
-              }}>
-              
-                <span style={{
-                position: 'absolute',
-                top: '2px',
-                left: dark ? '22px' : '2px',
-                width: '24px',
-                height: '24px',
-                borderRadius: '12px',
-                backgroundColor: '#FFFFFF',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                transition: 'left 0.2s ease'
-              }} />
-              </button>
-            </div>
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
             {user?.role === 'admin' &&
           <Button
             variant="outline"
