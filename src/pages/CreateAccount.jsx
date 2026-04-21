@@ -40,31 +40,13 @@ const PRO_STEPS = ['Infos', 'Activité', 'Charte', 'DAC7'];
 
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
-function ProgressBar({ current, total, labels }) {
+function ProgressBar({ current, total }) {
   return (
-    <div className="w-full mb-5">
-      <div className="flex items-center justify-between mb-2">
-        {labels.map((label, i) => (
-          <div key={i} className="flex flex-col items-center flex-1">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
-              i < current - 1
-                ? 'bg-[#1A365D] border-[#1A365D] text-white'
-                : i === current - 1
-                ? 'bg-[#1A365D] border-[#1A365D] text-white'
-                : 'bg-white border-[#CBD5E0] text-[#A0AEC0]'
-            }`}>
-              {i < current - 1 ? <CheckCircle className="w-4 h-4" /> : i + 1}
-            </div>
-            <span className="text-[9px] text-[#718096] mt-1 text-center leading-tight hidden sm:block">{label}</span>
-          </div>
-        ))}
-      </div>
-      <div className="h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
-        <div
-          className="h-full bg-[#1A365D] rounded-full transition-all duration-500"
-          style={{ width: `${((current - 1) / (total - 1)) * 100}%` }}
-        />
-      </div>
+    <div className="w-full h-1 bg-gray-100 rounded-full mb-2">
+      <div
+        className="h-full bg-[#FF6B35] rounded-full transition-all duration-500"
+        style={{ width: `${((current - 1) / (total - 1)) * 100}%` }}
+      />
     </div>
   );
 }
@@ -74,52 +56,60 @@ function ProgressBar({ current, total, labels }) {
 function StepTypeSelection({ onSelect }) {
   const navigate = useNavigate();
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-black text-[#1A365D]">Vous êtes ?</h2>
-        <p className="text-sm text-[#718096] mt-2">Choisissez votre profil pour commencer</p>
+    <div className="space-y-8 pb-8">
+      {/* Logo + Title */}
+      <div className="pt-4 pb-2">
+        <div className="w-12 h-12 rounded-2xl bg-[#FF6B35] flex items-center justify-center mb-6">
+          <ServiGoIcon size={28} white />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 leading-tight">Bienvenue sur<br />ServiGo</h1>
+        <p className="text-gray-500 mt-2 text-base">Votre plateforme d'artisans de confiance en Belgique.</p>
       </div>
 
-      <div className="space-y-4">
+      {/* Cards */}
+      <div className="space-y-3">
         <button
           onClick={() => onSelect('particulier')}
-          className="w-full bg-white rounded-2xl border-2 border-[#E2E8F0] hover:border-[#FF6B35] hover:shadow-lg transition-all duration-200 p-5 text-left group"
+          className="w-full bg-gray-50 hover:bg-gray-100 active:scale-[0.98] transition-all rounded-2xl p-5 text-left"
         >
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#FFF0EB] flex items-center justify-center shrink-0 group-hover:bg-[#FF6B35] transition-colors">
-              <Home className="w-7 h-7 text-[#FF6B35] group-hover:text-white transition-colors" />
+            <div className="w-11 h-11 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center shrink-0">
+              <Home className="w-5 h-5 text-[#FF6B35]" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-[#1A365D] text-lg">Particulier</p>
-              <p className="text-sm text-[#718096]">Je cherche un professionnel</p>
+              <p className="font-semibold text-gray-900">Je suis particulier</p>
+              <p className="text-sm text-gray-500 mt-0.5">Trouver un pro à domicile</p>
             </div>
-            <ArrowRight className="w-5 h-5 text-[#CBD5E0] group-hover:text-[#FF6B35] transition-colors shrink-0" />
+            <ArrowRight className="w-4 h-4 text-gray-400 shrink-0" />
           </div>
         </button>
 
         <button
           onClick={() => onSelect('professionnel')}
-          className="w-full bg-white rounded-2xl border-2 border-[#E2E8F0] hover:border-[#1A365D] hover:shadow-lg transition-all duration-200 p-5 text-left group"
+          className="w-full bg-gray-50 hover:bg-gray-100 active:scale-[0.98] transition-all rounded-2xl p-5 text-left"
         >
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#1A365D] flex items-center justify-center shrink-0 group-hover:bg-[#0F2444] transition-colors">
-              <Wrench className="w-7 h-7 text-white transition-colors" />
+            <div className="w-11 h-11 rounded-xl bg-gray-900/5 flex items-center justify-center shrink-0">
+              <Wrench className="w-5 h-5 text-gray-700" />
             </div>
             <div className="flex-1">
-              <p className="font-bold text-[#1A365D] text-lg">Professionnel</p>
-              <p className="text-sm text-[#718096]">Je propose mes services</p>
+              <p className="font-semibold text-gray-900">Je suis professionnel</p>
+              <p className="text-sm text-gray-500 mt-0.5">Recevoir des missions · 10€/mois</p>
             </div>
-            <ArrowRight className="w-5 h-5 text-[#CBD5E0] group-hover:text-[#1A365D] transition-colors shrink-0" />
+            <ArrowRight className="w-4 h-4 text-gray-400 shrink-0" />
           </div>
         </button>
       </div>
 
-      <p className="text-center text-sm text-[#718096]">
-        Déjà un compte ?{' '}
-        <button onClick={() => navigate('/se-connecter')} className="text-[#1A365D] font-bold hover:underline">
-          Se connecter
-        </button>
-      </p>
+      {/* Login */}
+      <div className="text-center pt-2">
+        <p className="text-sm text-gray-500">
+          Déjà un compte ?{' '}
+          <button onClick={() => navigate('/se-connecter')} className="text-gray-900 font-semibold underline underline-offset-2">
+            Se connecter
+          </button>
+        </p>
+      </div>
     </div>
   );
 }
@@ -166,59 +156,56 @@ function ParticulierSignup({ onBack }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-[#718096] hover:text-[#1A365D]">
-        <ArrowLeft className="w-4 h-4" /> Retour
-      </button>
-      <div>
-        <h2 className="text-xl font-black text-[#1A365D]">Créer mon compte</h2>
-        <p className="text-sm text-[#718096]">Particulier — accès aux services à domicile</p>
+    <form onSubmit={handleSubmit} className="space-y-5 pb-8">
+      <div className="pt-2 pb-2">
+        <h2 className="text-2xl font-bold text-gray-900">Créer un compte</h2>
+        <p className="text-gray-500 text-sm mt-1">Particulier · Accès gratuit</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Prénom <span className="text-red-500">*</span></Label>
-          <Input value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="Jean" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Prénom *</label>
+          <Input value={form.first_name} onChange={e => set('first_name', e.target.value)} placeholder="Jean" className="h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Nom <span className="text-red-500">*</span></Label>
-          <Input value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Dupont" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Nom *</label>
+          <Input value={form.last_name} onChange={e => set('last_name', e.target.value)} placeholder="Dupont" className="h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white" />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Email <span className="text-red-500">*</span></Label>
-        <Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jean@email.com" className="h-11 rounded-xl" inputMode="email" />
+        <label className="text-xs font-medium text-gray-600">Email *</label>
+        <Input type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jean@email.com" className="h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white" inputMode="email" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Téléphone</Label>
-        <Input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+32 470 12 34 56" className="h-11 rounded-xl" inputMode="tel" />
+        <label className="text-xs font-medium text-gray-600">Téléphone</label>
+        <Input type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+32 470 12 34 56" className="h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white" inputMode="tel" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Adresse</Label>
-        <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Rue de la Loi 16, 1000 Bruxelles" className="h-11 rounded-xl" />
+        <label className="text-xs font-medium text-gray-600">Adresse</label>
+        <Input value={form.address} onChange={e => set('address', e.target.value)} placeholder="Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Mot de passe <span className="text-red-500">*</span></Label>
+        <label className="text-xs font-medium text-gray-600">Mot de passe *</label>
         <div className="relative">
-          <Input type={showPass ? 'text' : 'password'} value={form.password} onChange={e => set('password', e.target.value)} placeholder="6 caractères minimum" className="h-11 rounded-xl pr-10" />
-          <button type="button" onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#CBD5E0]">
+          <Input type={showPass ? 'text' : 'password'} value={form.password} onChange={e => set('password', e.target.value)} placeholder="6 caractères minimum" className="h-12 rounded-xl border-gray-200 bg-gray-50 focus:bg-white pr-10" />
+          <button type="button" onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
             {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
       <label className="flex items-start gap-3 cursor-pointer">
-        <div onClick={() => setCguAccepted(v => !v)} className={`w-5 h-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${cguAccepted ? 'bg-[#1A365D] border-[#1A365D]' : 'border-[#CBD5E0]'}`}>
+        <div onClick={() => setCguAccepted(v => !v)} className={`w-5 h-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${cguAccepted ? 'bg-gray-900 border-gray-900' : 'border-gray-300'}`}>
           {cguAccepted && <CheckCircle className="w-3 h-3 text-white" />}
         </div>
-        <span className="text-xs text-[#718096] leading-relaxed">
-          J'accepte les <a href="/cgu" target="_blank" rel="noopener noreferrer" className="text-[#1A365D] underline">CGU</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-[#1A365D] underline">Politique de confidentialité</a>
+        <span className="text-xs text-gray-500 leading-relaxed">
+          J'accepte les <a href="/cgu" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline underline-offset-2">CGU</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-gray-900 underline underline-offset-2">Politique de confidentialité</a>
         </span>
       </label>
 
-      <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-[#FF6B35] hover:bg-[#E55A25] text-white font-bold text-base">
+      <button type="submit" disabled={loading} className="w-full h-13 rounded-2xl bg-[#FF6B35] text-white font-semibold text-base transition-opacity disabled:opacity-60 flex items-center justify-center gap-2" style={{ height: 52 }}>
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Créer mon compte'}
-      </Button>
+      </button>
     </form>
   );
 }
@@ -233,44 +220,41 @@ function ProStep1({ data, onChange, onNext, onBack }) {
     return true;
   };
   return (
-    <div className="space-y-4">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-[#718096] hover:text-[#1A365D]">
-        <ArrowLeft className="w-4 h-4" /> Retour
-      </button>
-      <div>
-        <h2 className="text-xl font-black text-[#1A365D]">Informations de base</h2>
-        <p className="text-sm text-[#718096]">Étape 1 — Vos coordonnées</p>
+    <div className="space-y-5 pb-8">
+      <div className="pt-2">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Étape 1 / 4</p>
+        <h2 className="text-2xl font-bold text-gray-900">Vos coordonnées</h2>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label className="text-xs">Prénom <span className="text-red-500">*</span></Label>
-          <Input value={data.first_name} onChange={e => onChange('first_name', e.target.value)} placeholder="Jean" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Prénom *</label>
+          <Input value={data.first_name} onChange={e => onChange('first_name', e.target.value)} placeholder="Jean" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Nom <span className="text-red-500">*</span></Label>
-          <Input value={data.last_name} onChange={e => onChange('last_name', e.target.value)} placeholder="Dupont" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Nom *</label>
+          <Input value={data.last_name} onChange={e => onChange('last_name', e.target.value)} placeholder="Dupont" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Email <span className="text-red-500">*</span></Label>
-        <Input type="email" value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="jean@email.com" className="h-11 rounded-xl" inputMode="email" />
+        <label className="text-xs font-medium text-gray-600">Email *</label>
+        <Input type="email" value={data.email} onChange={e => onChange('email', e.target.value)} placeholder="jean@email.com" className="h-12 rounded-xl border-gray-200 bg-gray-50" inputMode="email" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Téléphone</Label>
-        <Input type="tel" value={data.phone} onChange={e => onChange('phone', e.target.value)} placeholder="+32 470 12 34 56" className="h-11 rounded-xl" inputMode="tel" />
+        <label className="text-xs font-medium text-gray-600">Téléphone</label>
+        <Input type="tel" value={data.phone} onChange={e => onChange('phone', e.target.value)} placeholder="+32 470 12 34 56" className="h-12 rounded-xl border-gray-200 bg-gray-50" inputMode="tel" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Mot de passe <span className="text-red-500">*</span></Label>
+        <label className="text-xs font-medium text-gray-600">Mot de passe *</label>
         <div className="relative">
-          <Input type={showPass ? 'text' : 'password'} value={data.password} onChange={e => onChange('password', e.target.value)} placeholder="6 caractères minimum" className="h-11 rounded-xl pr-10" />
-          <button type="button" onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#CBD5E0]">
+          <Input type={showPass ? 'text' : 'password'} value={data.password} onChange={e => onChange('password', e.target.value)} placeholder="6 caractères minimum" className="h-12 rounded-xl border-gray-200 bg-gray-50 pr-10" />
+          <button type="button" onClick={() => setShowPass(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
             {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
       </div>
-      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
-        Continuer <ArrowRight className="w-4 h-4 ml-2" />
-      </Button>
+      <button onClick={() => validate() && onNext()} className="w-full rounded-2xl bg-gray-900 text-white font-semibold text-base flex items-center justify-center gap-2" style={{ height: 52 }}>
+        Continuer <ArrowRight className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -300,22 +284,19 @@ function ProStep2({ data, onChange, onNext, onBack }) {
   };
 
   return (
-    <div className="space-y-4">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-[#718096] hover:text-[#1A365D]">
-        <ArrowLeft className="w-4 h-4" /> Retour
-      </button>
-      <div>
-        <h2 className="text-xl font-black text-[#1A365D]">Informations professionnelles</h2>
-        <p className="text-sm text-[#718096]">Étape 2 — Votre activité</p>
+    <div className="space-y-5 pb-8">
+      <div className="pt-2">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Étape 2 / 4</p>
+        <h2 className="text-2xl font-bold text-gray-900">Votre activité</h2>
       </div>
 
       {/* Photo */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-[#F7FAFC] border-2 border-dashed border-[#CBD5E0] flex items-center justify-center overflow-hidden shrink-0">
-          {data.photo_url ? <img src={data.photo_url} alt="" className="w-full h-full object-cover" /> : <Camera className="w-6 h-6 text-[#CBD5E0]" />}
+        <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+          {data.photo_url ? <img src={data.photo_url} alt="" className="w-full h-full object-cover" /> : <Camera className="w-6 h-6 text-gray-400" />}
         </div>
         <label className="flex-1">
-          <div className="text-xs font-semibold text-[#1A365D] px-3 py-2 rounded-xl border border-[#1A365D] text-center cursor-pointer hover:bg-[#1A365D] hover:text-white transition-colors">
+          <div className="text-sm font-medium text-gray-700 px-4 py-2.5 rounded-xl border border-gray-200 text-center cursor-pointer hover:bg-gray-50 transition-colors">
             {data.photo_url ? 'Changer la photo' : 'Ajouter une photo'}
           </div>
           <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
@@ -323,31 +304,31 @@ function ProStep2({ data, onChange, onNext, onBack }) {
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-xs">Numéro BCE/KBO <span className="text-red-500">*</span></Label>
-        <Input value={data.bce_number} onChange={e => onChange('bce_number', e.target.value)} placeholder="BE 0xxx.xxx.xxx" className="h-11 rounded-xl" />
+        <label className="text-xs font-medium text-gray-600">Numéro BCE/KBO *</label>
+        <Input value={data.bce_number} onChange={e => onChange('bce_number', e.target.value)} placeholder="BE 0xxx.xxx.xxx" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Numéro TVA</Label>
-        <Input value={data.vat_number} onChange={e => onChange('vat_number', e.target.value)} placeholder="BE 0xxx.xxx.xxx" className="h-11 rounded-xl" />
+        <label className="text-xs font-medium text-gray-600">Numéro TVA</label>
+        <Input value={data.vat_number} onChange={e => onChange('vat_number', e.target.value)} placeholder="BE 0xxx.xxx.xxx" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Catégorie de service <span className="text-red-500">*</span></Label>
+        <label className="text-xs font-medium text-gray-600">Catégorie de service *</label>
         <Select value={data.category_name} onValueChange={v => onChange('category_name', v)}>
-          <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Choisissez votre métier" /></SelectTrigger>
+          <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-gray-50"><SelectValue placeholder="Choisissez votre métier" /></SelectTrigger>
           <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}</SelectContent>
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Adresse professionnelle</Label>
-        <Input value={data.address} onChange={e => onChange('address', e.target.value)} placeholder="Rue de la Loi 16, 1000 Bruxelles" className="h-11 rounded-xl" />
+        <label className="text-xs font-medium text-gray-600">Adresse professionnelle</label>
+        <Input value={data.address} onChange={e => onChange('address', e.target.value)} placeholder="Rue de la Loi 16, 1000 Bruxelles" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Description de vos services</Label>
-        <Textarea value={data.description} onChange={e => onChange('description', e.target.value)} placeholder="Décrivez vos compétences..." className="rounded-xl resize-none" rows={3} />
+        <label className="text-xs font-medium text-gray-600">Description de vos services</label>
+        <Textarea value={data.description} onChange={e => onChange('description', e.target.value)} placeholder="Décrivez vos compétences..." className="rounded-xl border-gray-200 bg-gray-50 resize-none" rows={3} />
       </div>
-      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
-        Continuer <ArrowRight className="w-4 h-4 ml-2" />
-      </Button>
+      <button onClick={() => validate() && onNext()} className="w-full rounded-2xl bg-gray-900 text-white font-semibold text-base flex items-center justify-center gap-2" style={{ height: 52 }}>
+        Continuer <ArrowRight className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -366,42 +347,40 @@ function ProStep3({ data, onChange, onNext, onBack }) {
   };
 
   return (
-    <div className="space-y-4">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-[#718096] hover:text-[#1A365D]">
-        <ArrowLeft className="w-4 h-4" /> Retour
-      </button>
-      <div>
-        <h2 className="text-xl font-black text-[#1A365D]">Charte d'indépendance</h2>
-        <p className="text-sm text-[#718096]">Étape 3 — Déclaration obligatoire ServiGo</p>
+    <div className="space-y-5 pb-8">
+      <div className="pt-2">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Étape 3 / 4</p>
+        <h2 className="text-2xl font-bold text-gray-900">Charte d'indépendance</h2>
+        <p className="text-sm text-gray-500 mt-1">Déclaration obligatoire — renouvelable chaque année.</p>
       </div>
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-        <p className="text-xs text-blue-800 leading-relaxed">En tant que professionnel indépendant sur ServiGo, vous devez confirmer votre statut. Renouvelable annuellement.</p>
-      </div>
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 space-y-3">
-        <h3 className="font-semibold text-sm flex items-center gap-2"><Shield className="w-4 h-4 text-[#1A365D]" /> Confirmations</h3>
+
+      <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" /> Confirmations</p>
         {INDEPENDENCE_ITEMS.map(item => (
           <label key={item.key} className="flex items-start gap-3 cursor-pointer">
-            <div onClick={() => setCheck(item.key, !checks[item.key])} className={`w-5 h-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${checks[item.key] ? 'bg-[#1A365D] border-[#1A365D]' : 'border-[#CBD5E0]'}`}>
+            <div onClick={() => setCheck(item.key, !checks[item.key])} className={`w-5 h-5 rounded-md border-2 shrink-0 mt-0.5 flex items-center justify-center transition-all ${checks[item.key] ? 'bg-gray-900 border-gray-900' : 'border-gray-300'}`}>
               {checks[item.key] && <CheckCircle className="w-3 h-3 text-white" />}
             </div>
-            <span className="text-sm leading-relaxed text-[#4A5568]">{item.label}{item.required && <span className="text-red-500 ml-1">*</span>}</span>
+            <span className="text-sm leading-relaxed text-gray-700">{item.label}{item.required && <span className="text-red-400 ml-1">*</span>}</span>
           </label>
         ))}
       </div>
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 space-y-3">
-        <h3 className="font-semibold text-sm">Assurance RC Pro <span className="text-red-500">*</span></h3>
+
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-gray-900">Assurance RC Pro *</p>
         <div className="space-y-1.5">
-          <Label className="text-xs">Nom de l'assureur</Label>
-          <Input value={data.insurance_company || ''} onChange={e => onChange('insurance_company', e.target.value)} placeholder="Ex: AXA, Allianz..." className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Nom de l'assureur</label>
+          <Input value={data.insurance_company || ''} onChange={e => onChange('insurance_company', e.target.value)} placeholder="AXA, Allianz..." className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Numéro de police</Label>
-          <Input value={data.insurance_policy || ''} onChange={e => onChange('insurance_policy', e.target.value)} placeholder="Ex: RC-2024-XXXXXX" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Numéro de police</label>
+          <Input value={data.insurance_policy || ''} onChange={e => onChange('insurance_policy', e.target.value)} placeholder="RC-2024-XXXXXX" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
       </div>
-      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
-        Je confirme mon statut <ArrowRight className="w-4 h-4 ml-2" />
-      </Button>
+
+      <button onClick={() => validate() && onNext()} className="w-full rounded-2xl bg-gray-900 text-white font-semibold text-base flex items-center justify-center gap-2" style={{ height: 52 }}>
+        Je confirme mon statut <ArrowRight className="w-4 h-4" />
+      </button>
     </div>
   );
 }
@@ -414,81 +393,67 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
     return true;
   };
   return (
-    <div className="space-y-4">
-      <button type="button" onClick={onBack} className="flex items-center gap-2 text-sm text-[#718096] hover:text-[#1A365D]">
-        <ArrowLeft className="w-4 h-4" /> Retour
-      </button>
-      <div>
-        <h2 className="text-xl font-black text-[#1A365D]">Données fiscales DAC7</h2>
-        <p className="text-sm text-[#718096]">Étape 4 — Directive européenne obligatoire</p>
-      </div>
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
-        <p className="text-xs text-blue-800">La directive DAC7 oblige les plateformes à collecter ces données pour le SPF Finances belge.</p>
+    <div className="space-y-5 pb-8">
+      <div className="pt-2">
+        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Étape 4 / 4</p>
+        <h2 className="text-2xl font-bold text-gray-900">Données fiscales</h2>
+        <p className="text-sm text-gray-500 mt-1">Obligatoire — Directive DAC7 (SPF Finances belge).</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 space-y-3">
-        <h3 className="font-semibold text-sm">Identité officielle</h3>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Identité</p>
         <div className="space-y-1.5">
-          <Label className="text-xs">Date de naissance <span className="text-red-500">*</span></Label>
-          <Input type="date" value={data.date_of_birth || ''} onChange={e => onChange('date_of_birth', e.target.value)} className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">Date de naissance *</label>
+          <Input type="date" value={data.date_of_birth || ''} onChange={e => onChange('date_of_birth', e.target.value)} className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Nationalité</Label>
+          <label className="text-xs font-medium text-gray-600">Nationalité</label>
           <Select value={data.nationality || ''} onValueChange={v => onChange('nationality', v)}>
-            <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+            <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-gray-50"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
             <SelectContent>{NATIONALITIES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 space-y-3">
-        <h3 className="font-semibold text-sm">Adresse complète</h3>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Rue et numéro</Label>
-          <Input value={data.address_street || ''} onChange={e => onChange('address_street', e.target.value)} placeholder="Rue de la Loi 16" className="h-11 rounded-xl" />
-        </div>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Adresse</p>
+        <Input value={data.address_street || ''} onChange={e => onChange('address_street', e.target.value)} placeholder="Rue et numéro" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Code postal</Label>
-            <Input value={data.address_postal_code || ''} onChange={e => onChange('address_postal_code', e.target.value)} placeholder="1000" className="h-11 rounded-xl" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Ville</Label>
-            <Input value={data.address_city || ''} onChange={e => onChange('address_city', e.target.value)} placeholder="Bruxelles" className="h-11 rounded-xl" />
-          </div>
+          <Input value={data.address_postal_code || ''} onChange={e => onChange('address_postal_code', e.target.value)} placeholder="Code postal" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
+          <Input value={data.address_city || ''} onChange={e => onChange('address_city', e.target.value)} placeholder="Ville" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 space-y-3">
-        <h3 className="font-semibold text-sm">Identifiants fiscaux</h3>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Fiscal</p>
         <div className="space-y-1.5">
-          <Label className="text-xs">NIF / Numéro national <span className="text-red-500">*</span></Label>
-          <Input value={data.tin_number || ''} onChange={e => onChange('tin_number', e.target.value)} placeholder="XX.XX.XX-XXX.XX" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">NIF / Numéro national *</label>
+          <Input value={data.tin_number || ''} onChange={e => onChange('tin_number', e.target.value)} placeholder="XX.XX.XX-XXX.XX" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">Forme juridique</Label>
+          <label className="text-xs font-medium text-gray-600">Forme juridique</label>
           <Select value={data.legal_form || ''} onValueChange={v => onChange('legal_form', v)}>
-            <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+            <SelectTrigger className="h-12 rounded-xl border-gray-200 bg-gray-50"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
             <SelectContent>{LEGAL_FORMS.map(lf => <SelectItem key={lf.value} value={lf.value}>{lf.label}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E2E8F0] p-5 space-y-3">
-        <h3 className="font-semibold text-sm">Coordonnées bancaires</h3>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Bancaire</p>
         <div className="space-y-1.5">
-          <Label className="text-xs">IBAN <span className="text-red-500">*</span></Label>
-          <Input value={data.iban || ''} onChange={e => onChange('iban', e.target.value)} placeholder="BE68 5390 0754 7034" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">IBAN *</label>
+          <Input value={data.iban || ''} onChange={e => onChange('iban', e.target.value)} placeholder="BE68 5390 0754 7034" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
         <div className="space-y-1.5">
-          <Label className="text-xs">BIC / SWIFT</Label>
-          <Input value={data.bic || ''} onChange={e => onChange('bic', e.target.value)} placeholder="GEBABEBB" className="h-11 rounded-xl" />
+          <label className="text-xs font-medium text-gray-600">BIC / SWIFT</label>
+          <Input value={data.bic || ''} onChange={e => onChange('bic', e.target.value)} placeholder="GEBABEBB" className="h-12 rounded-xl border-gray-200 bg-gray-50" />
         </div>
       </div>
 
-      <Button onClick={() => validate() && onSubmit()} disabled={loading} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
-        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Finaliser mon inscription <CheckCircle className="w-4 h-4 ml-2" /></>}
-      </Button>
+      <button onClick={() => validate() && onSubmit()} disabled={loading} className="w-full rounded-2xl bg-[#FF6B35] text-white font-semibold text-base flex items-center justify-center gap-2 disabled:opacity-60" style={{ height: 52 }}>
+        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Finaliser mon inscription <CheckCircle className="w-4 h-4" /></>}
+      </button>
     </div>
   );
 }
@@ -617,7 +582,7 @@ function ProSignup({ onBack }) {
 
   return (
     <div>
-      <ProgressBar current={step} total={4} labels={PRO_STEPS} />
+      <ProgressBar current={step} total={4} />
       {step === 1 && <ProStep1 data={proData} onChange={set} onNext={() => setStep(2)} onBack={onBack} />}
       {step === 2 && <ProStep2 data={proData} onChange={set} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
       {step === 3 && <ProStep3 data={proData} onChange={set} onNext={() => setStep(4)} onBack={() => setStep(2)} />}
@@ -644,31 +609,31 @@ export default function CreateAccount() {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
-      {/* Header */}
-      <div className="bg-[#FF6B35] px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)' }}>
-        <div className="flex justify-center mb-3">
-          <ServiGoIcon size={40} white />
-        </div>
-        <h1 className="text-white font-black text-lg">ServiGo</h1>
-        <p className="text-white/70 text-xs mt-0.5">Créer un compte</p>
+    <div className="fixed inset-0 bg-white flex flex-col">
+      {/* Minimal top bar */}
+      <div className="shrink-0 flex items-center justify-center pt-safe" style={{ paddingTop: 'max(env(safe-area-inset-top), 20px)', paddingBottom: 0 }}>
+        {userType !== null && (
+          <div className="absolute left-4" style={{ top: 'max(env(safe-area-inset-top), 20px)' }}>
+            <button onClick={() => setUserType(null)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+              <ArrowLeft className="w-4 h-4 text-gray-700" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="px-5 py-6 w-full max-w-md mx-auto">
+        <div className="px-6 w-full max-w-sm mx-auto" style={{ paddingTop: userType === null ? 'max(env(safe-area-inset-top), 60px)' : '16px' }}>
           {userType === null && <StepTypeSelection onSelect={setUserType} />}
           {userType === 'particulier' && <ParticulierSignup onBack={() => setUserType(null)} />}
           {userType === 'professionnel' && <ProSignup onBack={() => setUserType(null)} />}
         </div>
       </div>
 
-      <div className="text-center py-3 text-xs text-[#A0AEC0] shrink-0 border-t border-[#E2E8F0]">
-        <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#718096]">CGU</a>
+      <div className="text-center py-4 text-xs text-gray-400 shrink-0">
+        <a href="/cgu" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">CGU</a>
         {' · '}
-        <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#718096]">Confidentialité</a>
-        {' · '}
-        <span>© 2026 ServiGo</span>
+        <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600">Confidentialité</a>
       </div>
     </div>
   );
