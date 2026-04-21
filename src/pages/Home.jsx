@@ -264,7 +264,7 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {filteredCategories.map((category, index) => (
                   <ServiceCard
                     key={category.id}
