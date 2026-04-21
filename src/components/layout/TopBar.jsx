@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bell, MapPin } from 'lucide-react';
+import { Bell, MapPin, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,26 +52,33 @@ export default function TopBar({ title, subtitle }) {
   return (
     <>
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/40">
-        <div className="flex items-center justify-between px-5 h-16">
-          {/* Left: title + subtitle */}
+        <div className="flex items-center gap-3 px-4 h-16">
+
+          {/* Logo mark */}
+          <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)', boxShadow: '0 2px 8px rgba(108,92,231,0.3)' }}>
+            <ShieldCheck className="w-5 h-5 text-white" strokeWidth={2.2} />
+          </div>
+
+          {/* Title + subtitle */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold tracking-tight truncate text-foreground">{title}</h1>
+            <h1 className="text-base font-black tracking-tight truncate text-foreground leading-tight">{title}</h1>
             {subtitle && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1 leading-none mt-0.5">
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1 leading-none mt-0.5">
                 <MapPin className="w-3 h-3 shrink-0" style={{ color: BRAND }} />
-                <span>{subtitle}</span>
+                <span className="truncate">{subtitle}</span>
               </p>
             )}
           </div>
 
-          {/* Right: notification bell */}
-          <div className="relative">
+          {/* Notification bell */}
+          <div className="relative shrink-0">
             <button
               onClick={() => setNotifOpen(o => !o)}
               className="w-10 h-10 rounded-2xl flex items-center justify-center tap-scale relative"
-              style={{ background: unreadCount > 0 ? `${BRAND}12` : 'hsl(var(--muted))' }}
+              style={{ background: unreadCount > 0 ? `${BRAND}15` : 'hsl(var(--muted))' }}
             >
-              <Bell className="w-5 h-5" style={{ color: unreadCount > 0 ? BRAND : undefined }} strokeWidth={1.8} />
+              <Bell className="w-5 h-5" style={{ color: unreadCount > 0 ? BRAND : 'hsl(var(--muted-foreground))' }} strokeWidth={1.8} />
               {unreadCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
                   style={{ background: '#E17055' }}>
