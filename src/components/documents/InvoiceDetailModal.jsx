@@ -15,13 +15,37 @@ export default function InvoiceDetailModal({ invoice, onClose }) {
         </button>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Header */}
-        <div className="bg-[#1a1a2e] rounded-2xl p-5 text-white space-y-1">
-          <p className="text-white/60 text-xs uppercase tracking-wide">Facture</p>
-          <p className="font-bold text-lg">{invoice.invoice_number}</p>
-          <p className="text-white/70 text-xs">
-            {invoice.created_date ? format(new Date(invoice.created_date), 'dd MMMM yyyy', { locale: fr }) : '—'}
-          </p>
+        {/* Header — montant à payer bien visible */}
+        <div className="bg-[#1a1a2e] rounded-2xl p-5 text-white space-y-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-white/60 text-xs uppercase tracking-wide">Facture</p>
+              <p className="font-bold text-base">{invoice.invoice_number}</p>
+              <p className="text-white/60 text-xs mt-0.5">
+                {invoice.invoice_date ? format(new Date(invoice.invoice_date), 'dd MMMM yyyy', { locale: fr }) :
+                 invoice.created_date ? format(new Date(invoice.created_date), 'dd MMMM yyyy', { locale: fr }) : '—'}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-white/60 text-xs">Montant total</p>
+              <p className="text-3xl font-black text-white">{(invoice.total_ttc || invoice.total_price || 0).toFixed(2)} €</p>
+            </div>
+          </div>
+          <div className={`rounded-xl px-4 py-2 flex items-center justify-between ${
+            invoice.payment_status === 'paid' ? 'bg-green-500/20' : 'bg-orange-400/20'
+          }`}>
+            <p className="text-sm font-semibold">
+              {invoice.payment_status === 'paid' ? '✅ Facture payée' : '💳 En attente de paiement'}
+            </p>
+            {invoice.payment_method && (
+              <p className="text-xs text-white/70">
+                {invoice.payment_method === 'cash' ? 'Espèces' : invoice.payment_method === 'bank_transfer' ? 'Virement' : 'Carte'}
+              </p>
+            )}
+          </div>
+          {invoice.professional_name && (
+            <p className="text-white/70 text-xs">De la part de : <span className="text-white font-medium">{invoice.professional_name}</span></p>
+          )}
         </div>
 
         {/* Parties */}
