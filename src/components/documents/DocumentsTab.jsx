@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { FileText, Download, PenLine, CheckCircle, Clock, X, Trash2, Eye } from 'lucide-react';
+import { FileText, Download, PenLine, CheckCircle, Clock, X, Trash2, Eye, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import InvoiceDetailModal from '@/components/documents/InvoiceDetailModal';
+import CreateInvoiceModal from '@/components/documents/CreateInvoiceModal';
 
 // ─── PDF generation ──────────────────────────────────────────────────────────
 function generateInvoicePDF(invoice, type = 'facture') {
@@ -219,6 +220,7 @@ export default function DocumentsTab({ user }) {
   const queryClient = useQueryClient();
   const [signingInvoiceId, setSigningInvoiceId] = useState(null);
   const [viewingInvoice, setViewingInvoice] = useState(null);
+  const [showCreateInvoice, setShowCreateInvoice] = useState(false);
   const [docType, setDocType] = useState('factures'); // 'factures' | 'devis'
 
   const isCustomer = user?.user_type === 'particulier';
@@ -271,16 +273,26 @@ export default function DocumentsTab({ user }) {
 
   return (
     <div className="space-y-4">
-      {/* Type toggle */}
-      <div className="flex gap-2">
-        {[['factures', 'Factures'], ['devis', 'Devis']].map(([k, l]) => (
-          <button key={k} onClick={() => setDocType(k)}
-            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-              docType === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'
-            }`}>
-            <FileText className="w-3.5 h-3.5" /> {l}
+      {/* Type toggle + Create button */}
+      <div className="flex items-center gap-2">
+        <div className="flex gap-2 flex-1">
+          {[['factures', 'Factures'], ['devis', 'Devis']].map(([k, l]) => (
+            <button key={k} onClick={() => setDocType(k)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                docType === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'
+              }`}>
+              <FileText className="w-3.5 h-3.5" /> {l}
+            </button>
+          ))}
+        </div>
+        {!isCustomer && (
+          <button
+            onClick={() => setShowCreateInvoice(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold bg-primary text-primary-foreground border border-primary"
+          >
+            <Plus className="w-3.5 h-3.5" /> Créer
           </button>
-        ))}
+        )}
       </div>
 
       {/* FACTURES */}
@@ -416,6 +428,14 @@ export default function DocumentsTab({ user }) {
         <InvoiceDetailModal
           invoice={viewingInvoice}
           onClose={() => setViewingInvoice(null)}
+        />
+      )}
+
+      {/* Create invoice modal */}
+      {showCreateInvoice && (
+        <CreateInvoiceModal
+          user={user}
+          onClose={() => setShowCreateInvoice(false)}
         />
       )}
     </div>

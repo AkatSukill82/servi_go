@@ -111,13 +111,13 @@ export default function CustomerReceipts({ user }) {
                     {req.created_date && format(new Date(req.created_date), 'dd MMM yyyy', { locale: fr })}
                   </div>
 
-                  {invoice && (
+                  {invoice ? (
                     <div className="flex gap-2">
                       <button
                         onClick={() => setSelectedInvoice(invoice)}
-                        className="flex-1 h-9 rounded-xl border border-border text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-muted transition-colors"
+                        className="flex-1 h-9 rounded-xl bg-primary text-primary-foreground text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
                       >
-                        <Eye className="w-3.5 h-3.5" /> Voir la facture
+                        <Eye className="w-3.5 h-3.5" /> Voir la facture — {(invoice.total_price || 0).toFixed(2)} €
                       </button>
                       <button
                         onClick={() => generateInvoicePDF(invoice)}
@@ -127,7 +127,12 @@ export default function CustomerReceipts({ user }) {
                         <Download className="w-3.5 h-3.5 text-primary" />
                       </button>
                     </div>
-                  )}
+                  ) : req.status === 'completed' ? (
+                    <div className="h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <p className="text-xs font-medium text-amber-700">Facture en attente d'envoi par le pro</p>
+                    </div>
+                  ) : null}
                 </motion.div>
               );
             })}
