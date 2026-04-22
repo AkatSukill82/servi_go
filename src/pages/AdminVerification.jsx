@@ -296,6 +296,22 @@ function MaintenanceTab() {
   const [reassigning, setReassigning] = useState(false);
   const [dedupeResult, setDedupeResult] = useState(null);
   const [reassignResult, setReassignResult] = useState(null);
+  const [eidEmail, setEidEmail] = useState('');
+  const [eidApproving, setEidApproving] = useState(false);
+  const [eidResult, setEidResult] = useState(null);
+
+  const handleApproveEid = async () => {
+    if (!eidEmail.trim()) return;
+    setEidApproving(true);
+    setEidResult(null);
+    const users = await base44.entities.User.filter({ email: eidEmail.trim() });
+    if (!users[0]) { setEidResult('Utilisateur introuvable'); setEidApproving(false); return; }
+    await base44.entities.User.update(users[0].id, { eid_status: 'verified' });
+    setEidResult(`✅ eID approuvé pour ${eidEmail}`);
+    setEidEmail('');
+    queryClient.invalidateQueries();
+    setEidApproving(false);
+  };
 
   const handleDeduplicatePros = async () => {
     setDeduping(true);
@@ -364,6 +380,34 @@ function MaintenanceTab() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">Outils de maintenance et nettoyage de la base de données.</p>
+
+      {/* Approve eID by email */}
+      <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-green-600" />
+          <p className="font-semibold text-sm">Approuver eID par email</p>
+        </div>
+        <p className="text-xs text-muted-foreground">Force l'approbation de l'identité d'un utilisateur directement par son adresse email.</p>
+        <input
+          value={eidEmail}
+          onChange={e => { setEidEmail(e.target.value); setEidResult(null); }}
+          placeholder="email@exemple.com"
+          className="w-full text-sm border border-border rounded-xl px-3 py-2"
+          onKeyDown={e => e.key === 'Enter' && handleApproveEid()}
+        />
+        {eidResult && (
+          <div className={`rounded-xl px-3 py-2 text-sm font-medium ${eidResult.startsWith('✅') ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+            {eidResult}
+          </div>
+        )}
+        <button
+          onClick={handleApproveEid}
+          disabled={eidApproving || !eidEmail.trim()}
+          className="w-full h-10 rounded-xl bg-green-600 text-white text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
+        >
+          {eidApproving ? <><RefreshCw className="w-4 h-4 animate-spin" />Approbation...</> : <><ShieldCheck className="w-4 h-4" />Approuver l'eID</>}
+        </button>
+      </div>
 
       {/* Dedup card */}
       <div className="bg-card rounded-2xl border border-border p-5 space-y-3">
