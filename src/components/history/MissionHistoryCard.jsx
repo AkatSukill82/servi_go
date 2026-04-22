@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { FileText, Download, ChevronRight, CheckCircle2, Clock, XCircle, Wrench, AlertCircle, Calendar, Euro } from 'lucide-react';
+import { FileText, Download, ChevronRight, CheckCircle2, Clock, XCircle, Wrench, AlertCircle, Calendar } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -183,12 +183,6 @@ export default function MissionHistoryCard({ request, invoice, isPro }) {
           <Calendar className="w-3.5 h-3.5" />
           <span>{scheduledStr || dateStr}</span>
         </div>
-        {request.total_price > 0 && (
-          <div className="flex items-center gap-1">
-            <Euro className="w-3.5 h-3.5" />
-            <span className="font-semibold text-foreground">{request.total_price.toFixed(2)} €</span>
-          </div>
-        )}
         {invoice?.payment_status === 'paid' && (
           <span className="text-green-600 font-medium">Payé</span>
         )}

@@ -444,10 +444,7 @@ export default function ProDashboard() {
                             {req.scheduled_date && <p className="text-xs text-muted-foreground mt-0.5">📅 {req.scheduled_date}{req.scheduled_time ? ` à ${req.scheduled_time}` : ''}</p>}
                             {createdMinutesAgo !== null && <p className="text-xs text-orange-600 mt-2">⏰ Cette demande vous attend depuis {createdMinutesAgo} minute{createdMinutesAgo !== 1 ? 's' : ''} — répondez vite !</p>}
                           </div>
-                          <div className="text-right shrink-0 ml-3">
-                            <p className="font-bold text-base text-primary">{(req.estimated_price || req.base_price || 0).toFixed(0)} €</p>
-                            <p className="text-[10px] text-muted-foreground">estimé</p>
-                          </div>
+                          
                         </div>
                         {req.answers?.length > 0 && (
                           <div className="bg-muted rounded-lg p-3 mb-3 space-y-1">
@@ -480,7 +477,7 @@ export default function ProDashboard() {
                         <p className="font-semibold text-sm">{job.customer_first_name ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.` : (job.customer_name || 'Client')}</p>
                         <p className="text-xs text-muted-foreground">{job.category_name}</p>
                       </div>
-                      <span className="text-sm font-bold text-primary">{(job.base_price || 0).toFixed(0)} €</span>
+                      
                     </div>
                     <MissionProgress status={job.status} compact />
                     <div className="flex gap-2">
@@ -522,7 +519,7 @@ export default function ProDashboard() {
                       <p className="text-xs text-muted-foreground">{job.category_name}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold">{(job.base_price || 0).toFixed(0)} €</p>
+                      
                       <p className="text-[10px] text-[#38A169] font-medium">Terminé</p>
                     </div>
                     <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" strokeWidth={1.8} />

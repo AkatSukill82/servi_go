@@ -260,7 +260,6 @@ export default function MissionContractFull({ contract, userEmail, userType, onC
             {[
               { label: "Date d'intervention", value: dateDisplay, icon: '📅' },
               { label: "Heure prévue", value: contract.scheduled_time || '—', icon: '🕐' },
-              { label: "Durée estimée", value: contract.estimated_duration_hours ? `${contract.estimated_duration_hours}h` : '—', icon: '⏱️' },
               { label: "Lieu", value: contract.customer_address || '—', icon: '📍' },
             ].map((item) => (
               <div key={item.label} className="bg-gray-50 rounded-xl border border-gray-200 p-3">
@@ -283,7 +282,7 @@ export default function MissionContractFull({ contract, userEmail, userType, onC
               </p>
               <ul className="space-y-2">
                 {[
-                  "Régler le montant convenu avec le professionnel une fois la mission réalisée",
+                  "Régler le montant convenu sur place avec le professionnel, après son évaluation et votre accord, une fois la mission réalisée",
                   "Garantir l'accès au lieu d'intervention à la date et heure prévues",
                   "Fournir des informations exactes sur le problème à résoudre",
                   "Traiter le professionnel avec respect et courtoisie",
@@ -339,7 +338,7 @@ export default function MissionContractFull({ contract, userEmail, userType, onC
               { art: "Art. 1 — Objet", text: "Le présent contrat formalise l'engagement mutuel entre le Client et le Professionnel via la plateforme ServiGo pour la réalisation d'une prestation de service à domicile." },
               { art: "Art. 2 — Rôle de ServiGo", text: "ServiGo agit en qualité d'intermédiaire de mise en relation uniquement et n'est pas partie au contrat. Le paiement s'effectue directement entre le Client et le Professionnel selon les modalités convenues." },
               { art: "Art. 3 — Qualifications", text: "Le Professionnel déclare être dûment inscrit à la BCE (Banque-Carrefour des Entreprises), disposer des compétences requises par la réglementation belge et être couvert par une assurance RC professionnelle valide." },
-              { art: "Art. 4 — Engagement de paiement", text: "Le Client s'engage à régler le montant convenu avec le Professionnel dès la mission confirmée. Tout défaut de paiement pourra entraîner la suspension du compte sur la Plateforme." },
+              { art: "Art. 4 — Engagement de paiement", text: "Aucun prix n'est fixé à l'avance. Le Professionnel évalue le travail sur place et soumet un devis verbal ou écrit avant de commencer. Le Client s'engage à régler le montant convenu sur place avec le Professionnel après réalisation de la mission. Tout défaut de paiement pourra entraîner la suspension du compte sur la Plateforme." },
               { art: "Art. 5 — Engagement de qualité", text: "Le Professionnel s'engage à exécuter la prestation dans les règles de l'art et à assumer l'entière responsabilité de la qualité de son travail." },
               { art: "Art. 7 — Annulation", text: "Annulation plus de 24h avant la mission : gratuite. Annulation en deçà de 24h : des frais de déplacement peuvent être dus au Professionnel selon la politique convenue." },
               { art: "Art. 8 — Litiges", text: "En cas de litige, les parties s'engagent à rechercher une solution amiable via le service de médiation ServiGo. Plateforme de règlement en ligne des litiges ODR : https://ec.europa.eu/consumers/odr" },
