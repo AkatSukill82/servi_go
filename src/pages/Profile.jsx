@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
+import CustomerContracts from '@/components/profile/CustomerContracts';
 import ReferralSection from '@/components/profile/ReferralSection';
 import { useTheme } from '@/lib/ThemeContext';
 import PageFooter from '@/components/layout/PageFooter';
@@ -46,6 +47,7 @@ export default function Profile() {
   const { logout } = useAuth();
   const { dark, setDark } = useTheme();
   const [tab, setTab] = useState('infos');
+  const [receiptsSubTab, setReceiptsSubTab] = useState('missions');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -438,8 +440,20 @@ export default function Profile() {
 
         {/* ─── ONGLET REÇUS ─── */}
         {tab === 'recus' &&
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            <CustomerReceipts user={user} />
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            {/* Sub-tabs */}
+            <div className="flex gap-2">
+              {[['missions', 'Missions & Reçus'], ['contrats', 'Contrats signés']].map(([k, l]) => (
+                <button key={k} onClick={() => setReceiptsSubTab(k)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
+                    receiptsSubTab === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border text-muted-foreground'
+                  }`}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            {receiptsSubTab === 'missions' && <CustomerReceipts user={user} />}
+            {receiptsSubTab === 'contrats' && <CustomerContracts user={user} />}
           </motion.div>
         }
 

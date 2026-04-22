@@ -26,6 +26,7 @@ import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
 import { useTheme } from '@/lib/ThemeContext';
 import DocumentsTab from '@/components/documents/DocumentsTab';
+import ProContractsTab from '@/components/documents/ProContractsTab';
 import PageFooter from '@/components/layout/PageFooter';
 
 const TABS = [
@@ -592,11 +593,24 @@ export default function ProProfile() {
               </div>
             </div>
 
-            {/* Factures & contrats */}
+            {/* Factures */}
             <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-border/50">
+                <h3 className="font-semibold text-sm">Factures</h3>
+              </div>
               <div className="px-5 py-4">
-                <h3 className="font-semibold text-sm mb-3">Factures & contrats</h3>
                 <DocumentsTab user={user} />
+              </div>
+            </div>
+
+            {/* Contrats signés */}
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-border/50">
+                <h3 className="font-semibold text-sm">Contrats de mission</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">Contrats signés avec vos clients</p>
+              </div>
+              <div className="px-5 py-4">
+                <ProContractsTab user={user} />
               </div>
             </div>
           </motion.div>
