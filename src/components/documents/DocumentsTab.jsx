@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { FileText, Download, PenLine, CheckCircle, Clock, X, Trash2 } from 'lucide-react';
+import { FileText, Download, PenLine, CheckCircle, Clock, X, Trash2, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
+import InvoiceDetailModal from '@/components/documents/InvoiceDetailModal';
 
 // ─── PDF generation ──────────────────────────────────────────────────────────
 function generateInvoicePDF(invoice, type = 'facture') {
@@ -217,6 +218,7 @@ function SignatureModal({ onClose, onConfirm }) {
 export default function DocumentsTab({ user }) {
   const queryClient = useQueryClient();
   const [signingInvoiceId, setSigningInvoiceId] = useState(null);
+  const [viewingInvoice, setViewingInvoice] = useState(null);
   const [docType, setDocType] = useState('factures'); // 'factures' | 'devis'
 
   const isCustomer = user?.user_type === 'particulier';
@@ -335,13 +337,16 @@ export default function DocumentsTab({ user }) {
                   </div>
 
                   <div className="flex gap-2">
+                    <Button onClick={() => setViewingInvoice(inv)} variant="outline" size="sm" className="flex-1 rounded-xl h-9 text-xs">
+                      <Eye className="w-3.5 h-3.5 mr-1.5" /> Voir
+                    </Button>
                     {!signed && (
                       <Button onClick={() => setSigningInvoiceId(inv.id)} variant="outline" size="sm" className="flex-1 rounded-xl h-9 text-xs">
                         <PenLine className="w-3.5 h-3.5 mr-1.5" /> Signer
                       </Button>
                     )}
-                    <Button onClick={() => generateInvoicePDF(inv, 'facture')} variant="outline" size="sm" className={`${signed ? 'flex-1' : ''} rounded-xl h-9 text-xs`}>
-                      <Download className="w-3.5 h-3.5 mr-1.5" /> Télécharger
+                    <Button onClick={() => generateInvoicePDF(inv, 'facture')} variant="outline" size="sm" className="rounded-xl h-9 text-xs">
+                      <Download className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -403,6 +408,14 @@ export default function DocumentsTab({ user }) {
         <SignatureModal
           onClose={() => setSigningInvoiceId(null)}
           onConfirm={handleSign}
+        />
+      )}
+
+      {/* Invoice detail modal */}
+      {viewingInvoice && (
+        <InvoiceDetailModal
+          invoice={viewingInvoice}
+          onClose={() => setViewingInvoice(null)}
         />
       )}
     </div>
