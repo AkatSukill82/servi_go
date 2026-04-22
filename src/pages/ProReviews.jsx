@@ -128,14 +128,11 @@ export default function ProReviews() {
   const navigate = useNavigate();
   const [selectedPro, setSelectedPro] = useState(null);
 
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['allPros'],
-    queryFn: () => base44.entities.User.filter({ user_type: 'professionnel' }, '-rating', 100),
+  const { data: pros = [], isLoading } = useQuery({
+    queryKey: ['allProfessionals'],
+    queryFn: () => base44.entities.Professional.list('-rating', 100),
     staleTime: 3 * 60 * 1000,
   });
-
-  // Only show pros that have a rating or reviews
-  const pros = users.filter(u => u.full_name || u.name);
 
   return (
     <div className="min-h-full bg-white pb-6">

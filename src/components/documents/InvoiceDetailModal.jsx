@@ -6,15 +6,15 @@ import { generateInvoicePDF } from '@/utils/generateInvoicePDF';
 
 export default function InvoiceDetailModal({ invoice, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex flex-col">
-      <div className="bg-card flex items-center justify-between px-4 py-3 border-b border-border shrink-0"
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+      <div className="sticky top-0 z-10 bg-white flex items-center justify-between px-4 py-3 border-b border-gray-100 shadow-sm"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}>
         <p className="font-semibold text-sm">Facture {invoice.invoice_number}</p>
-        <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted">
+        <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100">
           <X className="w-5 h-5" />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="p-4 space-y-4 pb-12">
         {/* Header — montant à payer bien visible */}
         <div className="bg-[#1a1a2e] rounded-2xl p-5 text-white space-y-3">
           <div className="flex items-start justify-between">
