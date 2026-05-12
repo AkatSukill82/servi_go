@@ -1,11 +1,11 @@
 /**
  * useAppleIAP.js
- * Hook Apple In-App Purchase via cordova-plugin-purchase v13 (CdvPurchase)
+ * Apple In-App Purchase via cordova-plugin-purchase v13 (CdvPurchase)
  * Compatible Capacitor 6 + iOS natif
  *
  * Produits à créer dans App Store Connect (bundle: be.servigo.app) :
- *   - servigo.pro.monthly  → 9,99 € / mois  (auto-renewing subscription)
- *   - servigo.pro.yearly   → 90,00 € / an   (auto-renewing subscription)
+ *   servigo.pro.monthly  → 9,99 €/mois  (auto-renewing subscription)
+ *   servigo.pro.yearly   → 90,00 €/an   (auto-renewing subscription)
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -21,27 +21,52 @@ export const PRODUCT_IDS = {
   annual:  'servigo.pro.yearly',
 };
 
-const FALLBACK_PRICES = {
-  monthly: '9,99 €',
-  yearly:  '90,00 €',
-};
+const FALLBACK_PRICES = { monthly: '9,99 €', yearly: '90,00 €' };
+
+// ─── Attend que CdvPurchase soit disponible (polling + deviceready) ───────────
+function waitForCdvPurchase(timeoutMs = 8000) {
+  return new Promise((resolve, reject) => {
+    if (window.CdvPurchase) { resolve(window.CdvPurchase); return; }
+
+    let done = false;
+    const finish = (val) => {
+      if (done) return;
+      done = true;
+      clearInterval(poll);
+      clearTimeout(timer);
+      document.removeEventListener('deviceready', onReady);
+      val ? resolve(val) : reject(new Error('CdvPurchase non disponible'));
+    };
+
+    const onReady = () => {
+      if (window.CdvPurchase) finish(window.CdvPurchase);
+    };
+    document.addEventListener('deviceready', onReady, { once: true });
+
+    // Polling toutes les 250 ms (au cas où deviceready est déjà passé)
+    const poll = setInterval(() => {
+      if (window.CdvPurchase) finish(window.CdvPurchase);
+    }, 250);
+
+    const timer = setTimeout(() => finish(null), timeoutMs);
+  });
+}
 
 export function useAppleIAP(user) {
-  const [storeReady, setStoreReady]   = useState(false);
-  const [pluginReady, setPluginReady] = useState(false);
-  const [products, setProducts]       = useState({});
-  const [purchasing, setPurchasing]   = useState(false);
-  const [restoring, setRestoring]     = useState(false);
-
+  const [storeReady, setStoreReady]     = useState(false);
+  const [iapAvailable, setIapAvailable] = useState(false);
+  const [products, setProducts]         = useState({});
+  const [purchasing, setPurchasing]     = useState(false);
+  const [restoring, setRestoring]       = useState(false);
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
+  const initializedRef = useRef(false);
 
-  // ─── Vérification du receipt côté serveur ─────────────────────────────────
+  // ─── Vérification receipt côté serveur ──────────────────────────────────────
   const verifyAndActivate = useCallback(async (transaction) => {
     try {
       const productId = transaction.products?.[0]?.id;
       const plan = productId === PRODUCT_IDS.yearly ? 'annual' : 'monthly';
-
       try {
         const res = await base44.functions.invoke('verifyAppleReceipt', {
           receiptData: transaction.parentReceipt?.nativeData?.appStoreReceipt
@@ -57,7 +82,7 @@ export function useAppleIAP(user) {
           toast.error('Vérification échouée. Contactez le support.');
         }
       } catch {
-        // Fonction Base44 pas encore déployée → on finalise quand même
+        // Fonction Base44 pas déployée → on finalise quand même
         transaction.finish();
         toast.success('Abonnement Pro activé ! 🎉');
       }
@@ -68,71 +93,58 @@ export function useAppleIAP(user) {
     }
   }, []);
 
-  // ─── Init du store (iOS uniquement) ───────────────────────────────────────
+  // ─── Init du store ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (!isIOS) return;
+    if (initializedRef.current) return;
 
-    let initialized = false;
+    waitForCdvPurchase(8000)
+      .then((CdvPurchase) => {
+        if (initializedRef.current) return;
+        initializedRef.current = true;
+        setIapAvailable(true);
 
-    const initStore = () => {
-      if (initialized) return;
-      if (!window.CdvPurchase) {
-        console.warn('[IAP] CdvPurchase non disponible après deviceready');
-        return;
-      }
-      initialized = true;
-      setPluginReady(true);
+        const { store, ProductType, Platform } = CdvPurchase;
 
-      const { store, ProductType, Platform } = window.CdvPurchase;
+        store.register([
+          { id: PRODUCT_IDS.monthly, type: ProductType.PAID_SUBSCRIPTION, platform: Platform.APPLE_APPSTORE },
+          { id: PRODUCT_IDS.yearly,  type: ProductType.PAID_SUBSCRIPTION, platform: Platform.APPLE_APPSTORE },
+        ]);
 
-      store.register([
-        { id: PRODUCT_IDS.monthly, type: ProductType.PAID_SUBSCRIPTION, platform: Platform.APPLE_APPSTORE },
-        { id: PRODUCT_IDS.yearly,  type: ProductType.PAID_SUBSCRIPTION, platform: Platform.APPLE_APPSTORE },
-      ]);
+        store.when()
+          .productUpdated((product) => {
+            setProducts((prev) => ({ ...prev, [product.id]: product }));
+          })
+          .approved((transaction) => {
+            verifyAndActivate(transaction);
+          })
+          .finished((transaction) => {
+            console.log('[IAP] Transaction finalisée :', transaction.transactionId);
+          });
 
-      store.when()
-        .productUpdated((product) => {
-          setProducts((prev) => ({ ...prev, [product.id]: product }));
-        })
-        .approved((transaction) => {
-          verifyAndActivate(transaction);
-        })
-        .finished((transaction) => {
-          console.log('[IAP] Transaction finalisée :', transaction.transactionId);
-        });
-
-      store.initialize([Platform.APPLE_APPSTORE])
-        .then(() => {
-          setStoreReady(true);
-          store.update();
-        })
-        .catch((err) => console.error('[IAP] Erreur init store :', err));
-    };
-
-    // CdvPurchase peut être dispo immédiatement ou après deviceready
-    if (window.CdvPurchase) {
-      initStore();
-    } else {
-      document.addEventListener('deviceready', initStore, { once: true });
-      // Fallback si deviceready est déjà passé
-      setTimeout(() => {
-        if (!initialized && window.CdvPurchase) initStore();
-      }, 2000);
-    }
-
-    return () => document.removeEventListener('deviceready', initStore);
+        store.initialize([Platform.APPLE_APPSTORE])
+          .then(() => {
+            setStoreReady(true);
+            store.update();
+          })
+          .catch((err) => console.error('[IAP] Erreur init store :', err));
+      })
+      .catch(() => {
+        console.warn('[IAP] CdvPurchase indisponible après 8s');
+        setIapAvailable(false);
+      });
   }, [verifyAndActivate]);
 
-  // ─── Lancer un achat ───────────────────────────────────────────────────────
+  // ─── Lancer un achat ─────────────────────────────────────────────────────────
   const purchase = useCallback(async (plan = 'monthly') => {
     if (!storeReady || !window.CdvPurchase) {
-      toast.error('App Store pas encore prêt. Réessayez dans quelques secondes.');
+      toast.error('App Store pas encore prêt. Patientez quelques secondes.');
       return;
     }
     const productId = PRODUCT_IDS[plan] || PRODUCT_IDS.monthly;
     const product = products[productId];
     if (!product) {
-      toast.error('Produit introuvable dans l\'App Store. Vérifiez votre connexion.');
+      toast.error('Produit introuvable dans l\'App Store. Vérifiez votre connexion et réessayez.');
       return;
     }
     setPurchasing(true);
@@ -146,7 +158,7 @@ export function useAppleIAP(user) {
     }
   }, [storeReady, products]);
 
-  // ─── Restaurer les achats (obligatoire Apple guideline) ───────────────────
+  // ─── Restaurer les achats (obligatoire Apple guideline) ──────────────────────
   const restorePurchases = useCallback(async () => {
     if (!window.CdvPurchase) {
       toast.error('Plugin de paiement non disponible.');
@@ -163,20 +175,21 @@ export function useAppleIAP(user) {
     }
   }, []);
 
-  // ─── Prix du produit (App Store ou fallback) ───────────────────────────────
+  // ─── Prix du produit ──────────────────────────────────────────────────────────
   const getProductInfo = useCallback((plan) => {
     const productId = PRODUCT_IDS[plan];
     const product = products[productId];
     return {
       id: productId,
       title: product?.title || (plan === 'yearly' || plan === 'annual' ? 'Annuel' : 'Mensuel'),
-      price: product?.offers?.[0]?.pricingPhases?.[0]?.price || FALLBACK_PRICES[plan === 'annual' ? 'yearly' : plan],
+      price: product?.offers?.[0]?.pricingPhases?.[0]?.price
+        || FALLBACK_PRICES[plan === 'annual' ? 'yearly' : plan],
     };
   }, [products]);
 
   return {
     storeReady,
-    pluginReady,
+    iapAvailable,
     isNative: isIOS,
     purchasing,
     restoring,
