@@ -8,7 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
-import { isNative } from '@/lib/platform';
+import { isNativeNow } from '@/lib/platform';
 
 // Pages
 import Chat from './pages/Chat';
@@ -78,7 +78,7 @@ const AuthenticatedApp = () => {
   }
 
   // Sur mobile natif, rediriger vers login si non authentifié (sauf pages publiques)
-  if (isNative && !isAuthenticated && !isPublicPath) {
+  if (isNativeNow() && !isAuthenticated && !isPublicPath) {
     return <Navigate to="/se-connecter" replace />;
   }
 

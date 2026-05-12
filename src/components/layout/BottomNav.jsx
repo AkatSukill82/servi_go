@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { BRAND } from '@/lib/theme';
+import { hapticSelection } from '@/lib/haptics';
 import {
   Home, ClipboardList, Heart, MessageCircle, User,
   LayoutDashboard, CalendarDays,
@@ -129,7 +130,7 @@ export default function BottomNav() {
             label={item.label}
             badge={getBadge(item.kind)}
             isActive={location.pathname === item.path}
-            onClick={() => navigate(item.path, { replace: true })}
+            onClick={() => { hapticSelection(); navigate(item.path, { replace: true }); }}
           />
         ))}
       </div>

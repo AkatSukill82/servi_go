@@ -111,7 +111,7 @@ export default function AppLayout() {
     const spinnerTop = '#6C5CE7';
 
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg, width: '100vw', height: '100vh' }}>
+      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg, width: '100vw', height: '100dvh' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
