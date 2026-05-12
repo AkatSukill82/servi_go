@@ -23,7 +23,7 @@ const ProProfile  = lazy(() => import('@/pages/ProProfile'));
 const ServiceRequest = lazy(() => import('@/pages/ServiceRequest'));
 const ProSubscription = lazy(() => import('@/pages/ProSubscription'));
 const ProAgenda = lazy(() => import('@/pages/ProAgenda'));
-const ProMessages = lazy(() => import('@/pages/ProMessages'));
+const ServiBot  = lazy(() => import('@/pages/ServiBot'));
 
 const CUSTOMER_TABS = ['/Home', '/MissionHistory', '/Favorites', '/Messages', '/Profile'];
 const PRO_TABS = ['/ProDashboard', '/ProAgenda', '/ProMessages', '/ProProfile'];
@@ -36,8 +36,7 @@ const TAB_COMPONENTS = {
   '/Profile': Profile,
   '/ProDashboard': ProDashboard,
   '/ProAgenda': ProAgenda,
-  '/Invoices': Invoices,
-  '/ProMessages': ProMessages,
+  '/ProMessages': Messages,
   '/ProProfile': ProProfile,
 };
 
@@ -46,6 +45,8 @@ const STACK_COMPONENTS = {
   '/ProSubscription': ProSubscription,
   '/Map': Map,
   '/Emergency': lazy(() => import('@/pages/Emergency')),
+  '/ServiBot': ServiBot,
+  '/Invoices': Invoices,
 };
 
 const TabSpinner = () => (

@@ -11,7 +11,6 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import { isNative } from '@/lib/platform';
 
 // Pages
-import SelectUserType from './pages/SelectUserType';
 import Chat from './pages/Chat';
 import MissionHistory from './pages/MissionHistory';
 import TrackingMap from './pages/TrackingMap';
@@ -24,16 +23,13 @@ import Support from './pages/Support';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Register from './pages/Register';
 import ProPublicProfile from './pages/ProPublicProfile';
-import ProMessages from './pages/ProMessages';
 import CGUFull from './pages/CGUFull';
 import Confidentialite from './pages/Confidentialite';
 import MentionsLegales from './pages/MentionsLegales';
 import CGV from './pages/CGV';
 import PolitiqueCookies from './pages/PolitiqueCookies';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import Landing from './pages/Landing';
 import AccountTypeSelection from './pages/AccountTypeSelection';
-import ServiBot from './pages/ServiBot';
 import IndependenceCharter from './pages/IndependenceCharter';
 import DAC7Form from './pages/DAC7Form';
 import AuthLogin from './pages/AuthLogin';
@@ -93,7 +89,6 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<RootRedirect />} />
 
       {/* Public pages (no layout) */}
-      <Route path="/SelectUserType" element={<SelectUserType />} />
       <Route path="/signup" element={<AccountTypeSelection />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />

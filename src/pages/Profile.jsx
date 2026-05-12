@@ -11,7 +11,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from
 '@/components/ui/alert-dialog';
-import { Camera, Save, LogOut, User, Trash2, Receipt, Shield, ShieldCheck, MapPin, Pencil, Check, LayoutDashboard } from 'lucide-react';
+import { Camera, Save, LogOut, User, Trash2, Receipt, Shield, ShieldCheck, MapPin, Pencil, Check, LayoutDashboard, FileText, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
@@ -454,6 +454,21 @@ export default function Profile() {
             </div>
             {receiptsSubTab === 'missions' && <CustomerReceipts user={user} />}
             {receiptsSubTab === 'contrats' && <CustomerContracts user={user} />}
+
+            {/* Factures Stripe */}
+            <button
+              onClick={() => navigate('/Invoices')}
+              className="w-full flex items-center gap-3 bg-card border border-border/50 rounded-2xl p-4 text-left shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#6C5CE7]/10 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5 text-[#6C5CE7]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold">Mes factures</p>
+                <p className="text-xs text-muted-foreground">Voir et payer les factures en attente</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+            </button>
           </motion.div>
         }
 
