@@ -17,7 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useAppleIAP } from '@/hooks/useAppleIAP';
+import { useAppleIAP, isIOS } from '@/hooks/useAppleIAP';
 
 const BENEFITS = [
   { icon: Zap,          text: 'Missions en temps réel dans votre catégorie' },
@@ -82,23 +82,24 @@ export default function ProSubscription() {
 
   // ─── Handler principal d'abonnement ───────────────────────────────────────
   const handleSubscribe = async () => {
-    if (isNative) {
+    if (isIOS) {
+      // iPhone / iPad → Apple In-App Purchase (aucune redirection)
       await purchase(plan);
       return;
     }
-    // Web → Stripe Checkout
+
+    // Android ou navigateur web → Stripe via lien externe
     setBillingLoading(true);
     try {
-      const res = await base44.functions.invoke('createStripeCheckout', {
+      const res = await base44.functions.invoke('createProSubscription', {
         plan,
-        userEmail: user?.email,
-        successUrl: `${window.location.origin}/ProSubscription?success=true`,
-        cancelUrl: `${window.location.origin}/ProSubscription`,
+        successUrl: `${window.location.origin}/ProSubscription?success=true&plan=${plan}`,
+        cancelUrl:  `${window.location.origin}/ProSubscription`,
       });
       if (res.data?.url) {
         window.location.href = res.data.url;
       } else {
-        toast.error(res.data?.error || 'Erreur lors de la création du paiement.');
+        toast.error(res.data?.error || 'Erreur lors de la création de l\'abonnement. Réessayez.');
       }
     } catch (err) {
       toast.error('Erreur : ' + (err?.message || 'réessayez'));
@@ -153,16 +154,16 @@ export default function ProSubscription() {
   };
   const sc = statusConfig[subscription?.status] || { label: 'Inactif', cls: 'text-gray-600 bg-gray-50 border-gray-200' };
 
-  // Prix affichés : depuis l'App Store si natif, sinon prix fixes
+  // Prix affichés : depuis l'App Store si iOS, sinon prix fixes
   const monthlyInfo = getProductInfo('monthly');
   const yearlyInfo  = getProductInfo('yearly');
-  const monthlyPrice = monthlyInfo?.price || '10 €';
-  const yearlyPrice  = yearlyInfo?.price  || '100 €';
+  const monthlyPrice = monthlyInfo?.price || '10,99 €';
+  const yearlyPrice  = yearlyInfo?.price  || '99,99 €';
 
   // ─── Bouton CTA label ──────────────────────────────────────────────────────
   const ctaLabel = () => {
-    if (purchasing || billingLoading) return 'Redirection...';
-    if (isNative) {
+    if (purchasing || billingLoading) return 'Traitement en cours...';
+    if (isIOS) {
       return plan === 'annual'
         ? `S'abonner ${yearlyPrice}/an`
         : `S'abonner ${monthlyPrice}/mois`;
@@ -196,8 +197,8 @@ export default function ProSubscription() {
           )}
         </AnimatePresence>
 
-        {/* Store en cours de chargement (iOS natif uniquement) */}
-        {isNative && !storeReady && (
+        {/* Store en cours de chargement (iOS uniquement) */}
+        {isIOS && !storeReady && (
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center gap-3">
             <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
             <p className="text-sm text-blue-800">Connexion à l'App Store...</p>
@@ -290,7 +291,7 @@ export default function ProSubscription() {
             )}
 
             {/* Mettre à jour carte (web/Android seulement) */}
-            {!isNative && (
+            {!isIOS && (
               <Button
                 variant="outline"
                 onClick={handleOpenBillingPortal}
@@ -306,7 +307,7 @@ export default function ProSubscription() {
             )}
 
             {/* Restaurer les achats (iOS uniquement — obligatoire Apple) */}
-            {isNative && (
+            {isIOS && (
               <Button
                 variant="outline"
                 onClick={restorePurchases}
@@ -429,7 +430,7 @@ export default function ProSubscription() {
             {/* CTA principal */}
             <Button
               onClick={handleSubscribe}
-              disabled={purchasing || billingLoading || (isNative && !storeReady)}
+              disabled={purchasing || billingLoading || (isIOS && !storeReady)}
               className="w-full h-14 rounded-2xl text-base font-bold"
             >
               {(purchasing || billingLoading)
@@ -440,7 +441,7 @@ export default function ProSubscription() {
             </Button>
 
             {/* Restaurer (iOS — obligatoire Apple guideline) */}
-            {isNative && (
+            {isIOS && (
               <button
                 onClick={restorePurchases}
                 disabled={restoring}
@@ -454,7 +455,7 @@ export default function ProSubscription() {
             {!isActive && subscription && (
               <button
                 onClick={handleSubscribe}
-                disabled={purchasing}
+                disabled={purchasing || billingLoading}
                 className="w-full text-center text-sm font-semibold text-primary hover:underline py-2"
               >
                 Renouveler mon abonnement →
@@ -462,7 +463,7 @@ export default function ProSubscription() {
             )}
 
             <p className="text-center text-xs text-muted-foreground">
-              {isNative
+              {isIOS
                 ? 'Paiement via Apple · Géré dans Réglages > Apple ID > Abonnements'
                 : 'Sans engagement · Résiliable à tout moment · Paiement sécurisé Stripe'
               }

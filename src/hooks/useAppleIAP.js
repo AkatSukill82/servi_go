@@ -18,13 +18,17 @@ const PRODUCT_IDS = {
   annual:  'servigo.pro.yearly',
 };
 
-// window.Capacitor est injecté par le bridge natif AVANT que le JS charge — toujours fiable.
-const isNative =
-  typeof window !== 'undefined' &&
-  !!(
-    window.Capacitor?.isNativePlatform?.() ||
-    window.Capacitor?.getPlatform?.() === 'ios'
-  );
+// Détection de plateforme via window.Capacitor (injecté par le bridge avant tout JS)
+const getPlatform = () => {
+  if (typeof window === 'undefined') return 'web';
+  const cap = window.Capacitor;
+  if (!cap) return 'web';
+  return cap.getPlatform?.() || (cap.isNativePlatform?.() ? 'ios' : 'web');
+};
+
+export const platform = getPlatform(); // 'ios' | 'android' | 'web'
+export const isIOS     = platform === 'ios';
+export const isAndroid = platform === 'android';
 
 export function useAppleIAP(user) {
   const [storeReady, setStoreReady] = useState(false);
@@ -52,9 +56,8 @@ export function useAppleIAP(user) {
           userEmail: userRef.current?.email,
         });
         verified = !!res.data?.success;
-      } catch (serverErr) {
+      } catch {
         // Si la fonction Base44 n'existe pas encore, on finalise quand même
-        console.warn('[IAP] Vérification serveur indisponible, finalisation locale :', serverErr?.message);
         verified = true;
       }
 
@@ -72,20 +75,16 @@ export function useAppleIAP(user) {
     }
   }, []);
 
-  // ─── Initialisation du store ───────────────────────────────────────────────
+  // ─── Initialisation du store (iOS uniquement) ──────────────────────────────
   useEffect(() => {
-    if (!isNative) return;
+    if (!isIOS) return;
 
     let initialized = false;
 
     const initStore = () => {
-      if (initialized) return;
-      if (!window.CdvPurchase) {
-        console.warn('[IAP] window.CdvPurchase non disponible au deviceready');
-        return;
-      }
-
+      if (initialized || !window.CdvPurchase) return;
       initialized = true;
+
       const { store, ProductType, Platform } = window.CdvPurchase;
 
       store.register([
@@ -109,36 +108,21 @@ export function useAppleIAP(user) {
           setStoreReady(true);
           store.update();
         })
-        .catch((err) => {
-          console.error('[IAP] Erreur initialisation store :', err);
-        });
+        .catch((err) => console.error('[IAP] Erreur init store :', err));
     };
 
-    // Essayer immédiatement si déjà disponible, sinon attendre deviceready
     if (window.CdvPurchase) {
       initStore();
     } else {
       document.addEventListener('deviceready', initStore, { once: true });
     }
 
-    return () => {
-      document.removeEventListener('deviceready', initStore);
-    };
+    return () => document.removeEventListener('deviceready', initStore);
   }, [verifyAndActivate]);
 
   // ─── Lancer un achat ───────────────────────────────────────────────────────
   const purchase = useCallback(async (plan = 'monthly') => {
-    if (!isNative) {
-      toast.error('Le paiement est disponible uniquement sur l\'application iOS.');
-      return;
-    }
-
-    if (!window.CdvPurchase) {
-      toast.error('Plugin de paiement non disponible. Relancez l\'application.');
-      return;
-    }
-
-    if (!storeReady) {
+    if (!storeReady || !window.CdvPurchase) {
       toast.error('Connexion à l\'App Store en cours. Réessayez dans quelques secondes.');
       return;
     }
@@ -147,7 +131,7 @@ export function useAppleIAP(user) {
     const product = products[productId];
 
     if (!product) {
-      toast.error('Produit non trouvé dans l\'App Store. Vérifiez votre connexion.');
+      toast.error('Produit non trouvé dans l\'App Store.');
       return;
     }
 
@@ -157,28 +141,22 @@ export function useAppleIAP(user) {
       if (!offer) throw new Error('Aucune offre disponible pour ce produit.');
       await window.CdvPurchase.store.order(offer);
     } catch (err) {
-      toast.error('Achat annulé ou erreur : ' + (err?.message || ''));
+      toast.error('Achat annulé : ' + (err?.message || ''));
       setPurchasing(false);
     }
   }, [storeReady, products]);
 
   // ─── Restaurer les achats ──────────────────────────────────────────────────
   const restorePurchases = useCallback(async () => {
-    if (!isNative) {
-      toast.info('Restauration disponible uniquement sur iOS.');
-      return;
-    }
-
     if (!window.CdvPurchase) {
       toast.error('Plugin de paiement non disponible.');
       return;
     }
-
     setRestoring(true);
     try {
       await window.CdvPurchase.store.restorePurchases();
       toast.success('Achats restaurés ✓');
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de la restauration.');
     } finally {
       setRestoring(false);
@@ -194,13 +172,14 @@ export function useAppleIAP(user) {
       id: product.id,
       title: product.title,
       description: product.description,
-      price: product.offers?.[0]?.pricingPhases?.[0]?.price || (plan === 'yearly' || plan === 'annual' ? '99,99 €' : '10,99 €'),
+      price: product.offers?.[0]?.pricingPhases?.[0]?.price
+        || (plan === 'yearly' || plan === 'annual' ? '99,99 €' : '10,99 €'),
     };
   }, [products]);
 
   return {
     storeReady,
-    isNative,
+    isNative: isIOS,
     purchasing,
     restoring,
     purchase,
