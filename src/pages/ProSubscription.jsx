@@ -82,11 +82,29 @@ export default function ProSubscription() {
 
   // ─── Handler principal d'abonnement ───────────────────────────────────────
   const handleSubscribe = async () => {
-    if (!isNative) {
-      toast.error('Le paiement est disponible uniquement sur l\'application iOS.');
+    if (isNative) {
+      await purchase(plan);
       return;
     }
-    await purchase(plan);
+    // Web → Stripe Checkout
+    setBillingLoading(true);
+    try {
+      const res = await base44.functions.invoke('createStripeCheckout', {
+        plan,
+        userEmail: user?.email,
+        successUrl: `${window.location.origin}/ProSubscription?success=true`,
+        cancelUrl: `${window.location.origin}/ProSubscription`,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.error(res.data?.error || 'Erreur lors de la création du paiement.');
+      }
+    } catch (err) {
+      toast.error('Erreur : ' + (err?.message || 'réessayez'));
+    } finally {
+      setBillingLoading(false);
+    }
   };
 
   const handleCancelSubscription = async () => {
@@ -143,13 +161,13 @@ export default function ProSubscription() {
 
   // ─── Bouton CTA label ──────────────────────────────────────────────────────
   const ctaLabel = () => {
-    if (purchasing) return 'Traitement en cours...';
+    if (purchasing || billingLoading) return 'Redirection...';
     if (isNative) {
       return plan === 'annual'
         ? `S'abonner ${yearlyPrice}/an`
         : `S'abonner ${monthlyPrice}/mois`;
     }
-    return `Payer ${plan === 'annual' ? yearlyPrice + '/an' : monthlyPrice + '/mois'}`;
+    return `Payer ${plan === 'annual' ? yearlyPrice + '/an' : monthlyPrice + '/mois'} par Stripe`;
   };
 
   // ─── Rendu ─────────────────────────────────────────────────────────────────
@@ -411,10 +429,10 @@ export default function ProSubscription() {
             {/* CTA principal */}
             <Button
               onClick={handleSubscribe}
-              disabled={purchasing || (isNative && !storeReady)}
+              disabled={purchasing || billingLoading || (isNative && !storeReady)}
               className="w-full h-14 rounded-2xl text-base font-bold"
             >
-              {purchasing
+              {(purchasing || billingLoading)
                 ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 : <CreditCard className="w-5 h-5 mr-2" />
               }
