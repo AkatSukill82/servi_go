@@ -1,27 +1,21 @@
 import { isNativeNow } from '@/lib/platform';
 
-let Haptics = null;
-
-function loadHaptics() {
-  if (Haptics !== null) return;
-  if (!isNativeNow()) { Haptics = false; return; }
-  import('@capacitor/haptics').then(m => { Haptics = m.Haptics; }).catch(() => { Haptics = false; });
+function triggerHaptic(style) {
+  if (!isNativeNow()) return;
+  try {
+    const cap = window.Capacitor;
+    if (!cap) return;
+    // Use Capacitor Plugins API if available
+    const Haptics = cap.Plugins?.Haptics;
+    if (!Haptics) return;
+    if (style === 'selection') {
+      Haptics.selectionChanged().catch(() => {});
+    } else {
+      Haptics.impact({ style: style || 'LIGHT' }).catch(() => {});
+    }
+  } catch (_) {}
 }
 
-export function hapticLight() {
-  loadHaptics();
-  if (!Haptics) return;
-  Haptics.impact({ style: 'LIGHT' }).catch(() => {});
-}
-
-export function hapticMedium() {
-  loadHaptics();
-  if (!Haptics) return;
-  Haptics.impact({ style: 'MEDIUM' }).catch(() => {});
-}
-
-export function hapticSelection() {
-  loadHaptics();
-  if (!Haptics) return;
-  Haptics.selectionChanged().catch(() => {});
-}
+export function hapticLight()     { triggerHaptic('LIGHT'); }
+export function hapticMedium()    { triggerHaptic('MEDIUM'); }
+export function hapticSelection() { triggerHaptic('selection'); }
