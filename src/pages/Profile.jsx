@@ -145,7 +145,7 @@ export default function Profile() {
 
           {/* Infos */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold truncate">{displayName}</h1>
+            <h1 className="text-2xl font-black tracking-tight text-foreground truncate">{displayName}</h1>
             <p className="text-xs text-muted-foreground mt-0.5 truncate">{user?.email}</p>
 
             <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -287,7 +287,7 @@ export default function Profile() {
               <Button
                 onClick={() => updateMutation.mutate(form)}
                 disabled={updateMutation.isPending}
-                className="w-full h-11 rounded-xl font-semibold bg-[#1D9E75] hover:bg-[#1D9E75]/90">
+                className="w-full h-11 rounded-xl font-semibold bg-primary hover:bg-primary/90">
                 
                     <Save className="w-4 h-4 mr-2" />
                     {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}

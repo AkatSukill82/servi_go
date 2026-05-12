@@ -67,12 +67,12 @@ function ProfileCompletion({ user }) {
     user?.eid_status === 'verified',
   ];
   const pct = Math.round((checks.filter(Boolean).length / checks.length) * 100);
-  const color = pct < 50 ? 'bg-red-500' : pct < 80 ? 'bg-yellow-500' : 'bg-[#1D9E75]';
+  const color = pct < 50 ? 'bg-red-500' : pct < 80 ? 'bg-yellow-500' : 'bg-primary';
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">Complétion du profil</span>
-        <span className={`text-xs font-bold ${pct < 50 ? 'text-red-500' : pct < 80 ? 'text-yellow-600' : 'text-[#1D9E75]'}`}>{pct}%</span>
+        <span className={`text-xs font-bold ${pct < 50 ? 'text-red-500' : pct < 80 ? 'text-yellow-600' : 'text-primary'}`}>{pct}%</span>
       </div>
       <div className="h-2 bg-muted rounded-full overflow-hidden">
         <motion.div
@@ -221,14 +221,14 @@ export default function ProProfile() {
               <AvatarImage src={form.photo_url || user?.photo_url} />
               <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">{initials}</AvatarFallback>
             </Avatar>
-            <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-[#534AB7] flex items-center justify-center cursor-pointer shadow-md">
+            <label className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary flex items-center justify-center cursor-pointer shadow-md">
               <Camera className="w-3.5 h-3.5 text-white" />
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold truncate">{displayName}</h1>
+            <h1 className="text-2xl font-black tracking-tight text-foreground truncate">{displayName}</h1>
             <p className="text-xs text-muted-foreground truncate">{user?.category_name || 'Professionnel ServiGo'}</p>
 
             {user?.rating && (
@@ -242,7 +242,7 @@ export default function ProProfile() {
 
             <div className="flex flex-wrap gap-1.5 mt-2">
               {isVerified ? (
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1" style={{ backgroundColor: '#FFF3EE', color: '#FF6B35', borderColor: '#FF6B35' }}>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1" style={{ backgroundColor: 'rgba(108,92,231,0.08)', color: '#6C5CE7', borderColor: 'rgba(108,92,231,0.3)' }}>
                   <ServiGoIcon size={10} /> Pro Vérifié ServiGo ✓
                 </span>
               ) : (
@@ -325,7 +325,7 @@ export default function ProProfile() {
             onClick={() => setActiveTab(key)}
             className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium border transition-colors min-h-[44px] ${
               activeTab === key
-                ? 'bg-[#534AB7] text-white border-[#534AB7] shadow-sm'
+                ? 'bg-primary text-white border-primary shadow-sm'
                 : 'bg-card text-muted-foreground border-border hover:bg-muted'
             }`}
           >
@@ -381,7 +381,7 @@ export default function ProProfile() {
                   <Input value={form.bce_number} onChange={e => setForm(f => ({ ...f, bce_number: e.target.value }))} disabled={!isEditing} placeholder="BE 0xxx.xxx.xxx" className="h-11 rounded-xl" />
                 </div>
                 {isEditing && (
-                  <Button onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending} className="w-full h-11 rounded-xl bg-[#1D9E75] hover:bg-[#1D9E75]/90">
+                  <Button onClick={() => updateMutation.mutate(form)} disabled={updateMutation.isPending} className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90">
                     <Save className="w-4 h-4 mr-2" />
                     {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
                   </Button>
@@ -438,11 +438,11 @@ export default function ProProfile() {
             {/* Statistiques rapides */}
             <div className="grid grid-cols-3 gap-2.5">
               <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-[#534AB7]">{completedMissions.length}</p>
+                <p className="text-2xl font-bold text-primary">{completedMissions.length}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Missions complétées</p>
               </div>
               <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-[#1D9E75]">{avgRating || '—'}</p>
+                <p className="text-2xl font-bold text-primary">{avgRating || '—'}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Note moyenne</p>
               </div>
               <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
@@ -452,7 +452,7 @@ export default function ProProfile() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2"><Briefcase className="w-4 h-4 text-[#534AB7]" />Mon métier</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary" />Mon métier</h3>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Catégorie de service</Label>
                 <Select value={form.category_name} onValueChange={val => setForm(f => ({ ...f, category_name: val }))}>
@@ -469,7 +469,7 @@ export default function ProProfile() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2"><Euro className="w-4 h-4 text-[#1D9E75]" />Mes tarifs</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2"><Euro className="w-4 h-4 text-primary" />Mes tarifs</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Prix de base (€)</Label>
@@ -487,7 +487,7 @@ export default function ProProfile() {
             <Button
               onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}
               disabled={updateMutation.isPending}
-              className="w-full h-12 rounded-xl bg-[#1D9E75] hover:bg-[#1D9E75]/90 font-semibold"
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold"
             >
               <Save className="w-4 h-4 mr-2" />
               {updateMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder les modifications'}

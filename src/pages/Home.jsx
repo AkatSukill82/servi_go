@@ -155,34 +155,31 @@ export default function Home() {
         <div className="pb-8">
 
           {/* ── Hero section ── */}
-          <div className="bg-white px-5 pt-5 pb-6">
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight leading-tight">
+          <div className="bg-background px-5 pt-5 pb-6">
+            <h1 className="text-3xl font-black text-foreground tracking-tight leading-tight">
               {firstName ? `${greeting},\n${firstName} 👋` : `${greeting} 👋`}
             </h1>
-            <p className="text-gray-400 text-sm mt-1">Que puis-je faire pour vous aujourd'hui ?</p>
+            <p className="text-muted-foreground text-sm mt-1">Que puis-je faire pour vous aujourd'hui ?</p>
 
-            {/* Search bar — Airbnb style */}
+            {/* Search bar */}
             <div className="mt-4 relative">
               <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-                style={{ color: '#9CA3AF', width: 18, height: 18 }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
+                style={{ width: 18, height: 18 }}
               />
               <input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Plombier, électricien, peintre…"
-                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-gray-900 text-sm font-medium focus:outline-none transition-shadow"
-                style={{
-                  background: '#F3F4F6',
-                  boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none',
-                }}
+                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-foreground text-sm font-medium focus:outline-none transition-shadow bg-muted"
+                style={{ boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none' }}
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center tap-scale"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center tap-scale"
                 >
-                  <X className="w-3.5 h-3.5 text-gray-600" />
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               )}
             </div>
@@ -226,15 +223,14 @@ export default function Home() {
               >
                 <button
                   onClick={() => setConfirmCancel(false)}
-                  className="flex-1 h-10 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 tap-scale"
+                  className="flex-1 h-11 rounded-xl border border-border text-sm font-semibold text-foreground tap-scale"
                 >
                   Conserver
                 </button>
                 <button
                   onClick={() => cancelMutation.mutate(unfinishedRequest.id)}
                   disabled={cancelMutation.isPending}
-                  className="flex-1 h-10 rounded-xl text-sm font-bold text-white tap-scale disabled:opacity-60"
-                  style={{ background: '#E17055' }}
+                  className="flex-1 h-11 rounded-xl text-sm font-bold text-white tap-scale disabled:opacity-60 bg-destructive"
                 >
                   {cancelMutation.isPending ? 'Annulation…' : 'Annuler la demande'}
                 </button>
@@ -245,7 +241,7 @@ export default function Home() {
           {/* ── Services ── */}
           <div className="mt-6 px-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-black text-gray-900">Nos services</h2>
+              <h2 className="text-xl font-black text-foreground">Nos services</h2>
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
@@ -265,8 +261,8 @@ export default function Home() {
                 <div className="w-16 h-16 rounded-2xl mb-3 flex items-center justify-center" style={{ background: `${BRAND}12` }}>
                   <Search className="w-8 h-8" style={{ color: BRAND }} strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-bold text-gray-900">Aucun service trouvé</p>
-                <p className="text-xs text-gray-400 mt-1">Essayez un autre terme</p>
+                <p className="text-sm font-bold text-foreground">Aucun service trouvé</p>
+                <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -286,7 +282,7 @@ export default function Home() {
           {nearbyPros.length > 0 && (
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4 px-4">
-                <h2 className="text-xl font-black text-gray-900">Top professionnels</h2>
+                <h2 className="text-xl font-black text-foreground">Top professionnels</h2>
                 <button
                   onClick={() => navigate('/Map')}
                   className="text-sm font-bold flex items-center gap-1"
@@ -315,7 +311,7 @@ export default function Home() {
           {recentReviews.length > 0 && (
             <div className="mt-8 px-4">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-black text-gray-900">Ce qu'ils disent</h2>
+                <h2 className="text-xl font-black text-foreground">Ce qu'ils disent</h2>
                 <button
                   onClick={() => navigate('/ProReviews')}
                   className="text-sm font-bold flex items-center gap-1"
@@ -342,8 +338,8 @@ export default function Home() {
                         {(review.customer_name || 'C')[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-900 truncate">{review.customer_name || 'Client'}</p>
-                        <p className="text-xs text-gray-400">{review.category_name}</p>
+                        <p className="text-sm font-bold text-foreground truncate">{review.customer_name || 'Client'}</p>
+                        <p className="text-xs text-muted-foreground">{review.category_name}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0 bg-amber-50 px-2 py-1 rounded-full">
                         <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
@@ -361,7 +357,7 @@ export default function Home() {
 
           {/* ── Trust strip — Airbnb style ── */}
           <div className="mt-8 mx-4 bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest text-center mb-4">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center mb-4">
               Pourquoi ServiGo
             </p>
             <div className="flex items-center justify-around gap-2">

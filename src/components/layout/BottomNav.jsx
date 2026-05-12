@@ -47,7 +47,7 @@ function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
         )}
         <Icon
           strokeWidth={isActive ? 2.2 : 1.6}
-          style={{ color: isActive ? BRAND : '#9CA3AF', width: 22, height: 22, position: 'relative' }}
+          style={{ color: isActive ? BRAND : 'hsl(var(--muted-foreground))', width: 22, height: 22, position: 'relative' }}
         />
         {/* Badge dot */}
         {badge > 0 && (
@@ -61,7 +61,7 @@ function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
       </div>
       <span
         className="text-[10px] font-semibold tracking-tight"
-        style={{ color: isActive ? BRAND : '#9CA3AF' }}
+        style={{ color: isActive ? BRAND : 'hsl(var(--muted-foreground))' }}
       >
         {label}
       </span>
@@ -115,7 +115,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="shrink-0 bg-white"
+      className="shrink-0 bg-background"
       style={{
         paddingBottom: 'env(safe-area-inset-bottom)',
         borderTop: '1px solid rgba(0,0,0,0.06)',

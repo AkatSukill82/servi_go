@@ -68,7 +68,7 @@ export default function Messages() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Rechercher une conversation…"
-              className="w-full h-10 pl-9 pr-8 rounded-lg bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#4F46E5]"
+              className="w-full h-10 pl-9 pr-8 rounded-lg bg-muted text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               style={{ fontSize: 16 }}
             />
             {search && (
@@ -86,8 +86,8 @@ export default function Messages() {
           </div>
         ) : chats.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-            <div className="w-20 h-20 rounded-full bg-[#4F46E5]/10 flex items-center justify-center mb-4">
-              <MessageCircle className="w-10 h-10 text-[#4F46E5]" strokeWidth={1.5} />
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <MessageCircle className="w-10 h-10 text-primary" strokeWidth={1.5} />
             </div>
             <p className="text-base font-semibold">Aucun message</p>
             <p className="text-sm text-muted-foreground mt-1 max-w-xs">
@@ -95,7 +95,7 @@ export default function Messages() {
             </p>
             <button
               onClick={() => navigate('/Home')}
-              className="mt-6 bg-[#4F46E5] text-white text-sm font-semibold px-6 py-3 rounded-pill tap-scale"
+              className="mt-6 bg-primary text-white text-sm font-semibold px-6 py-3 rounded-pill tap-scale"
             >
               Trouver un artisan
             </button>
@@ -122,11 +122,11 @@ export default function Messages() {
                 >
                   {/* Avatar */}
                   <div className="relative shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-[#4F46E5]/10 flex items-center justify-center text-sm font-bold text-[#4F46E5]">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
                       {initials}
                     </div>
                     {hasUnread && (
-                      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-[#4F46E5] rounded-full border-2 border-card" />
+                      <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-primary rounded-full border-2 border-card" />
                     )}
                   </div>
 
@@ -149,7 +149,7 @@ export default function Messages() {
 
                   {/* Unread badge */}
                   {hasUnread && (
-                    <span className="shrink-0 min-w-[20px] h-5 bg-[#4F46E5] text-white text-[11px] font-bold rounded-pill flex items-center justify-center px-1.5">
+                    <span className="shrink-0 min-w-[20px] h-5 bg-primary text-white text-[11px] font-bold rounded-pill flex items-center justify-center px-1.5">
                       {unread > 9 ? '9+' : unread}
                     </span>
                   )}

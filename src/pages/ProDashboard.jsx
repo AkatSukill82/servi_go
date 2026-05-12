@@ -264,7 +264,7 @@ export default function ProDashboard() {
   const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
 
   return (
-    <div className="min-h-full bg-[#F7F7F7]">
+    <div className="min-h-full bg-background">
       <TopBar />
 
       {/* ── Hero / Stats card — Uber Driver style ── */}
@@ -362,7 +362,7 @@ export default function ProDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-2 bg-gray-100 p-1 rounded-2xl">
+        <div className="flex gap-2 bg-muted p-1 rounded-2xl">
           {[['missions', 'Missions', incomingRequests.length], ['stats', 'Statistiques', 0]].map(([key, label, count]) => (
             <button
               key={key}
@@ -409,7 +409,7 @@ export default function ProDashboard() {
                   {incomingRequests.slice(0, 2).map((req) => (
                     <div key={req.id} className="bg-white rounded-2xl p-4">
                       <p className="text-sm font-semibold">{req.category_name}</p>
-                      <p className="text-xs text-gray-400 mt-1">{req.customer_address || 'Adresse non précisée'}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{req.customer_address || 'Adresse non précisée'}</p>
                     </div>
                   ))}
                 </div>
@@ -420,7 +420,7 @@ export default function ProDashboard() {
             {hasActiveSubscription && (
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-black text-gray-900">
+                  <h2 className="text-base font-black text-foreground">
                     Demandes disponibles
                     {incomingRequests.length > 0 && (
                       <span className="ml-2 text-xs font-bold rounded-full px-2 py-0.5 text-white"
@@ -432,16 +432,16 @@ export default function ProDashboard() {
                   {incomingRequests.length > 0 && (
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-xs text-gray-400 font-medium">En direct</span>
+                      <span className="text-xs text-muted-foreground font-medium">En direct</span>
                     </div>
                   )}
                 </div>
 
                 {incomingRequests.length === 0 ? (
                   <div className="bg-white rounded-2xl p-6 text-center" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-                    <Clock className="w-8 h-8 text-gray-300 mx-auto mb-2" strokeWidth={1.5} />
-                    <p className="text-sm font-bold text-gray-900">Aucune demande pour l'instant</p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <Clock className="w-8 h-8 text-border mx-auto mb-2" strokeWidth={1.5} />
+                    <p className="text-sm font-bold text-foreground">Aucune demande pour l'instant</p>
+                    <p className="text-xs text-muted-foreground mt-1">
                       Les nouvelles missions de {proCategory || 'votre métier'} apparaîtront ici
                     </p>
                   </div>
@@ -466,7 +466,7 @@ export default function ProDashboard() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-bold text-sm text-gray-900">{req.category_name}</p>
+                                <p className="font-bold text-sm text-foreground">{req.category_name}</p>
                                 {isAssigned && (
                                   <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">
                                     Pour vous
@@ -478,12 +478,12 @@ export default function ProDashboard() {
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                              <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                                 <MapPin className="w-3 h-3 shrink-0" />
                                 <span className="truncate">{req.customer_address || 'Adresse non précisée'}</span>
                               </p>
                               {req.scheduled_date && (
-                                <p className="text-xs text-gray-400 mt-0.5">
+                                <p className="text-xs text-muted-foreground mt-0.5">
                                   📅 {req.scheduled_date}{req.scheduled_time ? ` · ${req.scheduled_time}` : ''}
                                 </p>
                               )}
@@ -495,11 +495,11 @@ export default function ProDashboard() {
                             </div>
                           </div>
                           {req.answers?.length > 0 && (
-                            <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-1">
+                            <div className="bg-muted/50 rounded-xl p-3 mb-3 space-y-1">
                               {req.answers.slice(0, 2).map((a, idx) => (
                                 <p key={idx} className="text-xs">
-                                  <span className="text-gray-400">{a.question} : </span>
-                                  <span className="font-semibold text-gray-700">{a.answer}</span>
+                                  <span className="text-muted-foreground">{a.question} : </span>
+                                  <span className="font-semibold text-foreground">{a.answer}</span>
                                 </p>
                               ))}
                             </div>
@@ -524,22 +524,22 @@ export default function ProDashboard() {
             {/* Active missions */}
             {hasActiveSubscription && activeJobs.length > 0 && (
               <div>
-                <h2 className="text-base font-black text-gray-900 mb-3">Missions en cours</h2>
+                <h2 className="text-base font-black text-foreground mb-3">Missions en cours</h2>
                 <div className="space-y-3">
                   {activeJobs.map(job => (
                     <div key={job.id} className="bg-white rounded-2xl p-4 space-y-3"
                       style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-sm font-black text-gray-600">
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-black text-muted-foreground">
                           {(job.customer_first_name || job.customer_name || 'C')[0]}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm text-gray-900">
+                          <p className="font-bold text-sm text-foreground">
                             {job.customer_first_name
                               ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.`
                               : (job.customer_name || 'Client')}
                           </p>
-                          <p className="text-xs text-gray-400">{job.category_name}</p>
+                          <p className="text-xs text-muted-foreground">{job.category_name}</p>
                         </div>
                       </div>
                       <MissionProgress status={job.status} compact />
@@ -576,27 +576,27 @@ export default function ProDashboard() {
             {/* Recent completed */}
             {hasActiveSubscription && completedJobs.length > 0 && (
               <div>
-                <h2 className="text-base font-black text-gray-900 mb-3">Missions récentes</h2>
+                <h2 className="text-base font-black text-foreground mb-3">Missions récentes</h2>
                 <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                   {completedJobs.slice(0, 5).map((job, i) => (
                     <button
                       key={job.id}
                       onClick={() => navigate(`/Chat?requestId=${job.id}`)}
-                      className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                      className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-muted/50 transition-colors border-b border-gray-50 last:border-0"
                     >
-                      <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0 text-sm font-black text-gray-500">
+                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-black text-muted-foreground">
                         {(job.customer_first_name || job.customer_name || 'C')[0]}
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+                        <p className="text-sm font-semibold text-foreground truncate">
                           {job.customer_first_name
                             ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.`
                             : (job.customer_name || 'Client')}
                         </p>
-                        <p className="text-xs text-gray-400">{job.category_name}</p>
+                        <p className="text-xs text-muted-foreground">{job.category_name}</p>
                       </div>
                       <span className="text-[11px] font-bold text-emerald-600 shrink-0">Terminé</span>
-                      <ChevronRight className="w-4 h-4 text-gray-300 shrink-0" />
+                      <ChevronRight className="w-4 h-4 text-border shrink-0" />
                     </button>
                   ))}
                 </div>
@@ -606,13 +606,13 @@ export default function ProDashboard() {
             {/* Reviews */}
             {hasActiveSubscription && myReviews.length > 0 && (
               <div>
-                <h2 className="text-base font-black text-gray-900 mb-3">Avis clients</h2>
+                <h2 className="text-base font-black text-foreground mb-3">Avis clients</h2>
                 <div className="space-y-3">
                   {myReviews.map(review => (
                     <div key={review.id} className="bg-white rounded-2xl p-4"
                       style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-bold text-gray-900">{review.customer_name || 'Client'}</p>
+                        <p className="text-sm font-bold text-foreground">{review.customer_name || 'Client'}</p>
                         <div className="flex gap-0.5">
                           {[1,2,3,4,5].map(s => (
                             <Star key={s} style={{ width: 12, height: 12 }}
@@ -621,7 +621,7 @@ export default function ProDashboard() {
                         </div>
                       </div>
                       {review.comment && (
-                        <p className="text-xs text-gray-500 leading-relaxed">"{review.comment}"</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">"{review.comment}"</p>
                       )}
                     </div>
                   ))}
@@ -642,7 +642,7 @@ export default function ProDashboard() {
             <div className="flex gap-1 justify-center">
               {[1,2,3,4,5].map(s => (
                 <button key={s} onClick={() => setProRating(s)} className="p-1">
-                  <Star className={`w-8 h-8 transition-colors ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+                  <Star className={`w-8 h-8 transition-colors ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-border'}`} />
                 </button>
               ))}
             </div>

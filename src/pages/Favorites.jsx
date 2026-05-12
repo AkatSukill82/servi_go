@@ -51,14 +51,13 @@ function FavoriteCard({ fav, onRemove }) {
 
       <div className="flex gap-2 pt-1">
         <button
-          className="flex-1 h-9 rounded-xl text-xs font-medium border border-border bg-transparent text-foreground tap-scale transition-colors hover:bg-muted/50"
+          className="flex-1 h-11 rounded-xl text-xs font-medium border border-border bg-transparent text-foreground tap-scale transition-colors hover:bg-muted/50"
           onClick={() => navigate(`/ProPublicProfile?proId=${fav.professional_id}`)}
         >
           Voir profil
         </button>
         <button
-          className="flex-1 h-9 rounded-xl text-xs font-semibold text-white tap-scale"
-          style={{ background: '#4F46E5' }}
+          className="flex-1 h-11 rounded-xl text-xs font-semibold text-white tap-scale bg-primary"
           onClick={() => navigate(`/ServiceRequest?category=${encodeURIComponent(fav.professional_category || '')}&priorityProId=${fav.professional_id}`)}
         >
           Demander
@@ -105,8 +104,7 @@ export default function Favorites() {
         </p>
         <button
           onClick={() => navigate('/Map')}
-          className="rounded-xl h-11 px-6 text-sm font-semibold text-white tap-scale"
-          style={{ background: '#4F46E5' }}
+          className="rounded-xl h-11 px-6 text-sm font-semibold text-white tap-scale bg-primary"
         >
           Explorer la carte
         </button>

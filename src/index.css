@@ -10,22 +10,24 @@
     /* ── ServiGo Design Tokens ── */
     --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
 
-    /* Brand */
-    --color-primary:   #5B4FCF;
-    --color-accent:    #5B4FCF;
-    --color-accent-hover: #4A3FBF;
-    --color-success:   #1A7A5C;
-    --color-warning:   #B45309;
-    --color-danger:    #C0392B;
+    /* Brand — source unique : src/lib/theme.js */
+    --color-primary:      #6C5CE7;
+    --color-primary-hover:#5A4BD4;
+    --color-success:      #00B894;
+    --color-success-bg:   rgba(0,184,148,0.10);
+    --color-warning:      #F59E0B;
+    --color-warning-bg:   rgba(245,158,11,0.10);
+    --color-danger:       #E17055;
+    --color-danger-bg:    rgba(225,112,85,0.10);
 
-    /* Neutrals – Light (neutral grey, no violet tint) */
-    --color-bg:        #F8F9FA;
-    --color-bg-soft:   #F1F3F5;
-    --color-border:    #DEE2E6;
-    --color-text:      #1A1A2E;
-    --color-text-muted:#52525B;
+    /* Neutrals */
+    --color-bg:        #FFFFFF;
+    --color-bg-soft:   #F7F8FA;
+    --color-border:    #E8EAED;
+    --color-text:      #111827;
+    --color-text-muted:#6B7280;
     --color-surface:   #FFFFFF;
-    --color-chip-bg:   #EEEFF1;
+    --color-chip-bg:   #F3F4F6;
 
     /* Shadows */
     --shadow-card:     0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07);
@@ -38,27 +40,27 @@
     --radius-xl:  24px;
     --radius-pill: 9999px;
 
-    /* Shadcn tokens – Light (neutral palette, WCAG AA compliant) */
-    --background:          0 0% 97%;
-    --foreground:          240 14% 12%;
+    /* Shadcn tokens — alignés sur BRAND #6C5CE7 */
+    --background:          0 0% 100%;
+    --foreground:          220 20% 10%;
     --card:                0 0% 100%;
-    --card-foreground:     240 14% 12%;
+    --card-foreground:     220 20% 10%;
     --popover:             0 0% 100%;
-    --popover-foreground:  240 14% 12%;
-    --primary:             250 56% 56%;
+    --popover-foreground:  220 20% 10%;
+    --primary:             247 74% 63%;
     --primary-foreground:  0 0% 100%;
-    --secondary:           220 14% 95%;
-    --secondary-foreground:240 14% 12%;
-    --muted:               220 14% 94%;
-    --muted-foreground:    220 9% 38%;
-    --accent:              250 56% 56%;
+    --secondary:           220 14% 96%;
+    --secondary-foreground:220 20% 10%;
+    --muted:               220 14% 95%;
+    --muted-foreground:    220 9% 42%;
+    --accent:              247 74% 63%;
     --accent-foreground:   0 0% 100%;
     --destructive:         4 76% 46%;
     --destructive-foreground: 0 0% 100%;
-    --border:              220 13% 88%;
-    --input:               220 13% 88%;
-    --ring:                250 56% 56%;
-    --radius:              0.875rem;
+    --border:              220 13% 91%;
+    --input:               220 13% 91%;
+    --ring:                247 74% 63%;
+    --radius:              0.75rem;
 
     /* Sidebar */
     --sidebar-background: 0 0% 99%;
