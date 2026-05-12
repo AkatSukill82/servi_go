@@ -755,16 +755,19 @@ function AdminDocumentsTab() {
 // ─── Main ────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
-  const { data: pendingReports = [] } = useQuery({
-    queryKey: ['adminPendingReports'],
-    queryFn: () => base44.entities.Report.filter({ status: 'pending' }, '-created_date', 200),
-    enabled: true,
-    staleTime: 30000,
-  });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+  });
+
+  const isAdmin = currentUser?.role === 'admin';
+
+  const { data: pendingReports = [] } = useQuery({
+    queryKey: ['adminPendingReports'],
+    queryFn: () => base44.entities.Report.filter({ status: 'pending' }, '-created_date', 200),
+    enabled: isAdmin,
+    staleTime: 30000,
   });
 
   // Auto-réassignation des missions bloquées au chargement admin
@@ -834,13 +837,13 @@ export default function AdminDashboard() {
   const { data: disputes = [] } = useQuery({
     queryKey: ['adminDisputes'],
     queryFn: () => base44.entities.Dispute.list('-created_date', 100),
-    enabled: currentUser?.role === 'admin',
+    enabled: isAdmin,
   });
 
   const { data: newTickets = [] } = useQuery({
     queryKey: ['adminNewTicketsCount'],
     queryFn: () => base44.entities.SupportTicket.filter({ status: 'new' }, '-created_date', 200),
-    enabled: currentUser?.role === 'admin',
+    enabled: isAdmin,
     staleTime: 30000,
   });
 

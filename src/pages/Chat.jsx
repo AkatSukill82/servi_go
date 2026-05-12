@@ -173,6 +173,11 @@ export default function Chat() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
+  // Vérification d'accès : seuls le client, le pro et les admins peuvent voir cette conversation
+  const hasAccess = !request || !user || user.role === 'admin' ||
+    user.email === request.customer_email ||
+    user.email === request.professional_email;
+
   const isFinished = ['completed', 'cancelled', 'disputed'].includes(request?.status);
   const isCustomer = user?.user_type === 'particulier';
   const isPro = user?.user_type === 'professionnel';
@@ -206,6 +211,15 @@ export default function Chat() {
         <Send className="w-7 h-7 text-gray-300" />
       </div>
       <p className="text-gray-600 font-semibold">Aucune conversation sélectionnée</p>
+      <button onClick={() => navigate(-1)} className="text-[#6C5CE7] font-bold text-sm">← Retour</button>
+    </div>
+  );
+
+  if (request && user && !hasAccess) return (
+    <div className="flex flex-col items-center justify-center h-screen bg-white px-6 text-center gap-5">
+      <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center text-3xl">🔒</div>
+      <p className="text-gray-800 font-semibold">Accès non autorisé</p>
+      <p className="text-sm text-gray-500 max-w-xs">Vous n'avez pas accès à cette conversation.</p>
       <button onClick={() => navigate(-1)} className="text-[#6C5CE7] font-bold text-sm">← Retour</button>
     </div>
   );

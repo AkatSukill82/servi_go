@@ -49,20 +49,7 @@ export default function Profile() {
   const [receiptsSubTab, setReceiptsSubTab] = useState('missions');
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ first_name: '', last_name: '', phone: '', address: '', photo_url: '' });
-  const [showAdminModal, setShowAdminModal] = useState(false);
-  const [adminPassword, setAdminPassword] = useState('');
-  const [adminError, setAdminError] = useState(false);
 
-  const handleAdminAccess = () => {
-    if (adminPassword === 'servigo2026') {
-      setShowAdminModal(false);
-      setAdminPassword('');
-      setAdminError(false);
-      navigate('/AdminDashboard');
-    } else {
-      setAdminError(true);
-    }
-  };
 
   const { data: user, isLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -84,10 +71,13 @@ export default function Profile() {
     }
   }, [user]);
 
+  const CUSTOMER_SAFE_FIELDS = new Set(['first_name', 'last_name', 'phone', 'address', 'photo_url']);
+
   const updateMutation = useMutation({
     mutationFn: (data) => {
-      const fullName = [data.first_name, data.last_name].filter(Boolean).join(' ');
-      return base44.auth.updateMe({ ...data, ...(fullName ? { full_name: fullName } : {}) });
+      const safe = Object.fromEntries(Object.entries(data).filter(([k]) => CUSTOMER_SAFE_FIELDS.has(k)));
+      const fullName = [safe.first_name, safe.last_name].filter(Boolean).join(' ');
+      return base44.auth.updateMe({ ...safe, ...(fullName ? { full_name: fullName } : {}) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -338,9 +328,9 @@ export default function Profile() {
                       {user?.role === 'admin' &&
           <Button
             variant="outline"
-            onClick={() => setShowAdminModal(true)}
+            onClick={() => navigate('/AdminDashboard')}
             className="w-full h-12 rounded-xl text-sm border-purple-200 text-purple-700 hover:bg-purple-50">
-            
+
                 <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard Admin
               </Button>
           }
@@ -358,36 +348,6 @@ export default function Profile() {
         }
         {tab === 'infos' && <PageFooter />}
 
-        {/* Admin password modal */}
-        {showAdminModal &&
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-6" onClick={(e) => e.target === e.currentTarget && setShowAdminModal(false)}>
-            <div className="bg-card rounded-2xl p-6 w-full max-w-sm shadow-xl space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                  <LayoutDashboard className="w-5 h-5 text-purple-700" />
-                </div>
-                <div>
-                  <p className="font-bold text-sm">Accès Admin</p>
-                  <p className="text-xs text-muted-foreground">Entrez le mot de passe admin</p>
-                </div>
-              </div>
-              <Input
-              type="password"
-              placeholder="Mot de passe"
-              value={adminPassword}
-              onChange={(e) => {setAdminPassword(e.target.value);setAdminError(false);}}
-              onKeyDown={(e) => e.key === 'Enter' && handleAdminAccess()}
-              className={`h-11 rounded-xl ${adminError ? 'border-red-400 focus-visible:ring-red-400' : ''}`}
-              autoFocus />
-            
-              {adminError && <p className="text-xs text-red-500 -mt-2">Mot de passe incorrect</p>}
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => {setShowAdminModal(false);setAdminPassword('');setAdminError(false);}} className="flex-1 rounded-xl h-11">Annuler</Button>
-                <Button onClick={handleAdminAccess} className="flex-1 rounded-xl h-11 bg-purple-600 hover:bg-purple-700">Accéder</Button>
-              </div>
-            </div>
-          </div>
-        }
 
         {/* ─── ONGLET REÇUS ─── */}
         {tab === 'recus' &&

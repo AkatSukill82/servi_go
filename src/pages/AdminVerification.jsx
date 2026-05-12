@@ -66,7 +66,7 @@ function ProCard({ pro, onApprove, onReject, isPending }) {
           </div>
           {pro.verification_status !== 'verified' && (
             <div className="flex gap-2 pt-1">
-              <Button onClick={() => onApprove(pro.id)} disabled={isPending} className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-sm"><CheckCircle className="w-4 h-4 mr-1" />Approuver</Button>
+              <Button onClick={() => { if (window.confirm(`Approuver ${pro.full_name} ? Cette action active le badge Pro Vérifié.`)) onApprove(pro.id); }} disabled={isPending} className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-sm"><CheckCircle className="w-4 h-4 mr-1" />Approuver</Button>
               {pro.verification_status !== 'rejected' && (
                 <Button onClick={() => onReject(pro.id)} disabled={isPending} variant="outline" className="flex-1 h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-50 text-sm"><XCircle className="w-4 h-4 mr-1" />Refuser</Button>
               )}

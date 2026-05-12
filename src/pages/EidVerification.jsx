@@ -113,8 +113,8 @@ export default function EidVerification() {
 
   const isPro = user?.user_type === 'professionnel';
 
-  // Use aiResult (fresh) if available, else fall back to existingVerif from DB
-  const activeVerif = aiResult ? { ...existingVerif, ...aiResult } : existingVerif;
+  // Le statut de la DB (post-refetch) a toujours priorité — aiResult enrichit les détails par document
+  const activeVerif = aiResult ? { ...aiResult, ...existingVerif } : existingVerif;
 
   // Build map field → AI doc result
   const aiResults = {};
