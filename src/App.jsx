@@ -8,6 +8,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { isNative } from '@/lib/platform';
 
 // Pages
 import SelectUserType from './pages/SelectUserType';
@@ -62,23 +63,26 @@ const RootRedirect = () => {
   return <CreateAccount />;
 };
 
+const PUBLIC_PATHS = [
+  '/se-connecter', '/creer-compte', '/cgu', '/cgv',
+  '/confidentialite', '/mentions-legales', '/cookies',
+  '/Register', '/CGU', '/PrivacyPolicy', '/Support',
+];
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
 
-  const isCapacitor = typeof window !== 'undefined' && window.Capacitor !== undefined;
-  const publicPaths = ['/se-connecter', '/creer-compte', '/cgu', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/Register', '/CGU', '/PrivacyPolicy', '/Support'];
   const currentPath = window.location.pathname;
-  const isPublicPath = publicPaths.some(p => currentPath.startsWith(p));
+  const isPublicPath = PUBLIC_PATHS.some(p => currentPath.startsWith(p));
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
-    return null;
-  }
+  if (isLoadingPublicSettings || isLoadingAuth) return null;
 
   if (authError?.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
   }
 
-  if (isCapacitor && !isAuthenticated && !isPublicPath) {
+  // Sur mobile natif, rediriger vers login si non authentifié (sauf pages publiques)
+  if (isNative && !isAuthenticated && !isPublicPath) {
     return <Navigate to="/se-connecter" replace />;
   }
 

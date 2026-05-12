@@ -11,24 +11,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { isIOS, isAndroid, platform } from '@/lib/platform';
+
+export { isIOS, isAndroid, platform };
 
 const PRODUCT_IDS = {
   monthly: 'servigo.pro.monthly',
   yearly:  'servigo.pro.yearly',
   annual:  'servigo.pro.yearly',
 };
-
-// Détection de plateforme via window.Capacitor (injecté par le bridge avant tout JS)
-const getPlatform = () => {
-  if (typeof window === 'undefined') return 'web';
-  const cap = window.Capacitor;
-  if (!cap) return 'web';
-  return cap.getPlatform?.() || (cap.isNativePlatform?.() ? 'ios' : 'web');
-};
-
-export const platform = getPlatform(); // 'ios' | 'android' | 'web'
-export const isIOS     = platform === 'ios';
-export const isAndroid = platform === 'android';
 
 export function useAppleIAP(user) {
   const [storeReady, setStoreReady] = useState(false);

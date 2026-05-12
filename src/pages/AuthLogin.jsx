@@ -7,8 +7,9 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { isNative } from '@/lib/platform';
 
-const isCapacitor = typeof window !== 'undefined' && window.Capacitor !== undefined;
+const isCapacitor = isNative;
 
 export default function AuthLogin() {
   const navigate = useNavigate();

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import {
   CheckCircle, CreditCard, Calendar, Shield, Zap,
-  AlertCircle, RefreshCw, Receipt, Loader2, RotateCcw,
+  RefreshCw, Receipt, Loader2, RotateCcw,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -43,7 +43,7 @@ export default function ProSubscription() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: subscription, refetch } = useQuery({
+  const { data: subscription } = useQuery({
     queryKey: ['proSubscription', user?.email],
     queryFn: () =>
       base44.entities.ProSubscription

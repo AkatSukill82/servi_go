@@ -1,11 +1,11 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
+import { isNative } from '@/lib/platform';
 
 const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
-// En Capacitor (iOS natif), il n'y a pas de proxy — on pointe directement vers l'API Base44
-const isCapacitor = typeof window !== 'undefined' && window.Capacitor !== undefined;
-const serverUrl = isCapacitor ? 'https://base44.app' : '';
+// En natif (iOS/Android), pas de proxy Vite — on pointe directement vers Base44
+const serverUrl = isNative ? 'https://base44.app' : '';
 
 export const base44 = createClient({
   appId,
