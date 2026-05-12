@@ -14,6 +14,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import MissionProgress from '@/components/mission/MissionProgress';
 import TopBar from '@/components/layout/TopBar';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
+import { BRAND } from '@/lib/theme';
 
 const getTimeSinceCreated = (createdDate) => {
   if (!createdDate) return 0;
@@ -34,7 +35,7 @@ export default function ProDashboard() {
 
   useEffect(() => { requestPermission(); }, []);
 
-  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me(), staleTime: 60000 });
   const proCategory = user?.category_name;
 
   const firstName = getFirstName(user);
@@ -263,6 +264,14 @@ export default function ProDashboard() {
       <TopBar />
 
       <div className="px-4 sm:px-6 pt-4 pb-4 space-y-5">
+
+      {/* Greeting */}
+      <div>
+        <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-tight">
+          {firstName ? `${greeting}, ${firstName} 👋` : `${greeting} 👋`}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-0.5">{proCategory || 'Professionnel'}</p>
+      </div>
 
       {/* Upcoming mission reminder */}
       {upcomingJob && (

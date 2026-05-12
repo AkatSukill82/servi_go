@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bell, MapPin, ShieldCheck } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { BRAND } from '@/lib/theme';
 
-const BRAND = '#6C5CE7';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -18,7 +18,7 @@ function timeAgo(dateStr) {
   return `il y a ${Math.floor(h / 24)}j`;
 }
 
-export default function TopBar({ title, subtitle }) {
+export default function TopBar() {
   const [notifOpen, setNotifOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();

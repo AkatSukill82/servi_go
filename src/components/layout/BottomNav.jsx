@@ -2,12 +2,12 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { BRAND } from '@/lib/theme';
 import {
   Home, ClipboardList, Heart, MessageCircle, User,
   LayoutDashboard, CalendarDays,
 } from 'lucide-react';
 
-const BRAND = '#6C5CE7';
 
 const MISSION_TYPES = [
   'new_mission', 'mission_accepted', 'mission_refused',
@@ -74,9 +74,7 @@ export default function BottomNav() {
 
   const isPro = user?.user_type === 'professionnel';
   const tabs   = isPro ? PRO_TABS : CUSTOMER_TABS;
-  const notifsKey = isPro
-    ? ['proUnreadNotifs', user?.email]
-    : ['unreadNotifs',    user?.email];
+  const notifsKey = ['unreadNotifs', user?.email];
 
   const { data: notifs = [] } = useQuery({
     queryKey: notifsKey,

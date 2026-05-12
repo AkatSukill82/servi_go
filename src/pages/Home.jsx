@@ -12,8 +12,8 @@ import TopBar from '@/components/layout/TopBar.jsx';
 import HomeSkeleton from '@/components/home/HomeSkeleton';
 import NearbyProCard from '@/components/home/NearbyProCard';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
+import { BRAND } from '@/lib/theme';
 
-const BRAND = '#6C5CE7';
 
 export default function Home() {
   const [viewingPro, setViewingPro] = useState(null);
@@ -272,7 +272,7 @@ export default function Home() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-black text-gray-900 tracking-tight">Top professionnels</h2>
-                <button className="text-sm font-bold flex items-center gap-1" style={{ color: BRAND }}>
+                <button onClick={() => navigate('/Map')} className="text-sm font-bold flex items-center gap-1" style={{ color: BRAND }}>
                   Voir tout <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>

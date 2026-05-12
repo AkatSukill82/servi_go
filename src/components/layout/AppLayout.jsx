@@ -7,7 +7,6 @@ import { isNative } from '@/lib/platform';
 
 
 import BottomNav from './BottomNav.jsx';
-import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import { useTheme } from '@/lib/ThemeContext';
 
 // Lazy load — chaque page chargée uniquement à la première visite
