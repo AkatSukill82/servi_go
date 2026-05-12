@@ -36,6 +36,8 @@ import AuthLogin from './pages/AuthLogin';
 import CreateAccount from './pages/CreateAccount';
 import AdminTestEmail from './pages/AdminTestEmail';
 import ProReviews from './pages/ProReviews';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -137,6 +139,8 @@ const AuthenticatedApp = () => {
       <Route path="/TrackingMap" element={<TrackingMap />} />
 
       <Route path="/ProReviews" element={<ProReviews />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </ErrorBoundary>

@@ -13,6 +13,10 @@ export default function PageFooter() {
         <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Confidentialité</a>
         {" · "}
         <a href="/cookies" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">Cookies</a>
+        {" · "}
+        <a href="/about" className="underline hover:text-foreground">À propos</a>
+        {" · "}
+        <a href="/contact" className="underline hover:text-foreground">Contact</a>
       </div>
       <div>ServiGo — SRL en cours de constitution — BCE : en cours · © 2026</div>
     </div>
