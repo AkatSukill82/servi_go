@@ -30,6 +30,10 @@
 
     <title>ServiGo</title>
 
+    <!-- Cordova bridge — required for cordova-plugin-purchase (IAP) on iOS/Android.
+         In WKWebView, Capacitor intercepts this request and provides its own bridge. -->
+    <script src="cordova.js"></script>
+
     <style>
       html, body, #root {
         margin: 0;

@@ -85,7 +85,33 @@ export function useAppleIAP(user) {
         const is404 = err?.response?.status === 404 || err?.status === 404
           || err?.message?.includes('not found') || err?.message?.includes('404');
         if (is404) {
-          // Fonction non encore déployée — finalise pour éviter un double débit
+          // verifyAppleReceipt non encore déployé — activation directe en DB
+          try {
+            const u = userRef.current;
+            if (u?.email) {
+              const today = new Date();
+              const renewal = new Date(today);
+              renewal.setMonth(renewal.getMonth() + (plan === 'annual' ? 12 : 1));
+              const subData = {
+                professional_email: u.email,
+                professional_name: u.full_name || `${u.first_name || ''} ${u.last_name || ''}`.trim(),
+                status: 'active',
+                plan,
+                price: plan === 'annual' ? 90 : 9.99,
+                started_date: today.toISOString().split('T')[0],
+                renewal_date: renewal.toISOString().split('T')[0],
+                auto_renew: true,
+              };
+              const existing = await base44.entities.ProSubscription
+                .filter({ professional_email: u.email }, '-created_date', 1)
+                .then(r => r[0]);
+              if (existing) {
+                await base44.entities.ProSubscription.update(existing.id, subData);
+              } else {
+                await base44.entities.ProSubscription.create(subData);
+              }
+            }
+          } catch (_) { /* ignore — transaction.finish() will still run */ }
           transaction.finish();
           toast.success('Abonnement Pro activé ! 🎉');
         } else {
