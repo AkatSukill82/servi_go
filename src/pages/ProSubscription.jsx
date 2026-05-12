@@ -149,11 +149,11 @@ export default function ProSubscription() {
   // ─── Abonnement actif ──────────────────────────────────────────────────────
   if (isActive && subscription) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="flex items-center gap-3 px-5 pt-6 pb-4 bg-white border-b border-gray-100">
+      <div className="min-h-screen bg-background">
+        <div className="flex items-center gap-3 px-5 pt-6 pb-4 bg-background border-b border-border">
           <BackButton fallback="/ProDashboard" />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Mon abonnement</h1>
+            <h1 className="text-2xl font-black tracking-tight text-foreground">Mon abonnement</h1>
             <p className="text-xs text-muted-foreground">ServiGo Pro</p>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default function ProSubscription() {
           </div>
 
           {/* Renouvellement auto */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <div className="bg-card rounded-2xl border border-border p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `${BRAND}12` }}>
@@ -249,14 +249,14 @@ export default function ProSubscription() {
 
           {/* Historique */}
           {(historyLoading || paymentHistory.length > 0) && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-5">
+            <div className="bg-card rounded-2xl border border-border p-5">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <Receipt className="w-4 h-4 text-muted-foreground" /> Historique des paiements
               </h3>
               {historyLoading ? (
                 <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-border">
                   {paymentHistory.map((ph) => (
                     <div key={ph.id} className="flex items-center justify-between py-2.5">
                       <div>
@@ -269,7 +269,7 @@ export default function ProSubscription() {
                         ph.status === 'paid'     ? 'bg-emerald-50 text-emerald-700' :
                         ph.status === 'failed'   ? 'bg-red-50 text-red-600'       :
                         ph.status === 'refunded' ? 'bg-orange-50 text-orange-600' :
-                        'bg-gray-50 text-gray-500'
+                        'bg-muted text-muted-foreground'
                       }`}>
                         {ph.status === 'paid' ? 'Payé' : ph.status === 'failed' ? 'Échoué' : ph.status === 'refunded' ? 'Remboursé' : ph.status}
                       </span>
@@ -330,7 +330,7 @@ export default function ProSubscription() {
 
   // ─── Page d'abonnement (non abonné) ───────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       {/* Header gradient */}
       <div className="relative px-5 pt-12 pb-10 overflow-hidden"
         style={{ background: `linear-gradient(160deg, #1a0533 0%, ${BRAND} 60%, #a78bfa 100%)` }}>
@@ -371,9 +371,9 @@ export default function ProSubscription() {
       <div className="px-4 -mt-4 pb-10 space-y-5">
 
         {/* Plan selector */}
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-card rounded-3xl shadow-lg border border-border overflow-hidden">
           {/* Toggle mensuel / annuel */}
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-border">
             {[
               { key: 'monthly', label: 'Mensuel', price: monthlyPrice, sub: '/mois', badge: null },
               { key: 'annual',  label: 'Annuel',  price: yearlyPrice,  sub: '/an',   badge: '−25%' },
@@ -413,15 +413,15 @@ export default function ProSubscription() {
         </div>
 
         {/* Avantages */}
-        <div className="bg-white rounded-3xl border border-gray-100 p-5 shadow-sm">
-          <p className="text-sm font-bold text-gray-900 mb-4">Tout ce qui est inclus</p>
+        <div className="bg-card rounded-3xl border border-border p-5 shadow-sm">
+          <p className="text-sm font-bold text-foreground mb-4">Tout ce qui est inclus</p>
           <div className="space-y-3.5">
             {BENEFITS.map(({ icon: Icon, text }, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${BRAND}10` }}>
                   <Icon className="w-4 h-4" style={{ color: BRAND }} strokeWidth={1.8} />
                 </div>
-                <p className="text-sm text-gray-700">{text}</p>
+                <p className="text-sm text-foreground">{text}</p>
               </div>
             ))}
           </div>

@@ -149,7 +149,7 @@ export default function ProVerificationOnboarding() {
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
               <div>
-                <h1 className="text-2xl font-bold">Informations de base</h1>
+                <h1 className="text-2xl font-black">Informations de base</h1>
                 <p className="text-sm text-muted-foreground mt-1">Dites-nous qui vous êtes</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -172,7 +172,7 @@ export default function ProVerificationOnboarding() {
           {step === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
               <div>
-                <h1 className="text-2xl font-bold">Votre métier</h1>
+                <h1 className="text-2xl font-black">Votre métier</h1>
                 <p className="text-sm text-muted-foreground mt-1">Décrivez votre activité professionnelle</p>
               </div>
               <div className="space-y-1.5">
@@ -204,7 +204,7 @@ export default function ProVerificationOnboarding() {
           {step === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
               <div>
-                <h1 className="text-2xl font-bold">Vérification BCE</h1>
+                <h1 className="text-2xl font-black">Vérification BCE</h1>
                 <p className="text-sm text-muted-foreground mt-1">Renseignez votre numéro d'entreprise belge</p>
               </div>
               <BceValidator value={bceNumber} onChange={setBceNumber} />
@@ -214,7 +214,7 @@ export default function ProVerificationOnboarding() {
           {step === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
               <div>
-                <h1 className="text-2xl font-bold">Disponibilités</h1>
+                <h1 className="text-2xl font-black">Disponibilités</h1>
                 <p className="text-sm text-muted-foreground mt-1">Configurez vos horaires de travail</p>
               </div>
               {user && <AvailabilityEditor userEmail={user.email} />}
@@ -224,7 +224,7 @@ export default function ProVerificationOnboarding() {
           {step === 5 && (
             <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 space-y-5">
               <div>
-                <h1 className="text-2xl font-bold">Abonnement Pro</h1>
+                <h1 className="text-2xl font-black">Abonnement Pro</h1>
                 <p className="text-sm text-muted-foreground mt-1">Choisissez comment démarrer</p>
               </div>
               <div className="space-y-3">

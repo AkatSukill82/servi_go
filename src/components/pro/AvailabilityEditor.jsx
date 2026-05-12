@@ -210,7 +210,7 @@ export default function AvailabilityEditor({ userEmail }) {
       <Button
         onClick={handleSave}
         disabled={loading}
-        className="w-full h-11 rounded-xl bg-[#1D9E75] hover:bg-[#1D9E75]/90"
+        className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90"
       >
         {loading ? 'Sauvegarde...' : 'Sauvegarder les disponibilités'}
       </Button>
