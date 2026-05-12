@@ -1,7 +1,7 @@
 {
   "name": "Favorite",
-  "type": "object",
   "description": "Professionnels mis en favoris par les clients",
+  "type": "object",
   "properties": {
     "customer_email": {
       "type": "string",
@@ -22,6 +22,10 @@
     },
     "professional_rating": {
       "type": "number"
+    },
+    "description": {
+      "type": "string",
+      "description": "Notes optionnelles sur ce favori"
     }
   },
   "required": [

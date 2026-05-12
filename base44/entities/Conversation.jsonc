@@ -43,6 +43,10 @@
     },
     "deleted_at": {
       "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "description": "Notes optionnelles sur cette conversation"
     }
   },
   "required": [

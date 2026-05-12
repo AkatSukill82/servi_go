@@ -1,0 +1,80 @@
+{
+  "name": "EmailVerification",
+  "type": "object",
+  "description": "Tokens de v\u00e9rification d'email envoy\u00e9s lors de l'inscription",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email de l'utilisateur \u00e0 v\u00e9rifier"
+    },
+    "token": {
+      "type": "string",
+      "description": "Code \u00e0 6 chiffres envoy\u00e9 par email"
+    },
+    "token_expires_at": {
+      "type": "string",
+      "description": "Expiration du token (ISO 8601, valable 15 min)"
+    },
+    "is_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "verified_at": {
+      "type": "string"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de tentatives incorrectes (max 5)"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "IP de la demande de v\u00e9rification"
+    },
+    "resend_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de renvois du code"
+    },
+    "description": {
+      "type": "string",
+      "description": "Notes optionnelles sur cette v\u00e9rification"
+    }
+  },
+  "required": [
+    "user_email",
+    "token"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

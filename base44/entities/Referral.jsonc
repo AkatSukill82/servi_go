@@ -1,0 +1,104 @@
+{
+  "name": "Referral",
+  "description": "Programme de parrainage \u2014 un utilisateur invite un ami et obtient une r\u00e9compense",
+  "type": "object",
+  "properties": {
+    "referrer_email": {
+      "type": "string",
+      "description": "Email de la personne qui parraine (parrain)"
+    },
+    "referrer_name": {
+      "type": "string"
+    },
+    "referred_email": {
+      "type": "string",
+      "description": "Email de la personne invit\u00e9e (filleul)"
+    },
+    "referred_name": {
+      "type": "string"
+    },
+    "referral_code": {
+      "type": "string",
+      "description": "Code unique de parrainage (ex: MEHDI-X7K2)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "converted",
+        "rewarded",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "pending = invit\u00e9 non inscrit, converted = inscrit, rewarded = r\u00e9compense attribu\u00e9e"
+    },
+    "reward_type": {
+      "type": "string",
+      "enum": [
+        "discount_10pct",
+        "free_month",
+        "credit_5eur",
+        "none"
+      ],
+      "description": "Type de r\u00e9compense"
+    },
+    "reward_given": {
+      "type": "boolean",
+      "default": false,
+      "description": "R\u00e9compense d\u00e9j\u00e0 attribu\u00e9e au parrain ?"
+    },
+    "converted_at": {
+      "type": "string",
+      "description": "Date de conversion (quand le filleul a cr\u00e9\u00e9 son compte)"
+    },
+    "deleted_at": {
+      "type": "string",
+      "description": "Soft delete"
+    },
+    "description": {
+      "type": "string",
+      "description": "Notes optionnelles sur ce parrainage"
+    }
+  },
+  "required": [
+    "referrer_email",
+    "referral_code"
+  ],
+  "rls": {
+    "create": {
+      "data.referrer_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.referrer_email": "{{user.email}}"
+        },
+        {
+          "data.referred_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.referrer_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

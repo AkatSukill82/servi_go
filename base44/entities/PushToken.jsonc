@@ -1,0 +1,82 @@
+{
+  "name": "PushToken",
+  "type": "object",
+  "description": "Tokens de notifications push iOS (APNs) et Android (FCM) pour chaque appareil utilisateur",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email de l'utilisateur"
+    },
+    "token": {
+      "type": "string",
+      "description": "Token push APNs ou FCM"
+    },
+    "platform": {
+      "type": "string",
+      "enum": [
+        "ios",
+        "android",
+        "web"
+      ],
+      "description": "Plateforme de l'appareil"
+    },
+    "device_name": {
+      "type": "string",
+      "description": "Nom de l'appareil (ex: iPhone 15 de Mehdi)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Token toujours valide ?"
+    },
+    "last_used_at": {
+      "type": "string",
+      "description": "Derni\u00e8re utilisation du token (ISO 8601)"
+    },
+    "created_at": {
+      "type": "string",
+      "description": "Date d'enregistrement du token"
+    },
+    "description": {
+      "type": "string",
+      "description": "Notes optionnelles sur ce token"
+    }
+  },
+  "required": [
+    "user_email",
+    "token",
+    "platform"
+  ],
+  "rls": {
+    "create": {
+      "data.user_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "data.user_email": "{{user.email}}"
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

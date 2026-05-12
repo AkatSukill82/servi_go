@@ -1,0 +1,106 @@
+{
+  "description": "Historique d\u00e9taill\u00e9 de chaque paiement d'abonnement pro \u2014 remplace le tableau payment_history dans ProSubscription",
+  "name": "PaymentHistory",
+  "type": "object",
+  "properties": {
+    "professional_email": {
+      "type": "string",
+      "description": "Email du professionnel"
+    },
+    "professional_name": {
+      "type": "string"
+    },
+    "subscription_id": {
+      "type": "string",
+      "description": "ID de la ProSubscription associ\u00e9e"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Montant pay\u00e9 en euros"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "paid",
+        "failed",
+        "refunded",
+        "pending"
+      ],
+      "default": "paid"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "stripe",
+        "bank_transfer",
+        "cash"
+      ]
+    },
+    "payment_date": {
+      "type": "string",
+      "description": "Date du paiement (ISO 8601)"
+    },
+    "period_start": {
+      "type": "string",
+      "description": "D\u00e9but de la p\u00e9riode couverte (YYYY-MM-DD)"
+    },
+    "period_end": {
+      "type": "string",
+      "description": "Fin de la p\u00e9riode couverte (YYYY-MM-DD)"
+    },
+    "stripe_payment_intent_id": {
+      "type": "string",
+      "description": "ID Stripe du paiement pour r\u00e9conciliation"
+    },
+    "invoice_ref": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence de la facture associ\u00e9e"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "Raison de l'\u00e9chec si status=failed"
+    },
+    "deleted_at": {
+      "type": "string",
+      "description": "Soft delete"
+    },
+    "description": {
+      "type": "string",
+      "description": "Notes optionnelles sur ce paiement"
+    }
+  },
+  "required": [
+    "professional_email",
+    "amount",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
