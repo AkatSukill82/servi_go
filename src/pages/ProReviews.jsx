@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 
-const BRAND = '#6C5CE7';
+import { BRAND } from '@/lib/theme';
 
 function StarRow({ rating, size = 'sm' }) {
   const sz = size === 'sm' ? 'w-3 h-3' : 'w-4 h-4';

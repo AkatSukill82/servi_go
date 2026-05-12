@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import RatingModal from '@/components/review/RatingModal';
 import { toast } from 'sonner';
 
-const BRAND = '#6C5CE7';
+import { BRAND } from '@/lib/theme';
 
 const ACTIVE_STATUSES = ['searching', 'pending_pro', 'accepted', 'contract_pending', 'contract_signed', 'pro_en_route', 'in_progress'];
 const DONE_STATUSES = ['completed', 'cancelled', 'disputed'];

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 
-export default function BackButton({ fallback = '/Home', className = '' }) {
+export default function BackButton({ fallback = '/Home', className = '', iconColor }) {
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -17,9 +17,9 @@ export default function BackButton({ fallback = '/Home', className = '' }) {
     <button
       onClick={handleBack}
       aria-label="Retour"
-      className={`p-2 -ml-2 rounded-xl hover:bg-muted transition-colors active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center ${className}`}
+      className={`p-2 -ml-2 rounded-xl hover:bg-white/10 transition-colors active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center ${className}`}
     >
-      <ArrowLeft className="w-5 h-5" />
+      <ArrowLeft className="w-5 h-5" style={iconColor ? { color: iconColor } : undefined} />
     </button>
   );
 }
