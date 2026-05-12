@@ -11,9 +11,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { isIOS, isAndroid, platform, isIOSNow } from '@/lib/platform';
+import { isAndroid, platform, isIOSNow } from '@/lib/platform';
 
-export { isIOS, isAndroid, platform, isIOSNow };
+export { isAndroid, platform, isIOSNow };
 
 export const PRODUCT_IDS = {
   monthly: 'servigo.pro.monthly',
@@ -81,10 +81,17 @@ export function useAppleIAP(user) {
         } else {
           toast.error('Vérification échouée. Contactez le support.');
         }
-      } catch {
-        // Fonction Base44 pas déployée → on finalise quand même
-        transaction.finish();
-        toast.success('Abonnement Pro activé ! 🎉');
+      } catch (err) {
+        const is404 = err?.response?.status === 404 || err?.status === 404
+          || err?.message?.includes('not found') || err?.message?.includes('404');
+        if (is404) {
+          // Fonction non encore déployée — finalise pour éviter un double débit
+          transaction.finish();
+          toast.success('Abonnement Pro activé ! 🎉');
+        } else {
+          // Erreur réseau ou serveur — ne pas finaliser, l'utilisateur peut réessayer
+          toast.error('Erreur de vérification. Réessayez ou contactez le support.');
+        }
       }
     } catch (err) {
       toast.error('Erreur : ' + (err?.message || 'réessayez'));
@@ -124,8 +131,8 @@ export function useAppleIAP(user) {
 
         store.initialize([Platform.APPLE_APPSTORE])
           .then(() => {
-            setStoreReady(true);
-            store.update();
+            // Marque le store prêt seulement après que les produits ont été chargés
+            store.update().then(() => setStoreReady(true));
           })
           .catch((err) => console.error('[IAP] Erreur init store :', err));
       })
@@ -153,7 +160,11 @@ export function useAppleIAP(user) {
       if (!offer) throw new Error('Aucune offre disponible.');
       await window.CdvPurchase.store.order(offer);
     } catch (err) {
-      toast.error('Achat annulé.');
+      const msg = err?.message?.toLowerCase() || '';
+      // Annulation volontaire par l'utilisateur — pas d'erreur affichée
+      if (!msg.includes('cancel') && !msg.includes('dismiss') && err?.code !== 2) {
+        toast.error('Erreur lors de l\'achat. Réessayez ou contactez le support.');
+      }
       setPurchasing(false);
     }
   }, [storeReady, products]);

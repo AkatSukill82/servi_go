@@ -80,16 +80,17 @@ export default function ProSubscription() {
   const monthlyPrice = monthlyInfo?.price || '9,99 €';
   const yearlyPrice  = yearlyInfo?.price  || '90,00 €';
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (overridePlan) => {
+    const activePlan = overridePlan || plan;
     if (isIOSNow()) {
-      await purchase(plan);
+      await purchase(activePlan);
       return;
     }
     setBillingLoading(true);
     try {
       const res = await base44.functions.invoke('createProSubscription', {
-        plan,
-        successUrl: `${window.location.origin}/ProSubscription?success=true&plan=${plan}`,
+        plan: activePlan,
+        successUrl: `${window.location.origin}/ProSubscription?success=true&plan=${activePlan}`,
         cancelUrl:  `${window.location.origin}/ProSubscription`,
       });
       if (res.data?.url) {
@@ -222,11 +223,12 @@ export default function ProSubscription() {
                 <p className="text-sm font-bold text-amber-900">🎯 Passez à l'annuel</p>
                 <p className="text-xs text-amber-700 mt-0.5">Économisez 30 € — seulement {yearlyPrice}/an</p>
               </div>
-              <Button size="sm" onClick={() => { setPlan('annual'); handleSubscribe(); }}
+              <button onClick={() => handleSubscribe('annual')}
                 disabled={purchasing}
-                className="rounded-xl shrink-0 text-xs bg-amber-600 hover:bg-amber-700 text-white border-0">
+                className="rounded-xl shrink-0 text-xs font-semibold text-white px-3 py-1.5 tap-scale disabled:opacity-60"
+                style={{ background: '#D97706' }}>
                 Changer →
-              </Button>
+              </button>
             </div>
           )}
 
