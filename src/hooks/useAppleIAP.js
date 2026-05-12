@@ -125,8 +125,8 @@ export function useAppleIAP(user) {
           .approved((transaction) => {
             verifyAndActivate(transaction);
           })
-          .finished((transaction) => {
-            console.log('[IAP] Transaction finalisée :', transaction.transactionId);
+          .finished((_transaction) => {
+            // transaction finalised
           });
 
         store.initialize([Platform.APPLE_APPSTORE])

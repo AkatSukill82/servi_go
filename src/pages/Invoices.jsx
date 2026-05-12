@@ -37,6 +37,7 @@ function InvoiceRow({ invoice }) {
     try {
       const res = await base44.functions.invoke('createStripeCheckout', {
         request_id: invoice.request_id,
+        invoice_id: invoice.id,
         amount: invoice.total_price,
         invoice_number: invoice.invoice_number,
         successUrl: `${window.location.origin}/Invoices?paid=true`,

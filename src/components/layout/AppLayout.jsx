@@ -103,22 +103,14 @@ export default function AppLayout() {
   }, []);
 
   if (loading) {
-    const isDark = document.documentElement.classList.contains('dark') ||
-      window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const bg = isDark ? '#0a0a0a' : '#ffffff';
-    const textColor = isDark ? '#ffffff' : '#0F172A';
-    const spinnerTrack = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(108,92,231,0.15)';
-    const spinnerTop = '#6C5CE7';
-
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: bg, width: '100vw', height: '100dvh' }}>
+      <div className="fixed inset-0 flex flex-col items-center justify-center" style={{ background: '#ffffff', width: '100vw', height: '100dvh' }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="flex flex-col items-center gap-5"
         >
-          {/* Logo mark */}
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)', boxShadow: '0 8px 32px rgba(108,92,231,0.35)' }}>
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
@@ -126,8 +118,8 @@ export default function AppLayout() {
               <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="text-2xl font-black tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: textColor }}>ServiGo</span>
-          <div className="w-6 h-6 rounded-full animate-spin" style={{ border: `2.5px solid ${spinnerTrack}`, borderTopColor: '#6C5CE7' }} />
+          <span className="text-2xl font-black tracking-tight" style={{ fontFamily: 'Inter, system-ui, sans-serif', color: '#0F172A' }}>ServiGo</span>
+          <div className="w-6 h-6 rounded-full animate-spin" style={{ border: '2.5px solid rgba(108,92,231,0.15)', borderTopColor: '#6C5CE7' }} />
         </motion.div>
       </div>
     );

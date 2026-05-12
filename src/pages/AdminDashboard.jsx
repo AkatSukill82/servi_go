@@ -151,8 +151,6 @@ function ReportsTab() {
 function OverviewTab() {
   const queryClient = useQueryClient();
   const [repairingRequests, setRepairingRequests] = useState(false);
-  const [fixingContract, setFixingContract] = useState(false);
-  const [resettingRequest, setResettingRequest] = useState(false);
 
   const { data: allSubs = [] } = useQuery({
     queryKey: ['adminAllSubsOv'],
@@ -173,6 +171,11 @@ function OverviewTab() {
 
   // Maintenance handlers
   const handleRepairRequests = async () => {
+    const todayKey = `repairRun_${new Date().toISOString().slice(0, 10)}`;
+    if (localStorage.getItem(todayKey)) {
+      toast.error('Réparation déjà exécutée aujourd\'hui.');
+      return;
+    }
     setRepairingRequests(true);
     try {
       // Fix duplicates in tried_professionals
@@ -193,43 +196,12 @@ function OverviewTab() {
         await base44.entities.ServiceRequestV2.update(req.id, { status: 'cancelled', cancellation_reason: 'Expirée automatiquement' });
       }
       queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
+      localStorage.setItem(todayKey, '1');
       toast.success(`Réparé: ${pendingPros.length} dédupliquées, ${expired.length} annulées`);
     } catch (e) {
       toast.error('Erreur: ' + e.message);
     } finally {
       setRepairingRequests(false);
-    }
-  };
-
-  const handleFixContract = async () => {
-    setFixingContract(true);
-    try {
-      await base44.entities.MissionContract.update('69ca435e1b17e5ad45411b0b', { request_id: '69ca434ee96d5155ac7c6613' });
-      queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
-      toast.success('Contrat mis à jour ✅');
-    } catch (e) {
-      toast.error('Erreur: ' + e.message);
-    } finally {
-      setFixingContract(false);
-    }
-  };
-
-  const handleResetRequest = async () => {
-    setResettingRequest(true);
-    try {
-      await base44.entities.ServiceRequestV2.update('69ca434ee96d5155ac7c6612', {
-        status: 'searching',
-        tried_professionals: ['guillaume.maes@pro.be'],
-        professional_id: null,
-        professional_name: null,
-        professional_email: null,
-      });
-      queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
-      toast.success('Demande réinitialisée ✅');
-    } catch (e) {
-      toast.error('Erreur: ' + e.message);
-    } finally {
-      setResettingRequest(false);
     }
   };
 
@@ -326,20 +298,6 @@ function OverviewTab() {
             className="w-full h-10 text-xs rounded-lg bg-amber-600 hover:bg-amber-700"
           >
             {repairingRequests ? 'Réparation...' : '🔨 Réparer les demandes bloquées'}
-          </Button>
-          <Button
-            onClick={handleFixContract}
-            disabled={fixingContract}
-            className="w-full h-10 text-xs rounded-lg bg-blue-600 hover:bg-blue-700"
-          >
-            {fixingContract ? 'Correction...' : '📋 Corriger le contrat Déménageur'}
-          </Button>
-          <Button
-            onClick={handleResetRequest}
-            disabled={resettingRequest}
-            className="w-full h-10 text-xs rounded-lg bg-green-600 hover:bg-green-700"
-          >
-            {resettingRequest ? 'Réinitialisation...' : '🔄 Réinitialiser demande Jardinier'}
           </Button>
         </div>
       </div>
@@ -770,37 +728,13 @@ export default function AdminDashboard() {
     staleTime: 30000,
   });
 
-  // Auto-réassignation des missions bloquées au chargement admin
+  // Auto-réassignation des missions bloquées au chargement admin (max 1x/jour)
   useEffect(() => {
     if (currentUser?.role !== 'admin') return;
+    const todayKey = `autoReassign_${new Date().toISOString().slice(0, 10)}`;
+    if (localStorage.getItem(todayKey)) return;
     (async () => {
       try {
-        // Fix ciblé : mission jardinier Thomas Verhaegen bloquée
-        const STUCK_MISSION_ID = '69ca434ee96d5155ac7c6612';
-        const GUILLAUME_ID = '69c3c465524bb57e83e1fed0';
-        try {
-          const missions = await base44.entities.ServiceRequestV2.filter({ id: STUCK_MISSION_ID });
-          const stuck = missions[0];
-          if (stuck && stuck.status === 'searching') {
-            await base44.entities.ServiceRequestV2.update(STUCK_MISSION_ID, {
-              status: 'pending_pro',
-              professional_id: GUILLAUME_ID,
-              professional_name: 'Guillaume Maes',
-              professional_email: 'guillaume.maes@pro.be',
-              tried_professionals: [...(stuck.tried_professionals || []), 'guillaume.maes@pro.be'],
-            });
-            await base44.entities.Notification.create({
-              recipient_email: 'guillaume.maes@pro.be',
-              recipient_type: 'professionnel',
-              type: 'new_mission',
-              title: `Nouvelle mission : ${stuck.category_name}`,
-              body: `Une mission vous a été assignée. Client : ${stuck.customer_name || stuck.customer_email}.`,
-              request_id: STUCK_MISSION_ID,
-              action_url: `/Chat?requestId=${STUCK_MISSION_ID}`,
-            });
-          }
-        } catch (e) { console.warn('Fix mission spécifique:', e); }
-
         const stuckRequests = await base44.entities.ServiceRequestV2.filter({ status: 'searching' }, '-created_date', 100);
         if (stuckRequests.length === 0) return;
         const availablePros = await base44.entities.User.filter({ user_type: 'professionnel', available: true, verification_status: 'verified' }, '-created_date', 200);
@@ -828,6 +762,7 @@ export default function AdminDashboard() {
             action_url: `/Chat?requestId=${req.id}`,
           });
         }
+        localStorage.setItem(todayKey, '1');
       } catch (e) {
         console.warn('Auto-reassign error:', e);
       }

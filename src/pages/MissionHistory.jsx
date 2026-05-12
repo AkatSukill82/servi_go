@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, ChevronRight } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, ChevronRight, FileText } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -89,6 +89,14 @@ function MissionCard({ req, onRate, index }) {
             <MessageCircle className="w-4 h-4" />
             Chat
           </button>
+          {req.status === 'completed' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate('/Invoices'); }}
+              className="flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border border-border text-sm font-semibold text-foreground transition-colors hover:bg-muted/50 tap-scale"
+            >
+              <FileText className="w-4 h-4" />
+            </button>
+          )}
           {canRate && (
             <button
               onClick={() => onRate(req)}

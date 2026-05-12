@@ -14,18 +14,9 @@
                     <view key="view" userInteractionEnabled="NO" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" translatesAutoresizingMaskIntoConstraints="NO" id="snD-IY-ifK">
-                                <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
-                            </imageView>
-                        </subviews>
-                        <color key="backgroundColor" red="0.42352941176" green="0.36078431372" blue="0.90980392156" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                        <constraints>
-                            <constraint firstItem="snD-IY-ifK" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="Cd0-ba-kre"/>
-                            <constraint firstItem="snD-IY-ifK" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="3b3-Mq-nHA"/>
-                            <constraint firstItem="Ze5-6b-2t3" firstAttribute="bottom" secondItem="snD-IY-ifK" secondAttribute="bottom" id="Wug-7m-euG"/>
-                            <constraint firstItem="Ze5-6b-2t3" firstAttribute="trailing" secondItem="snD-IY-ifK" secondAttribute="trailing" id="moa-c2-u7t"/>
-                        </constraints>
+                        <subviews/>
+                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints/>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>

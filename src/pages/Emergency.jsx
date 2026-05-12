@@ -41,6 +41,13 @@ export default function Emergency() {
     mutationFn: async () => {
       const cat = categories.find(c => c.name === selectedCat);
       if (!cat || !user) throw new Error('Catégorie ou utilisateur manquant');
+      const availablePros = await base44.entities.User.filter(
+        { user_type: 'professionnel', available: true, category_name: cat.name, verification_status: 'verified' },
+        '-created_date', 1
+      );
+      if (availablePros.length === 0) {
+        toast('Aucun professionnel disponible pour ce service en ce moment. Votre demande sera prise en charge dès qu\'un pro sera disponible.', { duration: 6000 });
+      }
       const estimatedPrice = (cat.base_price || 50) * 1.5;
       const req = await base44.entities.ServiceRequestV2.create({
         category_id: cat.id,

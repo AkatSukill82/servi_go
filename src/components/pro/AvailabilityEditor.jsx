@@ -60,8 +60,8 @@ export default function AvailabilityEditor({ userEmail }) {
           slots: e.slots || [],
           is_day_off: e.is_day_off,
         })));
-      } catch (err) {
-        console.error('Error fetching availability:', err);
+      } catch {
+        // silently fail — user sees default slots
       }
     };
     fetchAvailability();
@@ -110,9 +110,13 @@ export default function AvailabilityEditor({ userEmail }) {
         })
       );
       toast.success('Disponibilités sauvegardées ✅');
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de la sauvegarde');
-      console.error(err);
+      // Reload from DB to restore consistent state after partial failure
+      const existing = await base44.entities.ProAvailability.filter({ professional_email: userEmail }, '-day_of_week').catch(() => []);
+      if (existing.length > 0) {
+        setDays(existing.map(e => ({ day_of_week: e.day_of_week, day_label: e.day_label, id: e.id, slots: e.slots || [], is_day_off: e.is_day_off })));
+      }
     } finally {
       setLoading(false);
     }

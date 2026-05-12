@@ -140,9 +140,11 @@ export default function DAC7Tab() {
     toast.success('Export CSV téléchargé');
   };
 
-  const completeCount = dac7Profiles.filter(p => p.is_complete).length;
-  const verifiedCount = dac7Profiles.filter(p => p.is_verified).length;
-  const incompleteCount = allPros.filter(p => !dac7Profiles.find(d => d.professional_email === p.email && d.is_complete)).length;
+  const activeProsEmails = new Set(allPros.map(u => u.email));
+  const activeProfiles = dac7Profiles.filter(p => activeProsEmails.has(p.professional_email));
+  const completeCount = activeProfiles.filter(p => p.is_complete).length;
+  const verifiedCount = activeProfiles.filter(p => p.is_verified).length;
+  const incompleteCount = allPros.filter(p => !activeProfiles.find(d => d.professional_email === p.email && d.is_complete)).length;
 
   return (
     <div className="space-y-5">

@@ -151,6 +151,10 @@ export default function ProDashboard() {
 
   const acceptMutation = useMutation({
     mutationFn: async ({ requestId, request }) => {
+      const fresh = await base44.entities.ServiceRequestV2.filter({ id: requestId }).then(r => r[0]);
+      if (!fresh || !['searching', 'pending_pro'].includes(fresh.status)) {
+        throw new Error('Mission déjà prise');
+      }
       await base44.entities.ServiceRequestV2.update(requestId, {
         status: 'contract_pending',
         professional_id: user.id,

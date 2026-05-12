@@ -90,7 +90,7 @@ export default function ProPublicProfile() {
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
-  const { data: pro } = useQuery({
+  const { data: pro, isLoading: proLoading } = useQuery({
     queryKey: ['proPublic', proId, proEmail],
     queryFn: async () => {
       if (proId) return base44.entities.User.filter({ id: proId }).then(r => r[0] || null);
@@ -135,15 +135,18 @@ export default function ProPublicProfile() {
     else navigate('/ServiceRequest');
   };
 
-  if (!pro && (proId || proEmail)) return (
+  if (proLoading) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
     </div>
   );
 
   if (!pro) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" />
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 px-6 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center text-3xl">🔍</div>
+      <p className="font-semibold text-foreground">Professionnel introuvable</p>
+      <p className="text-sm text-muted-foreground">Ce profil n'existe pas ou a été supprimé.</p>
+      <button onClick={() => navigate(-1)} className="text-sm text-primary underline">Retour</button>
     </div>
   );
 

@@ -27,6 +27,7 @@ export default function Chat() {
   const [conversationId, setConversationId] = useState(null);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  const creatingConvRef = useRef(false);
   const viewportHeight = useVisualViewport();
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
@@ -53,7 +54,8 @@ export default function Chat() {
     ).then((convs) => {
       if (convs.length > 0) {
         setConversationId(convs[0].id);
-      } else {
+      } else if (!creatingConvRef.current) {
+        creatingConvRef.current = true;
         base44.entities.Conversation.create({
           customer_email: request.customer_email,
           customer_name: request.customer_name || '',
@@ -63,7 +65,7 @@ export default function Chat() {
           last_message_at: new Date().toISOString(),
           unread_count_customer: 0,
           unread_count_pro: 0,
-        }).then((conv) => setConversationId(conv.id)).catch(() => {});
+        }).then((conv) => setConversationId(conv.id)).catch(() => {}).finally(() => { creatingConvRef.current = false; });
       }
     }).catch(() => {});
   }, [request?.customer_email, request?.professional_email]);

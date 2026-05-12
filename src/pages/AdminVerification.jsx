@@ -192,7 +192,7 @@ function IdentityVerifTab() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, status, reason, userEmail, userName }) => {
-      await base44.entities.IdentityVerification.update(id, { status, rejection_reason: reason || null });
+      await base44.entities.IdentityVerification.update(id, { status, rejection_reason: reason || null, reviewed_by: 'admin', reviewed_date: new Date().toISOString() });
       const eidStatus = status === 'approved' ? 'verified' : 'rejected';
       const users = await base44.entities.User.filter({ email: userEmail });
       if (users[0]) await base44.entities.User.update(users[0].id, { eid_status: eidStatus, verification_status: status === 'approved' ? 'verified' : 'rejected' });

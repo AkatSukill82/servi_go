@@ -50,7 +50,7 @@ export default function MapPage() {
     queryKey: ['professionals'],
     queryFn: async () => {
       const all = await base44.entities.User.filter({ user_type: 'professionnel', available: true });
-      return deduplicateByEmail(all.filter(p => p.photo_url));
+      return deduplicateByEmail(all);
     },
     refetchInterval: 3000,
   });
@@ -125,7 +125,10 @@ export default function MapPage() {
           <BackButton fallback="/Home" />
           <div className="flex-1">
             <p className="text-sm font-semibold">Professionnels à proximité</p>
-            <p className="text-xs text-muted-foreground">{validPros.length} disponible{validPros.length !== 1 ? 's' : ''}</p>
+            <p className="text-xs text-muted-foreground">
+            {validPros.length} sur la carte
+            {professionals.length > validPros.length && ` · ${professionals.length - validPros.length} hors zone`}
+          </p>
           </div>
           <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" />
         </div>

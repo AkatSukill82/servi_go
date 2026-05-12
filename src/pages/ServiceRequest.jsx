@@ -68,7 +68,8 @@ export default function ServiceRequest() {
   });
 
   // ── eID gate ──
-  if (user && user.eid_status !== 'verified') {
+  if (!user) return null;
+  if (user.eid_status !== 'verified') {
     return (
       <div
         className="flex flex-col items-center justify-center min-h-screen px-6 text-center gap-6 bg-white"

@@ -6,10 +6,13 @@ import { useI18n } from '@/hooks/useI18n';
 function normalizeBce(raw) {
   // Accept: BE0123456789, BE 0123.456.789, 0123456789, etc.
   const digits = raw.replace(/[^0-9]/g, '');
-  if (digits.length === 10) {
-    return `BE ${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7, 10)}`;
-  }
-  return null;
+  if (digits.length !== 10) return null;
+  // Belgian BCE mod-97 checksum: last 2 digits = 97 - (first 8 digits % 97)
+  const body = parseInt(digits.slice(0, 8), 10);
+  const check = parseInt(digits.slice(8, 10), 10);
+  const expected = 97 - (body % 97);
+  if (check !== expected) return null;
+  return `BE ${digits.slice(0, 4)}.${digits.slice(4, 7)}.${digits.slice(7, 10)}`;
 }
 
 export default function BceValidator({ value, onChange, className = '' }) {
