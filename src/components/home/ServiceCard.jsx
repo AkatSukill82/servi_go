@@ -15,16 +15,15 @@ const ICON_MAP = {
   PaintBucket, Sofa, Bug, Fence, Trees
 };
 
-// Soft pastel palettes cycling through categories
 const PALETTES = [
-  { bg: 'rgba(108,92,231,0.1)', icon: '#6C5CE7' },
-  { bg: 'rgba(0,184,148,0.1)',  icon: '#00B894' },
-  { bg: 'rgba(253,203,110,0.15)', icon: '#E2A000' },
-  { bg: 'rgba(225,112,85,0.1)', icon: '#E17055' },
-  { bg: 'rgba(116,185,255,0.12)', icon: '#0984E3' },
-  { bg: 'rgba(162,155,254,0.12)', icon: '#6C5CE7' },
-  { bg: 'rgba(85,239,196,0.12)', icon: '#00B894' },
-  { bg: 'rgba(250,177,160,0.12)', icon: '#E17055' },
+  { bg: '#F0EEFF', icon: '#6C5CE7' },
+  { bg: '#E6F9F4', icon: '#00897B' },
+  { bg: '#FFF8E6', icon: '#E2A000' },
+  { bg: '#FFF0ED', icon: '#E17055' },
+  { bg: '#E8F4FF', icon: '#0984E3' },
+  { bg: '#F5E6FF', icon: '#8E44AD' },
+  { bg: '#E6FFF9', icon: '#00B894' },
+  { bg: '#FFEBE8', icon: '#E17055' },
 ];
 
 export default function ServiceCard({ category, index, onSearch }) {
@@ -33,18 +32,20 @@ export default function ServiceCard({ category, index, onSearch }) {
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.03, ease: 'easeOut' }}
+      transition={{ delay: index * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
       onClick={() => onSearch?.(category.name)}
-      className="flex flex-col items-center gap-2.5 p-3 rounded-2xl bg-card border border-border/50 tap-scale hover:border-border transition-all"
-      style={{ boxShadow: '0 2px 8px rgba(108,92,231,0.04)' }}
+      className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-white active:scale-95 transition-transform text-center"
+      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.05)' }}
     >
-      <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform"
-        style={{ background: palette.bg }}>
-        <Icon className="w-6 h-6" style={{ color: palette.icon }} strokeWidth={1.8} />
+      <div
+        className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+        style={{ background: palette.bg }}
+      >
+        <Icon style={{ color: palette.icon, width: 26, height: 26 }} strokeWidth={1.7} />
       </div>
-      <span className="text-[11px] font-semibold text-center leading-tight text-foreground line-clamp-2 w-full">
+      <span className="text-[11px] font-semibold text-gray-800 leading-tight line-clamp-2 w-full">
         {category.name}
       </span>
     </motion.button>

@@ -8,7 +8,6 @@ import {
   LayoutDashboard, CalendarDays,
 } from 'lucide-react';
 
-
 const MISSION_TYPES = [
   'new_mission', 'mission_accepted', 'mission_refused',
   'contract_to_sign', 'contract_signed', 'pro_en_route',
@@ -16,7 +15,6 @@ const MISSION_TYPES = [
 ];
 const MESSAGE_TYPES = ['message_received'];
 
-// kind: 'mission' | 'message' | 'profile' | null
 const CUSTOMER_TABS = [
   { path: '/Home',           icon: Home,          label: 'Accueil',  kind: 'mission' },
   { path: '/MissionHistory', icon: ClipboardList, label: 'Missions', kind: 'mission' },
@@ -32,29 +30,38 @@ const PRO_TABS = [
   { path: '/ProProfile',   icon: User,            label: 'Profil',    kind: 'profile' },
 ];
 
-function NavBadge({ count }) {
-  if (!count) return null;
-  return (
-    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] bg-[#E17055] rounded-full flex items-center justify-center text-[8px] font-bold text-white px-0.5 leading-none shadow-sm">
-      {count > 9 ? '9+' : count}
-    </span>
-  );
-}
-
 function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1 flex-1 py-2 min-h-[52px] justify-center tap-scale relative"
+      className="flex flex-col items-center gap-1 flex-1 py-2 min-h-[52px] justify-center relative active:scale-90 transition-transform"
     >
-      <div className="relative flex items-center justify-center">
+      <div className="relative">
+        {/* Active pill background */}
+        {isActive && (
+          <span
+            className="absolute inset-0 -m-1.5 rounded-xl"
+            style={{ background: `${BRAND}12` }}
+          />
+        )}
         <Icon
-          strokeWidth={isActive ? 2.3 : 1.6}
-          style={{ color: isActive ? BRAND : '#9CA3AF', width: 22, height: 22 }}
+          strokeWidth={isActive ? 2.2 : 1.6}
+          style={{ color: isActive ? BRAND : '#9CA3AF', width: 22, height: 22, position: 'relative' }}
         />
-        <NavBadge count={badge} />
+        {/* Badge dot */}
+        {badge > 0 && (
+          <span
+            className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] rounded-full flex items-center justify-center text-[8px] font-black text-white px-0.5"
+            style={{ background: '#E17055', lineHeight: 1 }}
+          >
+            {badge > 9 ? '9+' : badge}
+          </span>
+        )}
       </div>
-      <span className="text-[10px] font-semibold" style={{ color: isActive ? BRAND : '#9CA3AF' }}>
+      <span
+        className="text-[10px] font-semibold tracking-tight"
+        style={{ color: isActive ? BRAND : '#9CA3AF' }}
+      >
         {label}
       </span>
     </button>
@@ -62,8 +69,8 @@ function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
 }
 
 export default function BottomNav() {
-  const location  = useLocation();
-  const navigate  = useNavigate();
+  const location    = useLocation();
+  const navigate    = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -72,15 +79,14 @@ export default function BottomNav() {
     staleTime: 60000,
   });
 
-  const isPro = user?.user_type === 'professionnel';
+  const isPro  = user?.user_type === 'professionnel';
   const tabs   = isPro ? PRO_TABS : CUSTOMER_TABS;
   const notifsKey = ['unreadNotifs', user?.email];
 
   const { data: notifs = [] } = useQuery({
     queryKey: notifsKey,
     queryFn: () => base44.entities.Notification.filter(
-      { recipient_email: user.email, is_read: false },
-      '-created_date', 100
+      { recipient_email: user.email, is_read: false }, '-created_date', 100
     ),
     enabled: !!user?.email,
     refetchInterval: 30000,
@@ -90,32 +96,32 @@ export default function BottomNav() {
   const missionBadge = notifs.filter(n => MISSION_TYPES.includes(n.type)).length;
   const messageBadge = notifs.filter(n => MESSAGE_TYPES.includes(n.type)).length;
   const profileBadge = user && (!user.photo_url || !user.phone || user.eid_status !== 'verified') ? 1 : 0;
-
   const getBadge = (kind) => ({ mission: missionBadge, message: messageBadge, profile: profileBadge }[kind] ?? 0);
 
-  // Marque les notifications comme lues quand on arrive sur l'onglet correspondant
   useEffect(() => {
     if (!user?.email || !notifs.length) return;
     const currentTab = tabs.find(t => t.path === location.pathname);
     if (!currentTab) return;
-
     const toMark = notifs.filter(n => {
       if (currentTab.kind === 'mission') return MISSION_TYPES.includes(n.type);
       if (currentTab.kind === 'message') return MESSAGE_TYPES.includes(n.type);
       return false;
     });
     if (!toMark.length) return;
-
     Promise.all(toMark.map(n => base44.entities.Notification.update(n.id, { is_read: true })))
       .then(() => queryClient.invalidateQueries({ queryKey: notifsKey }));
   }, [location.pathname, user?.email]);
 
   return (
     <nav
-      className="shrink-0 bg-white border-t border-gray-100"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)', boxShadow: '0 -1px 0 #f0f0f0' }}
+      className="shrink-0 bg-white"
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom)',
+        borderTop: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
+      }}
     >
-      <div className="w-full flex items-center justify-around px-1" style={{ height: 56 }}>
+      <div className="w-full flex items-center justify-around px-2" style={{ height: 56 }}>
         {tabs.map((item) => (
           <NavItem
             key={item.path}

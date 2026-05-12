@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bell } from 'lucide-react';
+import { Bell, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BRAND } from '@/lib/theme';
-
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -23,11 +22,17 @@ export default function TopBar() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me(), staleTime: 60000 });
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    staleTime: 60000,
+  });
 
   const { data: notifs = [] } = useQuery({
     queryKey: ['unreadNotifs', user?.email],
-    queryFn: () => base44.entities.Notification.filter({ recipient_email: user.email, is_read: false }, '-created_date', 20),
+    queryFn: () => base44.entities.Notification.filter(
+      { recipient_email: user.email, is_read: false }, '-created_date', 20
+    ),
     enabled: !!user?.email,
     refetchInterval: 60000,
     staleTime: 30000,
@@ -49,20 +54,34 @@ export default function TopBar() {
     if (notif.action_url) navigate(notif.action_url);
   };
 
+  const city = user?.address?.split(',')[0]?.trim() || 'Belgique';
+
   return (
     <>
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-100" style={{ boxShadow: '0 1px 0 #f0f0f0' }}>
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-100/80" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
         <div className="flex items-center justify-between px-5 h-14">
 
-          {/* ServiGo logo text */}
-          <span className="text-xl font-black tracking-tight" style={{ color: BRAND }}>ServiGo</span>
+          {/* Location pill */}
+          <button
+            onClick={() => navigate('/Map')}
+            className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+          >
+            <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: BRAND }} />
+            <span className="text-xs font-semibold text-gray-800 max-w-[120px] truncate">{city}</span>
+            <span className="text-gray-400 text-xs">›</span>
+          </button>
 
-          {/* Notification bell */}
+          {/* Logo centré */}
+          <span className="absolute left-1/2 -translate-x-1/2 text-xl font-black tracking-tight select-none" style={{ color: BRAND }}>
+            ServiGo
+          </span>
+
+          {/* Bell */}
           <button
             onClick={() => setNotifOpen(o => !o)}
-            className="relative w-10 h-10 flex items-center justify-center tap-scale"
+            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 active:scale-95 transition-transform"
           >
-            <Bell className="w-5 h-5 text-gray-700" strokeWidth={1.8} />
+            <Bell className="w-4.5 h-4.5 text-gray-700" strokeWidth={1.8} style={{ width: 18, height: 18 }} />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
                 style={{ background: '#E17055' }}>
@@ -78,45 +97,44 @@ export default function TopBar() {
         {notifOpen && (
           <>
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-40"
               onClick={() => setNotifOpen(false)}
             />
             <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.96 }}
+              initial={{ opacity: 0, y: -8, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.96 }}
+              exit={{ opacity: 0, y: -8, scale: 0.97 }}
               transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="fixed top-[calc(env(safe-area-inset-top)+64px)] right-3 z-50 w-80 bg-card border border-border rounded-2xl overflow-hidden"
-              style={{ boxShadow: '0 8px 32px rgba(108,92,231,0.14)' }}
+              className="fixed top-[calc(env(safe-area-inset-top)+60px)] right-3 z-50 w-80 bg-white border border-gray-200 rounded-2xl overflow-hidden"
+              style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
             >
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <p className="text-sm font-bold">Notifications</p>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-900">Notifications</p>
                 {unreadCount > 0 && (
-                  <button onClick={markAllRead} className="text-xs font-semibold" style={{ color: BRAND }}>Tout marquer lu</button>
+                  <button onClick={markAllRead} className="text-xs font-semibold" style={{ color: BRAND }}>
+                    Tout lire
+                  </button>
                 )}
               </div>
-              <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
+              <div className="max-h-80 overflow-y-auto">
                 {notifs.length === 0 ? (
                   <div className="py-10 text-center">
-                    <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" strokeWidth={1.5} />
-                    <p className="text-sm text-muted-foreground">Aucune nouvelle notification</p>
+                    <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2" strokeWidth={1.5} />
+                    <p className="text-sm text-gray-400">Aucune nouvelle notification</p>
                   </div>
                 ) : notifs.map(n => (
                   <button
                     key={n.id}
                     onClick={() => handleNotifClick(n)}
-                    className="w-full px-4 py-3 text-left transition-colors hover:bg-muted/50"
-                    style={{ background: `${BRAND}06` }}
+                    className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
                   >
-                    <div className="flex items-start gap-2.5">
+                    <div className="flex items-start gap-3">
                       <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: BRAND }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground leading-tight">{n.title}</p>
-                        {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">{timeAgo(n.created_date)}</p>
+                        <p className="text-sm font-semibold text-gray-900 leading-tight">{n.title}</p>
+                        {n.body && <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.body}</p>}
+                        <p className="text-[10px] text-gray-400 mt-1">{timeAgo(n.created_date)}</p>
                       </div>
                     </div>
                   </button>
