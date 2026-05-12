@@ -3,12 +3,15 @@ import { appParams } from '@/lib/app-params';
 
 const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
-//Create a client with authentication required
+// En Capacitor (iOS natif), il n'y a pas de proxy — on pointe directement vers l'API Base44
+const isCapacitor = typeof window !== 'undefined' && window.Capacitor !== undefined;
+const serverUrl = isCapacitor ? 'https://base44.app' : '';
+
 export const base44 = createClient({
   appId,
   token,
   functionsVersion,
-  serverUrl: '',
+  serverUrl,
   requiresAuth: false,
   appBaseUrl
 });

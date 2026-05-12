@@ -3,15 +3,18 @@ import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
 
+const isCapacitorEnv = typeof window !== 'undefined' && window.Capacitor !== undefined;
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
+  // In Capacitor we skip the public settings fetch entirely
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(!isCapacitorEnv);
   const [authError, setAuthError] = useState(null);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const [appPublicSettings, setAppPublicSettings] = useState(null);
 
   useEffect(() => {
     checkAppState();
@@ -19,41 +22,47 @@ export const AuthProvider = ({ children }) => {
 
   const checkAppState = async () => {
     try {
-      setIsLoadingPublicSettings(true);
       setAuthError(null);
-      
-      // First, check app public settings (with token if available)
-      // This will tell us if auth is required, user not registered, etc.
+
+      if (isCapacitorEnv) {
+        // Native app: skip public settings API, go straight to local token check
+        await checkUserAuth();
+        return;
+      }
+
+      // Web: fetch public settings first
+      setIsLoadingPublicSettings(true);
       const appClient = createAxiosClient({
-        baseURL: `/api/apps/public`,
-        headers: {
-          'X-App-Id': appParams.appId
-        },
-        token: appParams.token, // Include token if available
+        baseURL: '/api/apps/public',
+        headers: { 'X-App-Id': appParams.appId },
+        token: appParams.token,
         interceptResponses: true
       });
-      
+
       try {
-        const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
+        const settingsTimeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('settings_timeout')), 6000)
+        );
+        const publicSettings = await Promise.race([
+          appClient.get(`/prod/public-settings/by-id/${appParams.appId}`),
+          settingsTimeout
+        ]);
         setAppPublicSettings(publicSettings);
-        setIsLoadingPublicSettings(false);
-        await checkUserAuth();
       } catch (appError) {
-        console.error('App state check failed:', appError);
-        
         if (appError.status === 403 && appError.data?.extra_data?.reason === 'user_not_registered') {
           setAuthError({ type: 'user_not_registered', message: 'User not registered for this app' });
+          setIsLoadingPublicSettings(false);
+          setIsLoadingAuth(false);
+          return;
         }
-        // All other errors (auth_required, unknown): just continue, pages handle their own auth
+      } finally {
         setIsLoadingPublicSettings(false);
-        setIsLoadingAuth(false);
       }
+
+      await checkUserAuth();
     } catch (error) {
       console.error('Unexpected error:', error);
-      setAuthError({
-        type: 'unknown',
-        message: error.message || 'An unexpected error occurred'
-      });
+      setAuthError({ type: 'unknown', message: error.message || 'An unexpected error occurred' });
       setIsLoadingPublicSettings(false);
       setIsLoadingAuth(false);
     }
@@ -62,10 +71,25 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     try {
       setIsLoadingAuth(true);
-      const currentUser = await base44.auth.me();
+
+      // Fast path: if no token stored locally, skip the network call entirely
+      const hasToken = !!(
+        localStorage.getItem('base44_access_token') ||
+        localStorage.getItem('token')
+      );
+      if (!hasToken) {
+        setIsAuthenticated(false);
+        return;
+      }
+
+      // Token exists: validate with server (8s timeout)
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('auth_timeout')), 8000)
+      );
+      const currentUser = await Promise.race([base44.auth.me(), timeout]);
       setUser(currentUser);
       setIsAuthenticated(true);
-    } catch (error) {
+    } catch {
       setIsAuthenticated(false);
     } finally {
       setIsLoadingAuth(false);
@@ -75,7 +99,13 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
-    base44.auth.logout('/se-connecter');
+    if (isCapacitorEnv) {
+      localStorage.removeItem('base44_access_token');
+      localStorage.removeItem('token');
+      window.location.href = '/se-connecter';
+    } else {
+      base44.auth.logout('/se-connecter');
+    }
   };
 
   const navigateToLogin = () => {
@@ -83,16 +113,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      isAuthenticated, 
+    <AuthContext.Provider value={{
+      user,
+      isAuthenticated,
       isLoadingAuth,
       isLoadingPublicSettings,
       authError,
       appPublicSettings,
       logout,
       navigateToLogin,
-      checkAppState
+      checkAppState,
+      checkUserAuth
     }}>
       {children}
     </AuthContext.Provider>

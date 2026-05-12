@@ -14,7 +14,8 @@ import { toast } from 'sonner';
 
 const PRODUCT_IDS = {
   monthly: 'servigo.pro.monthly',
-  yearly: 'servigo.pro.yearly',
+  yearly:  'servigo.pro.yearly',
+  annual:  'servigo.pro.yearly', // alias used by ProSubscription
 };
 
 // Détecte si on tourne dans Capacitor (iOS natif) ou dans le browser

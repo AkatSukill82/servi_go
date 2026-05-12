@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster"
 import { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -50,30 +51,42 @@ function ExternalRedirect({ to }) {
   return null;
 }
 
+// Route racine intelligente : redirige les utilisateurs déjà connectés
+const RootRedirect = () => {
+  const { isAuthenticated, user } = useAuth();
+  if (isAuthenticated && user) {
+    if (user.role === 'admin') return <Navigate to="/AdminDashboard" replace />;
+    if (user.user_type === 'professionnel') return <Navigate to="/ProDashboard" replace />;
+    return <Navigate to="/Home" replace />;
+  }
+  return <CreateAccount />;
+};
+
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated } = useAuth();
+
+  const isCapacitor = typeof window !== 'undefined' && window.Capacitor !== undefined;
+  const publicPaths = ['/se-connecter', '/creer-compte', '/cgu', '/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/Register', '/CGU', '/PrivacyPolicy', '/Support'];
+  const currentPath = window.location.pathname;
+  const isPublicPath = publicPaths.some(p => currentPath.startsWith(p));
 
   if (isLoadingPublicSettings || isLoadingAuth) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
+    return null;
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
-    // For auth_required or any other error, just render routes normally
-    // The individual pages handle auth redirects themselves
+  if (authError?.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
+  }
+
+  if (isCapacitor && !isAuthenticated && !isPublicPath) {
+    return <Navigate to="/se-connecter" replace />;
   }
 
   return (
     <ErrorBoundary>
     <Routes>
-      {/* Root → Signup page */}
-      <Route path="/" element={<CreateAccount />} />
+      {/* Root → redirige si connecté, sinon signup */}
+      <Route path="/" element={<RootRedirect />} />
 
       {/* Public pages (no layout) */}
       <Route path="/SelectUserType" element={<SelectUserType />} />

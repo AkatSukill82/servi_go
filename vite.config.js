@@ -2,7 +2,6 @@ import base44 from "@base44/vite-plugin"
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-// https://vite.dev/config/
 export default defineConfig({
   logLevel: 'error',
   plugins: [
@@ -14,12 +13,21 @@ export default defineConfig({
       visualEditAgent: true
     }),
     react(),
+    // Remove crossorigin from CSS links — WKWebView (Capacitor) doesn't serve
+    // CORS headers for stylesheet requests, causing CSS to silently fail.
+    {
+      name: 'capacitor-css-crossorigin-fix',
+      transformIndexHtml(html) {
+        return html.replace(
+          /<link rel="stylesheet" crossorigin/g,
+          '<link rel="stylesheet"'
+        );
+      },
+    },
   ],
   build: {
-    // Capacitor lit le build depuis /dist
     outDir: 'dist',
     assetsDir: 'assets',
-    // Évite les erreurs de modules manquants sur iOS WKWebView
     rollupOptions: {
       output: {
         manualChunks: undefined,
