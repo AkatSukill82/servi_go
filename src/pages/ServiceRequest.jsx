@@ -121,8 +121,16 @@ export default function ServiceRequest() {
   };
 
   const handleQuestionNext = () => {
-    if (questionIndex < totalQuestions - 1) setQuestionIndex(questionIndex + 1);
-    else setStep(STEPS.SLOT);
+    if (questionIndex < totalQuestions - 1) {
+      setQuestionIndex(questionIndex + 1);
+    } else {
+      // Si le client indique qu'il est bloqué → pas besoin de choisir une date, on envoie directement
+      const clientIsBlocked = Object.values(answers).some(
+        (a) => typeof a === 'string' && /bloqu/i.test(a)
+      );
+      if (clientIsBlocked) handleConfirm();
+      else setStep(STEPS.SLOT);
+    }
   };
 
   const handleConfirm = async () => {
