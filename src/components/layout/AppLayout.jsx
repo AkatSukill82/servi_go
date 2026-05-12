@@ -8,7 +8,6 @@ import { isNative } from '@/lib/platform';
 
 import BottomNav from './BottomNav.jsx';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
-import ProBottomNav from './ProBottomNav.jsx';
 import { useTheme } from '@/lib/ThemeContext';
 
 // Lazy load — chaque page chargée uniquement à la première visite
@@ -230,7 +229,7 @@ export default function AppLayout() {
         </AnimatePresence>
       </div>
 
-      {userType === 'professionnel' ? <ProBottomNav /> : <BottomNav />}
+      <BottomNav />
     </div>
   );
 }

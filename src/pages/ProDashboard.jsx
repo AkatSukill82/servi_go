@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Check, Clock, MapPin, Star, ShieldCheck, ChevronRight, TrendingUp, CreditCard, AlertCircle, Play, StopCircle } from 'lucide-react';
+import { Check, Clock, MapPin, Star, ChevronRight, CreditCard, AlertCircle, Play, StopCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import ProStats from '@/components/pro/ProStats';
@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
 import MissionProgress from '@/components/mission/MissionProgress';
 import TopBar from '@/components/layout/TopBar';
+import { getFirstName, getGreeting } from '@/lib/userUtils';
 
 const getTimeSinceCreated = (createdDate) => {
   if (!createdDate) return 0;
@@ -36,20 +37,8 @@ export default function ProDashboard() {
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   const proCategory = user?.category_name;
 
-  const firstName = (() => {
-    if (user?.first_name) return user.first_name;
-    const handle = (user?.full_name || '');
-    const letters = handle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
-    if (letters.length >= 2) return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
-    return '';
-  })();
-
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Bonjour';
-    if (h < 18) return 'Bon après-midi';
-    return 'Bonsoir';
-  })();
+  const firstName = getFirstName(user);
+  const greeting  = getGreeting();
 
   // Gate: redirect if independence charter not signed (skip in preview)
   useEffect(() => {
@@ -271,11 +260,7 @@ export default function ProDashboard() {
 
   return (
     <div className="min-h-full bg-background">
-      {/* Top bar */}
-      <TopBar
-        title={firstName ? `${greeting}, ${firstName} 👋` : greeting}
-        subtitle={user?.address?.split(',')[0] || user?.category_name || 'Professionnel'}
-      />
+      <TopBar />
 
       <div className="px-4 sm:px-6 pt-4 pb-4 space-y-5">
 

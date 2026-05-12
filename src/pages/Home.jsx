@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import {
-  Search, Zap, X, Star, ChevronRight, Shield,
-  FileText, CreditCard, Mic, AlertCircle, MapPin, Clock
-} from 'lucide-react';
+import { Search, Zap, X, Star, ChevronRight, Shield, FileText, CreditCard, MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceCard from '@/components/home/ServiceCard';
@@ -14,6 +11,7 @@ import PullToRefresh from '@/components/ui/PullToRefresh';
 import TopBar from '@/components/layout/TopBar.jsx';
 import HomeSkeleton from '@/components/home/HomeSkeleton';
 import NearbyProCard from '@/components/home/NearbyProCard';
+import { getFirstName, getGreeting } from '@/lib/userUtils';
 
 const BRAND = '#6C5CE7';
 
@@ -91,31 +89,15 @@ export default function Home() {
       )
     : categories;
 
-  const firstName = (() => {
-    if (user?.first_name) return user.first_name;
-    const handle = (user?.full_name || '');
-    const letters = handle.match(/^[a-zA-Z\u00C0-\u024F]+/)?.[0] || '';
-    if (letters.length >= 2) return letters.charAt(0).toUpperCase() + letters.slice(1).toLowerCase();
-    return '';
-  })();
-
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Bonjour';
-    if (h < 18) return 'Bon après-midi';
-    return 'Bonsoir';
-  })();
+  const firstName = getFirstName(user);
+  const greeting  = getGreeting();
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-full bg-white pb-4">
         <OnboardingModal />
 
-        {/* Top bar */}
-        <TopBar
-          title={firstName ? `${greeting}, ${firstName} 👋` : greeting}
-          subtitle={user?.address?.split(',')[0] || 'Belgique'}
-        />
+        <TopBar />
 
         <div className="px-4 sm:px-5 pt-6 space-y-7">
 
@@ -146,13 +128,9 @@ export default function Home() {
                   boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none',
                 }}
               />
-              {searchQuery ? (
+              {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center tap-scale">
                   <X className="w-4 h-4 text-gray-500" />
-                </button>
-              ) : (
-                <button className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center tap-scale" style={{ background: `${BRAND}15` }}>
-                  <Mic className="w-4 h-4" style={{ color: BRAND }} />
                 </button>
               )}
             </div>
