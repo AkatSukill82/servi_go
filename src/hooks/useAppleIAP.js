@@ -18,10 +18,15 @@ const PRODUCT_IDS = {
   annual:  'servigo.pro.yearly', // alias used by ProSubscription
 };
 
-// Détecte si on tourne dans Capacitor (iOS natif) ou dans le browser
-const isNative = () =>
+// window.Capacitor is injected by the native bridge before any JS runs — always reliable.
+// window.CdvPurchase may not be ready at first render, so never use it for routing.
+const isNative =
   typeof window !== 'undefined' &&
-  window.CdvPurchase !== undefined;
+  !!(window.Capacitor?.isNativePlatform?.() || window.Capacitor?.getPlatform?.() === 'ios');
+
+// The CdvPurchase store plugin (may load slightly after Capacitor bridge)
+const hasCdvStore = () =>
+  typeof window !== 'undefined' && window.CdvPurchase !== undefined;
 
 export function useAppleIAP(user) {
   const [storeReady, setStoreReady] = useState(false);
@@ -31,7 +36,8 @@ export function useAppleIAP(user) {
 
   // ─── Initialisation du store ───────────────────────────────────────────────
   useEffect(() => {
-    if (!isNative()) return; // On est dans le browser, pas besoin
+    if (!isNative) return;
+    if (!hasCdvStore()) return; // Plugin not yet loaded — skip
 
     const { store, ProductType, Platform } = window.CdvPurchase;
 
@@ -106,12 +112,17 @@ export function useAppleIAP(user) {
 
   // ─── Lancer un achat ───────────────────────────────────────────────────────
   const purchase = useCallback(async (plan = 'monthly') => {
-    if (!isNative()) {
+    if (!isNative) {
       // Fallback web : redirection vers le web portal Stripe
       window.open(
         `https://app.myservigo.be/subscribe?plan=${plan}&userId=${user?.id || ''}`,
         '_blank'
       );
+      return;
+    }
+
+    if (!hasCdvStore()) {
+      toast.error('Plugin de paiement non disponible. Relancez l\'application.');
       return;
     }
 
@@ -141,7 +152,7 @@ export function useAppleIAP(user) {
 
   // ─── Restaurer les achats ──────────────────────────────────────────────────
   const restorePurchases = useCallback(async () => {
-    if (!isNative()) {
+    if (!isNative) {
       toast.info('Restauration disponible uniquement sur iOS.');
       return;
     }
@@ -172,7 +183,7 @@ export function useAppleIAP(user) {
 
   return {
     storeReady,
-    isNative: isNative(),
+    isNative,
     purchasing,
     restoring,
     purchase,
