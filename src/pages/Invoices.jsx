@@ -113,7 +113,7 @@ export default function Invoices() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="px-4 pt-6 pb-8">
-        <h1 className="text-2xl font-bold mb-0.5">Mes factures</h1>
+        <h1 className="text-2xl font-black tracking-tight text-foreground mb-0.5">Mes factures</h1>
         <p className="text-sm text-muted-foreground mb-5">Historique de vos services</p>
 
         {/* Total */}

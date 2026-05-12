@@ -58,10 +58,9 @@ export default function Messages() {
       <div className="min-h-full bg-background">
         {/* Header */}
         <div
-          className="bg-card/95 backdrop-blur-md border-b border-border/50 px-4 pt-4 pb-3 sticky top-0 z-20"
-          style={{ paddingTop: '16px' }}
+          className="bg-background/95 backdrop-blur-xl border-b border-border/40 px-5 py-4 sticky top-0 z-20"
         >
-          <h1 className="text-xl font-semibold tracking-[-0.02em] mb-3">Messages</h1>
+          <h1 className="text-2xl font-black tracking-tight text-foreground mb-3">Messages</h1>
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

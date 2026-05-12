@@ -116,9 +116,9 @@ export default function Favorites() {
 
   return (
     <div className="min-h-screen bg-background pb-6">
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-4">
-        <h1 className="text-xl font-bold">Mes favoris</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40 px-5 py-4">
+        <h1 className="text-2xl font-black tracking-tight text-foreground">Mes favoris</h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
           {displayed.length} professionnel{displayed.length !== 1 ? 's' : ''}
         </p>
       </div>
