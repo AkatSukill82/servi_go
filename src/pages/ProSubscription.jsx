@@ -82,26 +82,11 @@ export default function ProSubscription() {
 
   // ─── Handler principal d'abonnement ───────────────────────────────────────
   const handleSubscribe = async () => {
-    if (isNative) {
-      // iOS natif → Apple IAP
-      await purchase(plan);
-    } else {
-      // Web / Android → Stripe via web portal
-      try {
-        const res = await base44.functions.invoke('createProSubscription', {
-          plan,
-          successUrl: `${window.location.origin}/ProSubscription?success=true&plan=${plan}`,
-          cancelUrl: `${window.location.origin}/ProSubscription`,
-        });
-        if (res.data?.url) {
-          window.location.href = res.data.url;
-        } else {
-          toast.error('Erreur lors de la création de l\'abonnement. Réessayez.');
-        }
-      } catch (err) {
-        toast.error('Erreur : ' + (err?.message || 'réessayez'));
-      }
+    if (!isNative) {
+      toast.error('Le paiement est disponible uniquement sur l\'application iOS.');
+      return;
     }
+    await purchase(plan);
   };
 
   const handleCancelSubscription = async () => {

@@ -113,11 +113,7 @@ export function useAppleIAP(user) {
   // ─── Lancer un achat ───────────────────────────────────────────────────────
   const purchase = useCallback(async (plan = 'monthly') => {
     if (!isNative) {
-      // Fallback web : redirection vers le web portal Stripe
-      window.open(
-        `https://app.myservigo.be/subscribe?plan=${plan}&userId=${user?.id || ''}`,
-        '_blank'
-      );
+      toast.error('Le paiement est disponible uniquement sur l\'application iOS.');
       return;
     }
 
