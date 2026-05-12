@@ -11,9 +11,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
-import { isIOS, isAndroid, platform } from '@/lib/platform';
+import { isIOS, isAndroid, platform, isIOSNow } from '@/lib/platform';
 
-export { isIOS, isAndroid, platform };
+export { isIOS, isAndroid, platform, isIOSNow };
 
 export const PRODUCT_IDS = {
   monthly: 'servigo.pro.monthly',

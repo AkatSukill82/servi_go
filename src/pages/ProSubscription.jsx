@@ -18,7 +18,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useAppleIAP, isIOS } from '@/hooks/useAppleIAP';
+import { useAppleIAP } from '@/hooks/useAppleIAP';
+import { isIOSNow } from '@/lib/platform';
 import { BRAND } from '@/lib/theme';
 
 const BENEFITS = [
@@ -80,7 +81,7 @@ export default function ProSubscription() {
   const yearlyPrice  = yearlyInfo?.price  || '90,00 €';
 
   const handleSubscribe = async () => {
-    if (isIOS) {
+    if (isIOSNow()) {
       await purchase(plan);
       return;
     }
@@ -135,7 +136,8 @@ export default function ProSubscription() {
   const sc = STATUS[subscription?.status] || { label: 'Inactif', color: 'text-gray-600 bg-gray-50 border-gray-200' };
 
   const isBusy = purchasing || billingLoading;
-  const ctaDisabled = isBusy || (isIOS && !storeReady);
+  const onIOS = isIOSNow();
+  const ctaDisabled = isBusy || (onIOS && !storeReady);
 
   const ctaLabel = isBusy
     ? 'Traitement…'
@@ -229,14 +231,14 @@ export default function ProSubscription() {
           )}
 
           {/* Actions */}
-          {!isIOS && (
+          {!onIOS && (
             <Button variant="outline" onClick={handleOpenBillingPortal} disabled={billingLoading}
               className="w-full h-11 rounded-xl">
               {billingLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
               Gérer le paiement
             </Button>
           )}
-          {isIOS && (
+          {onIOS && (
             <Button variant="outline" onClick={restorePurchases} disabled={restoring} className="w-full h-11 rounded-xl">
               {restoring ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
               Restaurer mes achats
@@ -356,7 +358,7 @@ export default function ProSubscription() {
         </div>
 
         {/* iOS : store loading */}
-        {isIOS && !storeReady && (
+        {onIOS && !storeReady && (
           <div className="mt-4 bg-white/10 backdrop-blur rounded-xl p-3 flex items-center gap-2">
             <Loader2 className="w-4 h-4 text-white/70 animate-spin shrink-0" />
             <p className="text-xs text-white/70">Connexion à l'App Store…</p>
@@ -438,7 +440,7 @@ export default function ProSubscription() {
             {ctaLabel}
           </Button>
 
-          {isIOS && (
+          {onIOS && (
             <button onClick={restorePurchases} disabled={restoring}
               className="w-full text-center text-sm font-medium py-2 flex items-center justify-center gap-2"
               style={{ color: BRAND }}>
@@ -461,7 +463,7 @@ export default function ProSubscription() {
           {[
             { icon: Shield,   label: 'Sans engagement' },
             { icon: RefreshCw, label: 'Résiliable' },
-            { icon: CreditCard, label: isIOS ? 'Apple Pay' : 'Stripe sécurisé' },
+            { icon: CreditCard, label: onIOS ? 'Apple Pay' : 'Stripe sécurisé' },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
@@ -471,7 +473,7 @@ export default function ProSubscription() {
         </div>
 
         <p className="text-center text-[10px] text-muted-foreground px-4 leading-relaxed">
-          {isIOS
+          {onIOS
             ? 'Le paiement est géré par Apple. Gérez vos abonnements dans Réglages › Apple ID › Abonnements.'
             : 'Paiement sécurisé par Stripe. Vous pouvez résilier à tout moment depuis votre espace Pro.'
           }
