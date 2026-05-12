@@ -95,7 +95,7 @@ export function useAppleIAP(user) {
 
   // ─── Init du store ───────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!isIOS) return;
+    if (!isIOSNow()) return;
     if (initializedRef.current) return;
 
     waitForCdvPurchase(8000)
@@ -190,7 +190,7 @@ export function useAppleIAP(user) {
   return {
     storeReady,
     iapAvailable,
-    isNative: isIOS,
+    isNative: isIOSNow(),
     purchasing,
     restoring,
     purchase,
