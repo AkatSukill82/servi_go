@@ -45,22 +45,9 @@ export default function Messages() {
     refetchInterval: 10000,
   });
 
-  const { data: requests = [] } = useQuery({
-    queryKey: ['myRequests', user?.email],
-    queryFn: () => isPro
-      ? base44.entities.ServiceRequestV2.filter({ professional_email: user.email }, '-updated_date', 50)
-      : base44.entities.ServiceRequestV2.filter({ customer_email: user.email }, '-updated_date', 50),
-    enabled: !!user?.email && conversations.length === 0,
-  });
-
-  const useConv = conversations.length > 0;
-  const rawChats = useConv ? conversations : requests.filter(r => r.professional_email);
-
-  const chats = rawChats.filter(item => {
+  const chats = conversations.filter(item => {
     if (!search.trim()) return true;
-    const name = useConv
-      ? (isPro ? item.customer_name : item.professional_name)
-      : item.professional_name;
+    const name = isPro ? item.customer_name : item.professional_name;
     return name?.toLowerCase().includes(search.toLowerCase());
   });
 
@@ -117,18 +104,12 @@ export default function Messages() {
         ) : (
           <div className="divide-y divide-border/50">
             {chats.map((item, i) => {
-              const name = useConv
-                ? (isPro ? item.customer_name : item.professional_name)
-                : item.professional_name;
-              const preview = useConv
-                ? (item.last_message_preview || 'Démarrer la conversation')
-                : item.category_name;
-              const ts = useConv ? item.last_message_at : item.updated_date;
-              const unread = useConv ? (item[isPro ? 'unread_count_pro' : 'unread_count_customer'] || 0) : 0;
+              const name = isPro ? item.customer_name : item.professional_name;
+              const preview = item.last_message_preview || 'Démarrer la conversation';
+              const ts = item.last_message_at;
+              const unread = item[isPro ? 'unread_count_pro' : 'unread_count_customer'] || 0;
               const hasUnread = unread > 0;
-              const navigateTo = useConv
-                ? (item.request_id ? `/Chat?requestId=${item.request_id}` : `/Chat?conversationId=${item.id}`)
-                : `/Chat?requestId=${item.id}`;
+              const navigateTo = item.request_id ? `/Chat?requestId=${item.request_id}` : `/Chat?conversationId=${item.id}`;
               const initials = (name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
               return (

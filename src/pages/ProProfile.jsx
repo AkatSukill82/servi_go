@@ -24,7 +24,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
-import { useTheme } from '@/lib/ThemeContext';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import ProContractsTab from '@/components/documents/ProContractsTab';
 import PageFooter from '@/components/layout/PageFooter';
@@ -91,7 +90,6 @@ export default function ProProfile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { dark, setDark } = useTheme();
   const [activeTab, setActiveTab] = useState('infos');
   const [isEditing, setIsEditing] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
@@ -400,8 +398,8 @@ export default function ProProfile() {
 
             {/* Abonnement */}
             <button onClick={() => navigate('/ProSubscription')} className={`w-full bg-card rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left ${isActive ? 'border-green-200' : 'border-orange-200'}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-green-50 dark:bg-green-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
-                <CreditCard className={`w-5 h-5 ${isActive ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`} />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-green-50' : 'bg-orange-50'}`}>
+                <CreditCard className={`w-5 h-5 ${isActive ? 'text-green-600' : 'text-orange-600'}`} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">ServiGo Pro — 10€/mois</p>
@@ -412,8 +410,8 @@ export default function ProProfile() {
 
             {/* eID */}
             <button onClick={() => navigate('/EidVerification')} className={`w-full bg-card rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left ${user?.eid_status === 'verified' ? 'border-green-200' : 'border-red-200'}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${user?.eid_status === 'verified' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-red-50 dark:bg-red-900/20'}`}>
-                <ShieldCheck className={`w-5 h-5 ${user?.eid_status === 'verified' ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`} />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${user?.eid_status === 'verified' ? 'bg-green-50' : 'bg-red-50'}`}>
+                <ShieldCheck className={`w-5 h-5 ${user?.eid_status === 'verified' ? 'text-green-600' : 'text-red-500'}`} />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">{user?.eid_status === 'verified' ? '✓ Identité vérifiée' : 'Vérifier mon identité (eID)'}</p>
@@ -422,48 +420,6 @@ export default function ProProfile() {
               {user?.eid_status !== 'verified' && <span className="text-primary font-bold">→</span>}
             </button>
 
-            <div className="flex items-center justify-between bg-card rounded-2xl border border-border/50 shadow-sm px-5 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{dark ? '🌙' : '☀️'}</span>
-                  <div>
-                    <p className="text-sm font-medium">Mode nuit</p>
-                    <p className="text-xs text-muted-foreground">Thème sombre pour les yeux</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    const next = !dark;
-                    setDark(next);
-                    base44.auth.updateMe({ dark_mode: next }).catch(() => {});
-                  }}
-                  style={{
-                    position: 'relative',
-                    width: '48px',
-                    height: '28px',
-                    borderRadius: '14px',
-                    backgroundColor: dark ? '#4F46E5' : '#D1D5DB',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: 0,
-                    flexShrink: 0,
-                    transition: 'background-color 0.2s ease',
-                    minHeight: 'unset',
-                    minWidth: 'unset',
-                  }}
-                >
-                  <span style={{
-                    position: 'absolute',
-                    top: '2px',
-                    left: dark ? '22px' : '2px',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '12px',
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
-                    transition: 'left 0.2s ease',
-                  }} />
-                </button>
-              </div>
             <Button variant="outline" onClick={() => navigate('/Support')} className="w-full h-12 rounded-xl text-sm">
               <Headphones className="w-4 h-4 mr-2" /> Contacter le support
             </Button>
@@ -489,15 +445,15 @@ export default function ProProfile() {
             {/* Statistiques rapides */}
             <div className="grid grid-cols-3 gap-2.5">
               <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-[#534AB7] dark:text-[#8B83D4]">{completedMissions.length}</p>
+                <p className="text-2xl font-bold text-[#534AB7]">{completedMissions.length}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Missions complétées</p>
               </div>
               <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-[#1D9E75] dark:text-[#34D399]">{avgRating || '—'}</p>
+                <p className="text-2xl font-bold text-[#1D9E75]">{avgRating || '—'}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Note moyenne</p>
               </div>
               <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 text-center">
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalEarnings.toFixed(0)}€</p>
+                <p className="text-2xl font-bold text-blue-600">{totalEarnings.toFixed(0)}€</p>
                 <p className="text-[10px] text-muted-foreground mt-1">Revenus estimés</p>
               </div>
             </div>
@@ -520,7 +476,7 @@ export default function ProProfile() {
             </div>
 
             <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2"><Euro className="w-4 h-4 text-[#1D9E75] dark:text-[#34D399]" />Mes tarifs</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2"><Euro className="w-4 h-4 text-[#1D9E75]" />Mes tarifs</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Prix de base (€)</Label>

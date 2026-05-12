@@ -12,13 +12,13 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from
 '@/components/ui/alert-dialog';
 import { Camera, Save, LogOut, User, Trash2, Receipt, Shield, ShieldCheck, MapPin, Pencil, Check, LayoutDashboard, FileText, ChevronRight } from 'lucide-react';
+import TopBar from '@/components/layout/TopBar.jsx';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import CustomerReceipts from '@/components/profile/CustomerReceipts';
 import CustomerContracts from '@/components/profile/CustomerContracts';
 import ReferralSection from '@/components/profile/ReferralSection';
-import { useTheme } from '@/lib/ThemeContext';
 import PageFooter from '@/components/layout/PageFooter';
 
 const TABS = [
@@ -45,7 +45,6 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { dark, setDark } = useTheme();
   const [tab, setTab] = useState('infos');
   const [receiptsSubTab, setReceiptsSubTab] = useState('missions');
   const [isEditing, setIsEditing] = useState(false);
@@ -69,13 +68,6 @@ export default function Profile() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
-
-  // Sync depuis la BDD une seule fois au chargement
-  useEffect(() => {
-    if (user?.dark_mode !== undefined) {
-      setDark(user.dark_mode === true);
-    }
-  }, [user?.dark_mode]);
 
   useEffect(() => {
     if (user) {
@@ -145,6 +137,7 @@ export default function Profile() {
 
   return (
     <div className="min-h-full bg-background">
+      <TopBar />
       {/* Hero Card */}
       <div className="bg-card border-b border-border/50 shadow-sm px-5 pt-8 pb-6">
         <div className="flex items-start gap-4">
@@ -317,7 +310,7 @@ export default function Profile() {
             <button
             onClick={() => navigate('/EidVerification')}
             className={`w-full bg-card rounded-2xl border shadow-sm p-4 flex items-center gap-3 text-left transition-colors ${
-            eidVerified ? 'border-green-200 dark:border-green-900' : 'border-red-200 dark:border-red-900'}`
+            eidVerified ? 'border-green-200' : 'border-red-200'}`
             }>
             
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${eidVerified ? 'bg-green-50' : 'bg-red-50'}`}>
@@ -339,52 +332,10 @@ export default function Profile() {
 
         {tab === 'infos' && user && <ReferralSection user={user} />}
 
-        {/* Mode nuit + Déconnexion + Footer — toujours en dernier */}
         {tab === 'infos' &&
         <div className="space-y-2 pt-2">
-            
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          
-            {user?.role === 'admin' &&
+                      {user?.role === 'admin' &&
           <Button
             variant="outline"
             onClick={() => setShowAdminModal(true)}

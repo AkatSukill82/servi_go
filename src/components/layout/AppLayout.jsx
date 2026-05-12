@@ -7,7 +7,6 @@ import { isNative } from '@/lib/platform';
 
 
 import BottomNav from './BottomNav.jsx';
-import { useTheme } from '@/lib/ThemeContext';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home.jsx'));
@@ -23,7 +22,6 @@ const ProProfile  = lazy(() => import('@/pages/ProProfile'));
 const ServiceRequest = lazy(() => import('@/pages/ServiceRequest'));
 const ProSubscription = lazy(() => import('@/pages/ProSubscription'));
 const ProAgenda = lazy(() => import('@/pages/ProAgenda'));
-const ServiBot  = lazy(() => import('@/pages/ServiBot'));
 
 const CUSTOMER_TABS = ['/Home', '/MissionHistory', '/Favorites', '/Messages', '/Profile'];
 const PRO_TABS = ['/ProDashboard', '/ProAgenda', '/ProMessages', '/ProProfile'];
@@ -45,7 +43,6 @@ const STACK_COMPONENTS = {
   '/ProSubscription': ProSubscription,
   '/Map': Map,
   '/Emergency': lazy(() => import('@/pages/Emergency')),
-  '/ServiBot': ServiBot,
   '/Invoices': Invoices,
 };
 
@@ -60,18 +57,8 @@ export default function AppLayout() {
   const location = useLocation();
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { setDark } = useTheme();
   const [currentUser, setCurrentUser] = React.useState(null);
   const userEmail = currentUser?.email;
-
-  // Sync préférence BDD → DOM après chargement de l'utilisateur
-  useEffect(() => {
-    if (currentUser?.dark_mode !== undefined) {
-      const localDark = localStorage.getItem('sg_dark') === '1';
-      const dbDark = currentUser.dark_mode === true;
-      if (dbDark !== localDark) setDark(dbDark);
-    }
-  }, [currentUser?.dark_mode]);
   const queryClient = useQueryClient();
 
   const { data: proSubscription } = useQuery({

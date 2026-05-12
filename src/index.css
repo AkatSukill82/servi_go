@@ -71,46 +71,6 @@
     --sidebar-ring:       243 75% 59%;
   }
 
-  /* ── Dark mode — DISABLED: force light mode everywhere ── */
-  [data-theme="dark"], .dark {
-    --color-bg:        #F8F9FA;
-    --color-bg-soft:   #F1F3F5;
-    --color-border:    #DEE2E6;
-    --color-text:      #1A1A2E;
-    --color-text-muted:#52525B;
-    --color-surface:   #FFFFFF;
-    --color-chip-bg:   #EEEFF1;
-    --shadow-card:     0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07);
-
-    --background:          0 0% 97%;
-    --foreground:          240 14% 12%;
-    --card:                0 0% 100%;
-    --card-foreground:     240 14% 12%;
-    --popover:             0 0% 100%;
-    --popover-foreground:  240 14% 12%;
-    --primary:             250 56% 56%;
-    --primary-foreground:  0 0% 100%;
-    --secondary:           220 14% 95%;
-    --secondary-foreground:240 14% 12%;
-    --muted:               220 14% 94%;
-    --muted-foreground:    220 9% 38%;
-    --accent:              250 56% 56%;
-    --accent-foreground:   0 0% 100%;
-    --destructive:         4 76% 46%;
-    --destructive-foreground: 0 0% 100%;
-    --border:              220 13% 88%;
-    --input:               220 13% 88%;
-    --ring:                250 56% 56%;
-
-    --sidebar-background: 0 0% 99%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary:    222 47% 11%;
-    --sidebar-primary-foreground: 0 0% 99%;
-    --sidebar-accent:     214 32% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border:     214 32% 91%;
-    --sidebar-ring:       243 75% 59%;
-  }
 }
 
 @layer base {
@@ -215,74 +175,6 @@
   }
 }
 
-/* ── Dark mode overrides — all forced to light ── */
-
-/* Dark mode: fix text on those banners */
-.dark .text-blue-900,  .dark .text-blue-800  { color: #93C5FD !important; }
-.dark .text-green-900, .dark .text-green-800 { color: #6EE7B7 !important; }
-.dark .text-yellow-900,.dark .text-yellow-800{ color: #FDE68A !important; }
-.dark .text-orange-800,.dark .text-orange-900{ color: #FED7AA !important; }
-.dark .text-red-800,   .dark .text-red-900   { color: #FCA5A5 !important; }
-.dark .text-blue-700   { color: #93C5FD !important; }
-.dark .text-green-700  { color: #6EE7B7 !important; }
-.dark .text-yellow-700 { color: #FDE68A !important; }
-.dark .text-orange-700 { color: #FDBA74 !important; }
-.dark .text-red-700    { color: #FCA5A5 !important; }
-.dark .text-orange-600 { color: #FDBA74 !important; }
-.dark .text-red-600    { color: #F87171 !important; }
-.dark .text-blue-600   { color: #60A5FA !important; }
-.dark .text-green-600  { color: #34D399 !important; }
-.dark .text-yellow-600 { color: #FBBF24 !important; }
-
-/* Dark mode: border colors for colored banners */
-.dark .border-blue-200   { border-color: rgba(59,130,246,0.3) !important; }
-.dark .border-green-200  { border-color: rgba(16,185,129,0.3) !important; }
-.dark .border-yellow-200 { border-color: rgba(245,158,11,0.3) !important; }
-.dark .border-orange-200 { border-color: rgba(249,115,22,0.3) !important; }
-.dark .border-red-200    { border-color: rgba(239,68,68,0.3)  !important; }
-.dark .border-purple-200 { border-color: rgba(139,92,246,0.3) !important; }
-.dark .border-indigo-200 { border-color: rgba(99,102,241,0.3) !important; }
-
-/* Dark mode: inline colored text badges */
-.dark .bg-blue-100   { background-color: rgba(59,130,246,0.18) !important; }
-.dark .bg-green-100  { background-color: rgba(16,185,129,0.18) !important; }
-.dark .bg-yellow-100 { background-color: rgba(245,158,11,0.18) !important; }
-.dark .bg-orange-100 { background-color: rgba(249,115,22,0.18) !important; }
-.dark .bg-red-100    { background-color: rgba(239,68,68,0.18)  !important; }
-.dark .bg-purple-100 { background-color: rgba(139,92,246,0.18) !important; }
-.dark .bg-indigo-100 { background-color: rgba(99,102,241,0.18) !important; }
-.dark .bg-sky-100    { background-color: rgba(14,165,233,0.18) !important; }
-.dark .text-blue-700,  .dark .text-blue-800  { color: #93C5FD !important; }
-.dark .text-indigo-700 { color: #A5B4FC !important; }
-.dark .text-purple-700 { color: #C4B5FD !important; }
-.dark .text-sky-700    { color: #7DD3FC !important; }
-
-/* Dark mode: fix white-background cards that hardcode white */
-.dark .bg-white { background-color: hsl(var(--card)) !important; }
-.dark .text-\[\#111827\], .dark .text-\[\#1A1A2E\], .dark .text-\[\#1A365D\] {
-  color: hsl(var(--foreground)) !important;
-}
-.dark .text-\[\#374151\] { color: hsl(var(--foreground)) !important; }
-.dark .text-\[\#4A5568\] { color: hsl(var(--muted-foreground)) !important; }
-.dark .text-\[\#6B7280\] { color: hsl(var(--muted-foreground)) !important; }
-.dark .text-\[\#718096\] { color: hsl(var(--muted-foreground)) !important; }
-.dark .bg-\[\#F9FAFB\], .dark .bg-\[\#F7FAFC\], .dark .bg-\[\#F3F4F6\] {
-  background-color: hsl(var(--muted)) !important;
-}
-.dark .bg-\[\#E5E7EB\] { background-color: hsl(var(--border)) !important; }
-.dark .border-\[\#E5E7EB\], .dark .border-\[\#E2E8F0\], .dark .border-\[\#D1D5DB\] {
-  border-color: hsl(var(--border)) !important;
-}
-
-/* Dark mode: inputs should have visible text */
-.dark input, .dark textarea, .dark select {
-  color: hsl(var(--foreground));
-  background-color: hsl(var(--input));
-}
-.dark input::placeholder, .dark textarea::placeholder {
-  color: hsl(var(--muted-foreground));
-  opacity: 0.7;
-}
 
 /* ── Full-width layout — all screen sizes ── */
 html, body, #root {

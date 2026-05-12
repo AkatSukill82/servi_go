@@ -101,8 +101,7 @@ const AuthenticatedApp = () => {
       <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
 
       {/* App pages with shared layout (tabs persistants) */}
-      <Route path="/ServiBot" element={<AppLayout />} />
-      <Route path="/Home" element={<AppLayout />} />
+<Route path="/Home" element={<AppLayout />} />
       <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Messages" element={<AppLayout />} />
       <Route path="/ProAgenda" element={<AppLayout />} />

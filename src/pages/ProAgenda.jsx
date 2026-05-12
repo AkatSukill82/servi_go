@@ -5,19 +5,19 @@ import { base44 } from '@/api/base44Client';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, List, MapPin, Clock, Phone, Euro, CheckCircle, XCircle, X, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { BRAND } from '@/lib/theme';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_CONFIG = {
-  pending_pro:  { label: 'En attente de confirmation', cls: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  accepted:     { label: 'Confirmé', cls: 'bg-green-100 text-green-700 border-green-200' },
-  contract_pending: { label: 'Contrat en cours', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
-  contract_signed:  { label: 'Contrat signé', cls: 'bg-indigo-100 text-indigo-700 border-indigo-200' },
-  pro_en_route: { label: 'En route', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
-  in_progress:  { label: 'En cours', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
-  completed:    { label: 'Terminé', cls: 'bg-gray-100 text-gray-600 border-gray-200' },
-  cancelled:    { label: 'Annulé', cls: 'bg-red-100 text-red-600 border-red-200' },
+  pending_pro:      { label: 'En attente',   bg: 'rgba(253,203,110,0.15)', color: '#B7870A' },
+  accepted:         { label: 'Confirmé',     bg: 'rgba(0,184,148,0.12)',   color: '#00897B' },
+  contract_pending: { label: 'Contrat',      bg: 'rgba(59,130,246,0.12)', color: '#1D4ED8' },
+  contract_signed:  { label: 'Signé',        bg: 'rgba(108,92,231,0.12)', color: '#6C5CE7' },
+  pro_en_route:     { label: 'En route',     bg: 'rgba(14,165,233,0.12)', color: '#0284C7' },
+  in_progress:      { label: 'En cours',     bg: 'rgba(108,92,231,0.12)', color: '#6C5CE7' },
+  completed:        { label: 'Terminé',      bg: 'rgba(148,163,184,0.12)', color: '#64748B' },
+  cancelled:        { label: 'Annulé',       bg: 'rgba(225,112,85,0.12)', color: '#C0392B' },
 };
 
 function DeclineModal({ onConfirm, onClose, isPending }) {
@@ -38,10 +38,10 @@ function DeclineModal({ onConfirm, onClose, isPending }) {
           className="w-full border border-border rounded-xl px-3 py-2.5 text-sm bg-muted/30 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
         />
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl h-11">Annuler</Button>
-          <Button onClick={() => onConfirm(reason)} disabled={isPending} className="flex-1 rounded-xl h-11 bg-destructive hover:bg-destructive/90">
-            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><XCircle className="w-4 h-4 mr-1.5" />Décliner</>}
-          </Button>
+          <button onClick={onClose} className="flex-1 h-11 rounded-xl text-sm font-medium border border-border bg-transparent text-foreground tap-scale">Annuler</button>
+          <button onClick={() => onConfirm(reason)} disabled={isPending} className="flex-1 h-11 rounded-xl text-sm font-semibold text-white tap-scale disabled:opacity-60" style={{ background: '#DC2626' }}>
+            {isPending ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : <span className="flex items-center justify-center gap-1.5"><XCircle className="w-4 h-4" />Décliner</span>}
+          </button>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@ function AppointmentCard({ req, user, onAccept, onDecline, accepting, declining 
             </p>
           )}
         </div>
-        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${sc.cls}`}>{sc.label}</span>
+        <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0" style={{ background: sc.bg, color: sc.color }}>{sc.label}</span>
       </div>
 
       {/* Details */}
@@ -103,23 +103,22 @@ function AppointmentCard({ req, user, onAccept, onDecline, accepting, declining 
       {/* Actions */}
       {isPending && (
         <div className="flex gap-2 pt-1">
-          <Button
-            size="sm"
+          <button
             onClick={() => onAccept(req)}
             disabled={accepting}
-            className="flex-1 rounded-xl h-10 bg-green-600 hover:bg-green-700 text-xs"
+            className="flex-1 h-10 rounded-xl text-xs font-semibold text-white tap-scale disabled:opacity-60 flex items-center justify-center gap-1"
+            style={{ background: '#16A34A' }}
           >
-            {accepting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><CheckCircle className="w-3.5 h-3.5 mr-1" />Accepter le RDV</>}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
+            {accepting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><CheckCircle className="w-3.5 h-3.5" />Accepter le RDV</>}
+          </button>
+          <button
             onClick={() => onDecline(req)}
             disabled={declining}
-            className="flex-1 rounded-xl h-10 text-xs border-destructive/30 text-destructive hover:bg-destructive/5"
+            className="flex-1 h-10 rounded-xl text-xs font-semibold border tap-scale disabled:opacity-60 flex items-center justify-center gap-1"
+            style={{ borderColor: 'rgba(220,38,38,0.3)', color: '#DC2626' }}
           >
-            <XCircle className="w-3.5 h-3.5 mr-1" />Décliner
-          </Button>
+            <XCircle className="w-3.5 h-3.5" />Décliner
+          </button>
         </div>
       )}
     </motion.div>
@@ -250,7 +249,7 @@ export default function ProAgenda() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--accent-blue)' }}>Agenda</h1>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: BRAND }}>Agenda</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {appointments.length} rendez-vous
             {pendingCount > 0 && <span className="ml-2 text-yellow-600 font-semibold">· {pendingCount} en attente</span>}
