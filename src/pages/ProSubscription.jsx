@@ -98,6 +98,12 @@ export default function ProSubscription() {
     }
 
     // Web → Stripe
+    // Bloquer si dans un iframe (preview sandbox)
+    if (window.self !== window.top) {
+      toast.error('Le paiement n\'est disponible que depuis l\'application publiée, pas depuis la prévisualisation.');
+      return;
+    }
+
     setBillingLoading(true);
     try {
       const res = await base44.functions.invoke('createProSubscription', {

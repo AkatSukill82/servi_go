@@ -3,6 +3,12 @@ import Stripe from 'npm:stripe@14.21.0';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
+// IDs des prix Stripe existants (Live Mode)
+const PRICE_IDS = {
+  monthly: 'price_1RMuViFAPMkxlXSv0YENF1xF', // Sera résolu dynamiquement si absent
+  annual:  'price_1RMuVoFAPMkxlXSv0kIFqNtB',
+};
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -16,34 +22,73 @@ Deno.serve(async (req) => {
     const cancelUrl = body.cancelUrl || `${req.headers.get('origin')}/ProSubscription`;
 
     const isAnnual = plan === 'annual';
-    const amount = isAnnual ? 10000 : 1000; // cents
-    const name = isAnnual ? 'ServiGo Pro — Abonnement Annuel' : 'ServiGo Pro — Abonnement Mensuel';
-    const description = isAnnual ? '~8.33€/mois · Économisez 17%' : null;
 
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      payment_method_types: ['card'],
-      customer_email: user.email,
-      line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: { name, ...(description ? { description } : {}) },
-          unit_amount: amount,
+    // Récupérer les prix depuis Stripe pour utiliser les bons price IDs
+    let priceId;
+    try {
+      const prices = await stripe.prices.list({ active: true, limit: 20 });
+      // Chercher le bon prix selon l'intervalle
+      const match = prices.data.find(p =>
+        p.recurring &&
+        (isAnnual ? p.recurring.interval === 'year' : p.recurring.interval === 'month')
+      );
+      priceId = match?.id;
+    } catch (e) {
+      console.error('Erreur récupération prix Stripe:', e.message);
+    }
+
+    let sessionConfig;
+
+    if (priceId) {
+      // Mode abonnement récurrent avec prix Stripe existant
+      sessionConfig = {
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        customer_email: user.email,
+        line_items: [{ price: priceId, quantity: 1 }],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          base44_app_id: Deno.env.get('BASE44_APP_ID'),
+          professional_email: user.email,
+          professional_name: user.full_name || '',
+          plan,
         },
-        quantity: 1,
-      }],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: {
-        base44_app_id: Deno.env.get('BASE44_APP_ID'),
-        professional_email: user.email,
-        professional_name: user.full_name || '',
-        plan,
-      },
-    });
+      };
+    } else {
+      // Fallback : one-time payment si pas de prix récurrent trouvé
+      console.warn('Aucun prix récurrent trouvé, fallback one-time payment');
+      const amount = isAnnual ? 10000 : 1000;
+      const name = isAnnual ? 'ServiGo Pro — Abonnement Annuel' : 'ServiGo Pro — Abonnement Mensuel';
+      sessionConfig = {
+        mode: 'payment',
+        payment_method_types: ['card'],
+        customer_email: user.email,
+        line_items: [{
+          price_data: {
+            currency: 'eur',
+            product_data: { name },
+            unit_amount: amount,
+          },
+          quantity: 1,
+        }],
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        metadata: {
+          base44_app_id: Deno.env.get('BASE44_APP_ID'),
+          professional_email: user.email,
+          professional_name: user.full_name || '',
+          plan,
+        },
+      };
+    }
 
-    // Create or update ProSubscription as pending_payment
-    const existing = await base44.asServiceRole.entities.ProSubscription.filter({ professional_email: user.email }, '-created_date', 1);
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    // Créer ou mettre à jour ProSubscription en pending_payment
+    const existing = await base44.asServiceRole.entities.ProSubscription.filter(
+      { professional_email: user.email }, '-created_date', 1
+    );
     const subData = {
       status: 'pending_payment',
       payment_method: 'stripe',
@@ -63,6 +108,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.ProSubscription.update(existing[0].id, subData);
     }
 
+    console.log(`Session Stripe créée: ${session.id} pour ${user.email} (plan: ${plan})`);
     return Response.json({ url: session.url, sessionId: session.id });
   } catch (error) {
     console.error('Pro subscription error:', error);
