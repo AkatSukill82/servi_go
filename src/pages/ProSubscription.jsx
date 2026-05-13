@@ -19,8 +19,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAppleIAP } from '@/hooks/useAppleIAP';
-import { isIOSNow } from '@/lib/platform';
+import { isIOSNow, isAndroidNow } from '@/lib/platform';
 import { BRAND } from '@/lib/theme';
+
+const PRO_SITE_URL = 'https://servi-go-pro.base44.app';
 
 const BENEFITS = [
   { icon: Zap,            text: 'Missions en temps réel dans votre catégorie' },
@@ -82,10 +84,20 @@ export default function ProSubscription() {
 
   const handleSubscribe = async (overridePlan) => {
     const activePlan = overridePlan || plan;
+
+    // iOS natif → Apple IAP
     if (isIOSNow()) {
       await purchase(activePlan);
       return;
     }
+
+    // Android natif → redirection vers le site web ServiGo Pro
+    if (isAndroidNow()) {
+      window.open(PRO_SITE_URL, '_system');
+      return;
+    }
+
+    // Web → Stripe
     setBillingLoading(true);
     try {
       const res = await base44.functions.invoke('createProSubscription', {
@@ -137,11 +149,14 @@ export default function ProSubscription() {
   const sc = STATUS[subscription?.status] || { label: 'Inactif', color: 'text-gray-600 bg-gray-50 border-gray-200' };
 
   const isBusy = purchasing || billingLoading;
-  const onIOS = isIOSNow();
+  const onIOS     = isIOSNow();
+  const onAndroid = isAndroidNow();
   const ctaDisabled = isBusy || (onIOS && !storeReady);
 
   const ctaLabel = isBusy
     ? 'Traitement…'
+    : onAndroid
+    ? 'S\'abonner sur le site web →'
     : plan === 'annual'
       ? `Commencer pour ${yearlyPrice}/an`
       : `Commencer pour ${monthlyPrice}/mois`;
@@ -233,11 +248,18 @@ export default function ProSubscription() {
           )}
 
           {/* Actions */}
-          {!onIOS && (
+          {!onIOS && !onAndroid && (
             <Button variant="outline" onClick={handleOpenBillingPortal} disabled={billingLoading}
               className="w-full h-11 rounded-xl">
               {billingLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
               Gérer le paiement
+            </Button>
+          )}
+          {onAndroid && (
+            <Button variant="outline" onClick={() => window.open(PRO_SITE_URL, '_system')}
+              className="w-full h-11 rounded-xl">
+              <CreditCard className="w-4 h-4 mr-2" />
+              Gérer mon abonnement sur le site
             </Button>
           )}
           {onIOS && (
@@ -465,7 +487,7 @@ export default function ProSubscription() {
           {[
             { icon: Shield,   label: 'Sans engagement' },
             { icon: RefreshCw, label: 'Résiliable' },
-            { icon: CreditCard, label: onIOS ? 'Apple Pay' : 'Stripe sécurisé' },
+            { icon: CreditCard, label: onIOS ? 'Apple Pay' : onAndroid ? 'Google Play' : 'Stripe sécurisé' },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
@@ -477,6 +499,8 @@ export default function ProSubscription() {
         <p className="text-center text-[10px] text-muted-foreground px-4 leading-relaxed">
           {onIOS
             ? 'Le paiement est géré par Apple. Gérez vos abonnements dans Réglages › Apple ID › Abonnements.'
+            : onAndroid
+            ? 'Sur Android, l\'abonnement se gère depuis notre site web. Vous serez redirigé automatiquement.'
             : 'Paiement sécurisé par Stripe. Vous pouvez résilier à tout moment depuis votre espace Pro.'
           }
         </p>
