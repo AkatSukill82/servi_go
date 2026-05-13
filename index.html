@@ -30,10 +30,6 @@
 
     <title>ServiGo</title>
 
-    <!-- Cordova bridge — required for cordova-plugin-purchase (IAP) on iOS/Android.
-         In WKWebView, Capacitor intercepts this request and provides its own bridge. -->
-    <script src="cordova.js"></script>
-
     <style>
       html, body, #root {
         margin: 0;
@@ -57,5 +53,10 @@
     <div id="root"></div>
 
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Cordova bridge for IAP (cordova-plugin-purchase) — loaded AFTER React
+         so it does not block the JS module bundle. waitForCdvPurchase() in
+         useAppleIAP polls for window.CdvPurchase after React is running. -->
+    <script src="cordova.js"></script>
   </body>
 </html>
