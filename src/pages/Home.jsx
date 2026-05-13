@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ServiceCard from '@/components/home/ServiceCard';
 import ProProfileSheet from '@/components/pro/ProProfileSheet';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
+import LocationPermissionModal from '@/components/onboarding/LocationPermissionModal';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import TopBar from '@/components/layout/TopBar.jsx';
 import HomeSkeleton from '@/components/home/HomeSkeleton';
@@ -101,30 +102,76 @@ export default function Home() {
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="min-h-full bg-[#F7F7F7]">
         <OnboardingModal />
+        <LocationPermissionModal />
         <TopBar />
 
-        {/* ── Active mission banner ── */}
+        {/* ── Active mission banner — Uber Eats style ── */}
         <AnimatePresence>
           {activeRequest && (
-            <motion.button
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
-              className="w-full text-left overflow-hidden"
+            <motion.div
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+              className="mx-4 mt-3 overflow-hidden"
+              style={{ borderRadius: 20 }}
             >
-              <div className="px-4 py-3 flex items-center gap-3 text-white"
-                style={{ background: 'linear-gradient(90deg, #00B894, #00CBA6)' }}>
-                <span className="text-lg">{activeStatusLabel[activeRequest.status]?.icon || '📍'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold leading-none">{activeStatusLabel[activeRequest.status]?.text}</p>
-                  <p className="text-xs text-white/80 mt-0.5 truncate">
-                    {activeRequest.professional_name} · {activeRequest.category_name}
-                  </p>
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
+                className="w-full text-left"
+                style={{
+                  background: 'linear-gradient(135deg, #00B894 0%, #00897B 100%)',
+                  borderRadius: 20,
+                  boxShadow: '0 6px 24px rgba(0,184,148,0.35)',
+                }}
+              >
+                {/* Top row */}
+                <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+                  {/* Pro avatar */}
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-base font-black text-white"
+                    style={{ background: 'rgba(255,255,255,0.25)' }}
+                  >
+                    {(activeRequest.professional_name || 'P')[0].toUpperCase()}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      {/* Pulsing dot */}
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-60" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+                      </span>
+                      <p className="text-sm font-black text-white leading-none">
+                        {activeStatusLabel[activeRequest.status]?.text}
+                      </p>
+                    </div>
+                    <p className="text-xs text-white/75 truncate">
+                      {activeRequest.professional_name} · {activeRequest.category_name}
+                    </p>
+                  </div>
+
+                  <div
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.22)' }}
+                  >
+                    <span className="text-white text-xs font-black">Suivre</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-white" />
+                  </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/70 shrink-0" />
-              </div>
-            </motion.button>
+
+                {/* Bottom progress bar */}
+                <div className="h-1 mx-4 mb-4 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                  <motion.div
+                    className="h-full rounded-full bg-white"
+                    initial={{ width: '20%' }}
+                    animate={{ width: activeRequest.status === 'in_progress' ? '80%' : activeRequest.status === 'pro_en_route' ? '55%' : '25%' }}
+                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                  />
+                </div>
+              </motion.button>
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -283,13 +330,6 @@ export default function Home() {
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4 px-4">
                 <h2 className="text-xl font-black text-foreground">Top professionnels</h2>
-                <button
-                  onClick={() => navigate('/Map')}
-                  className="text-sm font-bold flex items-center gap-1"
-                  style={{ color: BRAND }}
-                >
-                  Voir sur la carte <ChevronRight className="w-3.5 h-3.5" />
-                </button>
               </div>
               <div
                 className="flex gap-3 overflow-x-auto pb-2 pl-4 pr-4 snap-x snap-mandatory"
