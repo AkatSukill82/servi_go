@@ -13,15 +13,15 @@ export default defineConfig({
       visualEditAgent: true
     }),
     react(),
-    // Remove crossorigin from CSS links — WKWebView (Capacitor) doesn't serve
-    // CORS headers for stylesheet requests, causing CSS to silently fail.
+    // Remove crossorigin from all tags — WKWebView (Capacitor) serves assets
+    // via capacitor://localhost with no CORS headers, so crossorigin attributes
+    // cause CSS links and ES module scripts to fail silently.
     {
-      name: 'capacitor-css-crossorigin-fix',
+      name: 'capacitor-crossorigin-fix',
       transformIndexHtml(html) {
-        return html.replace(
-          /<link rel="stylesheet" crossorigin/g,
-          '<link rel="stylesheet"'
-        );
+        return html
+          .replace(/<link rel="stylesheet" crossorigin/g, '<link rel="stylesheet"')
+          .replace(/<script type="module" crossorigin/g, '<script type="module"');
       },
     },
   ],
