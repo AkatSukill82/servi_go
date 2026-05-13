@@ -14,7 +14,6 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.user_type !== 'professionnel') return Response.json({ error: 'Réservé aux professionnels' }, { status: 403 });
 
     const body = await req.json();
     const plan = body.plan === 'annual' ? 'annual' : 'monthly';
