@@ -82,6 +82,10 @@ export default function ProSubscription() {
   const monthlyPrice = monthlyInfo?.price || '9,99 €';
   const yearlyPrice  = yearlyInfo?.price  || '90,00 €';
 
+  const onIOS     = isIOSNow();
+  const onAndroid = isAndroidNow();
+  const inIframe  = window.self !== window.top;
+
   const handleSubscribe = async (overridePlan) => {
     const activePlan = overridePlan || plan;
 
@@ -154,9 +158,6 @@ export default function ProSubscription() {
   const sc = STATUS[subscription?.status] || { label: 'Inactif', color: 'text-gray-600 bg-gray-50 border-gray-200' };
 
   const isBusy = purchasing || billingLoading;
-  const onIOS     = isIOSNow();
-  const onAndroid = isAndroidNow();
-  const inIframe  = window.self !== window.top;
   // En iframe (preview Base44) on force le chemin web — jamais désactivé pour store
   const ctaDisabled = isBusy || (!inIframe && onIOS && !storeReady);
 
