@@ -75,7 +75,7 @@ export default function ProSubscription() {
     staleTime: 60000,
   });
 
-  const { isNative, purchasing, restoring, purchase, restorePurchases, getProductInfo, storeReady, iapAvailable } = useAppleIAP(user);
+  const { purchasing, restoring, purchase, restorePurchases, getProductInfo, storeReady } = useAppleIAP(user);
 
   const monthlyInfo = getProductInfo('monthly');
   const yearlyInfo  = getProductInfo('yearly');
@@ -89,8 +89,8 @@ export default function ProSubscription() {
   const handleSubscribe = async (overridePlan) => {
     const activePlan = overridePlan || plan;
 
-    // iOS natif (hors iframe) + IAP disponible → Apple IAP
-    if (isIOSNow() && !inIframe && iapAvailable) {
+    // iOS natif (hors iframe) → Apple IAP
+    if (isIOSNow() && !inIframe) {
       await purchase(activePlan);
       return;
     }
@@ -158,14 +158,10 @@ export default function ProSubscription() {
   const sc = STATUS[subscription?.status] || { label: 'Inactif', color: 'text-gray-600 bg-gray-50 border-gray-200' };
 
   const isBusy = purchasing || billingLoading;
-  // Désactivé seulement si : occupé, OU (iOS natif + IAP dispo + store pas encore prêt)
-  // Si IAP non dispo (timeout/erreur), on laisse passer pour fallback Stripe
-  const ctaDisabled = isBusy || (!inIframe && onIOS && iapAvailable && !storeReady);
+  const ctaDisabled = isBusy;
 
   const ctaLabel = isBusy
     ? 'Traitement…'
-    : (!inIframe && onIOS && iapAvailable && !storeReady)
-    ? 'Connexion App Store…'
     : onAndroid
     ? 'S\'abonner sur le site web →'
     : plan === 'annual'
