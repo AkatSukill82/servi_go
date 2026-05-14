@@ -13,6 +13,7 @@ import {
   Shield, CheckCircle, Home, Wrench, Camera
 } from 'lucide-react';
 import { toast } from 'sonner';
+import EidWelcomeSplash from '@/components/onboarding/EidWelcomeSplash';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ function StepTypeSelection({ onSelect }) {
 
 // ─── Particulier Signup ───────────────────────────────────────────────────────
 
-function ParticulierSignup({ onBack }) {
+function ParticulierSignup({ onBack, onRegistered }) {
   const navigate = useNavigate();
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -153,7 +154,7 @@ function ParticulierSignup({ onBack }) {
         user_type: 'particulier',
       });
       toast.success('Compte créé avec succès ! Bienvenue 🎉');
-      navigate('/Home', { replace: true });
+      onRegistered('particulier');
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || '';
       if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist')) {
@@ -495,7 +496,7 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
 
 // ─── Pro Signup (multi-step) ──────────────────────────────────────────────────
 
-function ProSignup({ onBack }) {
+function ProSignup({ onBack, onRegistered }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -602,7 +603,7 @@ function ProSignup({ onBack }) {
       }
 
       toast.success('Compte professionnel créé avec succès ! 🎉');
-      navigate('/ProDashboard', { replace: true });
+      onRegistered('professionnel');
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || '';
       if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist')) {
@@ -630,6 +631,8 @@ function ProSignup({ onBack }) {
 
 export default function CreateAccount() {
   const [userType, setUserType] = useState(null);
+  const [showEidSplash, setShowEidSplash] = useState(false);
+  const [registeredUserType, setRegisteredUserType] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -642,6 +645,21 @@ export default function CreateAccount() {
       }
     });
   }, []);
+
+  const handleSplashDismiss = () => {
+    setShowEidSplash(false);
+    if (registeredUserType === 'professionnel') navigate('/ProDashboard', { replace: true });
+    else navigate('/Home', { replace: true });
+  };
+
+  if (showEidSplash) {
+    return (
+      <EidWelcomeSplash
+        userType={registeredUserType}
+        onDismiss={handleSplashDismiss}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
@@ -658,8 +676,8 @@ export default function CreateAccount() {
       <div className="flex-1 overflow-y-auto">
         <div className="px-5 py-6 w-full max-w-md mx-auto">
           {userType === null && <StepTypeSelection onSelect={setUserType} />}
-          {userType === 'particulier' && <ParticulierSignup onBack={() => setUserType(null)} />}
-          {userType === 'professionnel' && <ProSignup onBack={() => setUserType(null)} />}
+          {userType === 'particulier' && <ParticulierSignup onBack={() => setUserType(null)} onRegistered={(type) => { setRegisteredUserType(type); setShowEidSplash(true); }} />}
+          {userType === 'professionnel' && <ProSignup onBack={() => setUserType(null)} onRegistered={(type) => { setRegisteredUserType(type); setShowEidSplash(true); }} />}
         </div>
       </div>
 
