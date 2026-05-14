@@ -24,7 +24,6 @@ import { useAuth } from '@/lib/AuthContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AvailabilityEditor from '@/components/pro/AvailabilityEditor';
-import ProStoriesManager from '@/components/pro/ProStoriesManager';
 import DocumentsTab from '@/components/documents/DocumentsTab';
 import ProContractsTab from '@/components/documents/ProContractsTab';
 import PageFooter from '@/components/layout/PageFooter';
@@ -484,11 +483,6 @@ export default function ProProfile() {
             </div>
 
             <AvailabilityEditor userEmail={user?.email} />
-
-            {/* Stories before/after */}
-            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5">
-              <ProStoriesManager userEmail={user?.email} userName={user?.full_name || user?.first_name} />
-            </div>
 
             <Button
               onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}

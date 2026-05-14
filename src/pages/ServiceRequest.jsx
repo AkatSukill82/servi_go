@@ -6,7 +6,6 @@ import { ChevronRight, Search, CheckCircle, MessageCircle, CalendarDays, MapPin 
 import SlotPicker from '@/components/request/SlotPicker';
 import { toast } from 'sonner';
 import QuestionStep from '@/components/request/QuestionStep';
-import AiQuoteWidget from '@/components/request/AiQuoteWidget';
 import { motion, AnimatePresence } from 'framer-motion';
 import MissionProgress from '@/components/mission/MissionProgress';
 
@@ -377,12 +376,6 @@ export default function ServiceRequest() {
                 <h2 className="text-2xl font-extrabold text-gray-900">Quand souhaitez-vous être reçu ?</h2>
                 <p className="text-gray-400 text-sm mt-1">Facultatif — vous pouvez aussi envoyer sans date</p>
               </div>
-
-              {/* ── Devis IA ── */}
-              <AiQuoteWidget
-                categoryName={category.name}
-                answers={questions.map((q, i) => ({ question: q.question, answer: answers[i] || '' })).filter(a => a.answer)}
-              />
 
               <SlotPicker
                 proSlots={[]}
