@@ -22,7 +22,7 @@ export default function AuthLogin() {
   useEffect(() => {
     // On web only: redirect to Base44 hosted login
     if (!isCapacitor) {
-      base44.auth.redirectToLogin('/');
+      base44.auth.redirectToLogin('/Home');
     }
   }, []);
 
@@ -119,14 +119,7 @@ export default function AuthLogin() {
             Mot de passe oublié ?
           </button>
           <p className="text-white/30 text-xs">
-            Pas de compte ?{' '}
-            <button
-              type="button"
-              onClick={() => navigate('/Register')}
-              className="text-[#6C5CE7] hover:text-[#a78bfa] underline underline-offset-2 transition-colors"
-            >
-              Sign up
-            </button>
+            Pas de compte ? Créez-en un sur app.myservigo.be
           </p>
         </div>
       </div>
