@@ -85,30 +85,29 @@ export default function ProSubscription() {
   const handleSubscribe = async (overridePlan) => {
     const activePlan = overridePlan || plan;
 
-    // iOS natif → Apple IAP
-    if (isIOSNow()) {
+    // iOS natif (hors iframe) → Apple IAP
+    if (isIOSNow() && !inIframe) {
       await purchase(activePlan);
       return;
     }
 
     // Android natif → redirection vers le site web ServiGo Pro
-    if (isAndroidNow()) {
+    if (isAndroidNow() && !inIframe) {
       window.open(PRO_SITE_URL, '_system');
       return;
     }
 
-    // Web → Stripe
+    // Web / iframe → Stripe
     setBillingLoading(true);
     try {
-      const origin = window.top?.location?.origin || window.location.origin;
+      const origin = window.location.origin;
       const res = await base44.functions.invoke('createProSubscription', {
         plan: activePlan,
         successUrl: `${origin}/ProSubscription?success=true&plan=${activePlan}`,
         cancelUrl:  `${origin}/ProSubscription`,
       });
       if (res.data?.url) {
-        // Depuis un iframe (preview Base44), ouvrir dans un nouvel onglet
-        if (window.self !== window.top) {
+        if (inIframe) {
           window.open(res.data.url, '_blank');
         } else {
           window.location.href = res.data.url;
@@ -157,7 +156,9 @@ export default function ProSubscription() {
   const isBusy = purchasing || billingLoading;
   const onIOS     = isIOSNow();
   const onAndroid = isAndroidNow();
-  const ctaDisabled = isBusy || (onIOS && !storeReady);
+  const inIframe  = window.self !== window.top;
+  // En iframe (preview Base44) on force le chemin web — jamais désactivé pour store
+  const ctaDisabled = isBusy || (!inIframe && onIOS && !storeReady);
 
   const ctaLabel = isBusy
     ? 'Traitement…'
