@@ -36,6 +36,14 @@ export default function ProDashboard() {
   useEffect(() => { requestPermission(); }, []);
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me(), staleTime: 60000 });
+
+  const { data: proVerif } = useQuery({
+    queryKey: ['identityVerif', user?.email],
+    queryFn: () => base44.entities.IdentityVerification.filter({ user_email: user.email }, '-created_date', 1).then(r => r[0] || null),
+    enabled: !!user?.email,
+    staleTime: 60000,
+  });
+  const eidApproved = proVerif?.status === 'approved' || user?.eid_status === 'verified';
   const proCategory = user?.category_name;
 
   const firstName = getFirstName(user);
@@ -307,18 +315,26 @@ export default function ProDashboard() {
           </div>
         )}
 
-        {/* Identity pending */}
-        {user && user.eid_status !== 'verified' && user.eid_status !== undefined && (
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center gap-3">
-            <span className="text-lg shrink-0">⚠️</span>
+        {/* Identity pending — bloque la réception de missions */}
+        {user && !eidApproved && (
+          <div className={`border rounded-2xl p-4 flex items-center gap-3 ${proVerif?.status === 'pending_review' ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+            <span className="text-lg shrink-0">{proVerif?.status === 'pending_review' ? '⏳' : '🪪'}</span>
             <div className="flex-1">
-              <p className="text-sm font-bold text-orange-900">Identité non vérifiée</p>
-              <p className="text-xs text-orange-600 mt-0.5">Fonctionnalités limitées en attendant la vérification</p>
+              <p className={`text-sm font-bold ${proVerif?.status === 'pending_review' ? 'text-blue-900' : 'text-red-900'}`}>
+                {proVerif?.status === 'pending_review' ? 'Vérification eID en cours' : 'Vérification eID requise'}
+              </p>
+              <p className={`text-xs mt-0.5 ${proVerif?.status === 'pending_review' ? 'text-blue-600' : 'text-red-600'}`}>
+                {proVerif?.status === 'pending_review'
+                  ? 'Votre dossier est examiné — vous recevrez des missions dès approbation'
+                  : 'Soumettez votre carte eID pour recevoir des missions'}
+              </p>
             </div>
-            <button onClick={() => navigate('/EidVerification')}
-              className="text-xs font-black text-orange-700 underline shrink-0">
-              Vérifier
-            </button>
+            {proVerif?.status !== 'pending_review' && (
+              <button onClick={() => navigate('/EidVerification')}
+                className="text-xs font-black text-red-700 underline shrink-0">
+                Vérifier →
+              </button>
+            )}
           </div>
         )}
 

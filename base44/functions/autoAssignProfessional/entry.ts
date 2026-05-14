@@ -37,9 +37,15 @@ Deno.serve(async (req) => {
         .map(s => s.professional_email)
     );
 
-    // 4. Filter to active subscribers, sort by rating desc
+    // 3b. Fetch verified identity checks — only pros with approved eID can receive missions
+    const approvedVerifs = await base44.asServiceRole.entities.IdentityVerification.filter(
+      { status: 'approved' }, '-created_date', 500
+    );
+    const verifiedEmails = new Set(approvedVerifs.map(v => v.user_email));
+
+    // 4. Filter to active subscribers WITH approved eID, sort by rating desc
     const eligible = candidates
-      .filter(p => activeEmails.has(p.email))
+      .filter(p => activeEmails.has(p.email) && verifiedEmails.has(p.email))
       .sort((a, b) => (b.rating || 0) - (a.rating || 0));
 
     // 5. No eligible candidates (hard stop)

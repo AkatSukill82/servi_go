@@ -67,9 +67,19 @@ export default function ServiceRequest() {
     mutationFn: (data) => base44.entities.ServiceRequestV2.create(data),
   });
 
-  // ── eID gate ──
-  if (!user) return null;
-  if (user.eid_status !== 'verified') {
+  // ── eID gate — vérifie via IdentityVerification en complément du champ user ──
+  const { data: identityVerif, isLoading: loadingVerif } = useQuery({
+    queryKey: ['identityVerif', user?.email],
+    queryFn: () => base44.entities.IdentityVerification.filter({ user_email: user.email }, '-created_date', 1).then(r => r[0] || null),
+    enabled: !!user?.email,
+    staleTime: 60000,
+  });
+
+  if (!user || loadingVerif) return null;
+
+  const eidApproved = identityVerif?.status === 'approved' || user?.eid_status === 'verified';
+
+  if (!eidApproved) {
     return (
       <div
         className="flex flex-col items-center justify-center min-h-screen px-6 text-center gap-6 bg-white"
@@ -84,16 +94,20 @@ export default function ServiceRequest() {
         <div>
           <h2 className="text-2xl font-extrabold text-gray-900">Vérification requise</h2>
           <p className="text-gray-400 mt-2 text-sm max-w-xs mx-auto">
-            Pour faire une demande, vérifiez d'abord votre identité avec votre carte eID.
+            {identityVerif?.status === 'pending_review'
+              ? 'Votre dossier est en cours de vérification. Vous pourrez faire une demande dès qu\'il sera approuvé.'
+              : 'Pour faire une demande de mission, vous devez d\'abord vérifier votre identité avec votre carte eID.'}
           </p>
         </div>
-        <button
-          onClick={() => navigate('/EidVerification')}
-          className="w-full h-14 rounded-2xl text-white font-extrabold text-base"
-          style={{ background: 'linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%)' }}
-        >
-          Vérifier mon identité
-        </button>
+        {identityVerif?.status !== 'pending_review' && (
+          <button
+            onClick={() => navigate('/EidVerification')}
+            className="w-full h-14 rounded-2xl text-white font-extrabold text-base"
+            style={{ background: 'linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%)' }}
+          >
+            Vérifier mon identité
+          </button>
+        )}
         <button onClick={() => navigate('/Home')} className="text-gray-400 font-medium text-sm">
           Retour à l'accueil
         </button>
