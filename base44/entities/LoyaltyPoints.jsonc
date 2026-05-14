@@ -1,0 +1,120 @@
+{
+  "name": "LoyaltyPoints",
+  "description": "Programme de fid\u00e9lit\u00e9 \u2014 points accumul\u00e9s par les clients et les pros",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_type": {
+      "type": "string",
+      "enum": [
+        "particulier",
+        "professionnel"
+      ]
+    },
+    "total_points": {
+      "type": "number",
+      "default": 0
+    },
+    "used_points": {
+      "type": "number",
+      "default": 0
+    },
+    "available_points": {
+      "type": "number",
+      "default": 0
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "bronze",
+        "silver",
+        "gold",
+        "platinum"
+      ],
+      "default": "bronze",
+      "description": "Niveau de fid\u00e9lit\u00e9"
+    },
+    "missions_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre total de missions"
+    },
+    "history": {
+      "type": "array",
+      "description": "Historique des transactions de points",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "earned",
+              "used",
+              "bonus"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "user_email"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

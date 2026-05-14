@@ -10,6 +10,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import ProStats from '@/components/pro/ProStats';
+import ClientScoreBadge from '@/components/pro/ClientScoreBadge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -251,6 +252,14 @@ export default function ProDashboard() {
           request_id: id,
           action_url: `/Chat?requestId=${id}`,
         });
+        // Award loyalty points to customer
+        base44.functions.invoke('awardLoyaltyPoints', {
+          user_email: job.customer_email,
+          user_name: job.customer_name || '',
+          user_type: 'particulier',
+          points_to_add: 50,
+          reason: `Mission ${job.category_name} complétée`,
+        }).catch(() => {});
       }
     },
     onSuccess: (_, variables) => {
@@ -515,6 +524,13 @@ export default function ProDashboard() {
                                   <span className="font-semibold">{a.answer}</span>
                                 </p>
                               ))}
+                            </div>
+                          )}
+
+                          {/* Score client */}
+                          {req.customer_email && (
+                            <div className="mb-3">
+                              <ClientScoreBadge customerEmail={req.customer_email} compact />
                             </div>
                           )}
 

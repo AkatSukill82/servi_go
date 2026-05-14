@@ -12,6 +12,8 @@ import PullToRefresh from '@/components/ui/PullToRefresh';
 import TopBar from '@/components/layout/TopBar.jsx';
 import HomeSkeleton from '@/components/home/HomeSkeleton';
 import NearbyProCard from '@/components/home/NearbyProCard';
+import ProStoriesCarousel from '@/components/home/ProStoriesCarousel';
+import LoyaltyWidget from '@/components/loyalty/LoyaltyWidget';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
 
@@ -324,6 +326,12 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* ── Stories before/after ── */}
+          <ProStoriesCarousel />
+
+          {/* ── Programme de fidélité ── */}
+          {user && <LoyaltyWidget userEmail={user.email} />}
 
           {/* ── Top professionnels ── */}
           {nearbyPros.length > 0 && (

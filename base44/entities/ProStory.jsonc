@@ -1,0 +1,75 @@
+{
+  "name": "ProStory",
+  "description": "Stories before/after d'un professionnel pour inspirer confiance",
+  "type": "object",
+  "properties": {
+    "professional_email": {
+      "type": "string"
+    },
+    "professional_name": {
+      "type": "string"
+    },
+    "category_name": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string",
+      "description": "Ex: R\u00e9novation salle de bain"
+    },
+    "photo_before_url": {
+      "type": "string"
+    },
+    "photo_after_url": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "views_count": {
+      "type": "number",
+      "default": 0
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "professional_email",
+    "photo_after_url"
+  ],
+  "rls": {
+    "create": {
+      "data.professional_email": "{{user.email}}"
+    },
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.professional_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
