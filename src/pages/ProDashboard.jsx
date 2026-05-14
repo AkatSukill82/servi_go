@@ -148,18 +148,17 @@ export default function ProDashboard() {
     staleTime: 60000,
   });
 
-  // GPS tracking for active missions
+  // GPS tracking for active missions — dépend d'un boolean stable, pas du tableau entier
+  const hasActiveMission = myJobs.some(j => ['accepted', 'pro_en_route', 'in_progress'].includes(j.status));
   useEffect(() => {
-    if (!user?.id) return;
-    const hasActive = myJobs.some(j => ['accepted', 'pro_en_route', 'in_progress'].includes(j.status));
-    if (!hasActive || !navigator.geolocation) return;
+    if (!user?.id || !hasActiveMission || !navigator.geolocation) return;
     const watchId = navigator.geolocation.watchPosition(
       (pos) => base44.entities.User.update(user.id, { latitude: pos.coords.latitude, longitude: pos.coords.longitude }).catch(() => {}),
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [user?.id, myJobs]);
+  }, [user?.id, hasActiveMission]);
 
   const { data: myReviews = [] } = useQuery({
     queryKey: ['myReviews', user?.email],

@@ -49,6 +49,14 @@ function ExternalRedirect({ to }) {
   return null;
 }
 
+// Guard routes admin — redirige si l'utilisateur n'est pas admin
+const AdminRoute = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/se-connecter" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/Home" replace />;
+  return children;
+};
+
 // Route racine intelligente : redirige les utilisateurs déjà connectés
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
@@ -112,9 +120,9 @@ const AuthenticatedApp = () => {
       <Route path="/signup" element={<Navigate to="/creer-compte" replace />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
-      <Route path="/AdminVerification" element={<AdminVerification />} />
-      <Route path="/AdminDashboard" element={<AdminDashboard />} />
-      <Route path="/AdminTestEmail" element={<AdminTestEmail />} />
+      <Route path="/AdminVerification" element={<AdminRoute><AdminVerification /></AdminRoute>} />
+      <Route path="/AdminDashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/AdminTestEmail" element={<AdminRoute><AdminTestEmail /></AdminRoute>} />
       <Route path="/CGU" element={<CGU />} />
       <Route path="/EidVerification" element={<EidVerification />} />
       <Route path="/Support" element={<Support />} />

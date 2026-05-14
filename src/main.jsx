@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
 
-console.log('[ServiGo] main.jsx loaded — React starting');
 
 try {
   const saved = localStorage.getItem('servigo-theme');
