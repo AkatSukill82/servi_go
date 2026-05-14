@@ -173,6 +173,8 @@ export default function ProProfile() {
     },
   });
 
+  const [uploadingPortfolio, setUploadingPortfolio] = useState(false);
+
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -181,6 +183,35 @@ export default function ProProfile() {
     await base44.auth.updateMe({ photo_url: file_url });
     queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     toast.success('Photo mise à jour !');
+  };
+
+  const handlePortfolioUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const current = user?.portfolio_photos || [];
+    if (current.length + files.length > 12) {
+      toast.error('Maximum 12 photos de portfolio');
+      return;
+    }
+    setUploadingPortfolio(true);
+    try {
+      const uploads = await Promise.all(files.map(f => base44.integrations.Core.UploadFile({ file: f })));
+      const newUrls = uploads.map(u => u.file_url);
+      await base44.auth.updateMe({ portfolio_photos: [...current, ...newUrls] });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      toast.success(`${files.length} photo${files.length > 1 ? 's' : ''} ajoutée${files.length > 1 ? 's' : ''} !`);
+    } catch {
+      toast.error('Erreur lors du téléchargement');
+    } finally {
+      setUploadingPortfolio(false);
+    }
+  };
+
+  const handlePortfolioDelete = async (url) => {
+    const updated = (user?.portfolio_photos || []).filter(u => u !== url);
+    await base44.auth.updateMe({ portfolio_photos: updated });
+    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    toast.success('Photo supprimée');
   };
 
   const handleDocUpload = async (e, field) => {
@@ -483,6 +514,45 @@ export default function ProProfile() {
             </div>
 
             <AvailabilityEditor userEmail={user?.email} />
+
+            {/* Portfolio photos */}
+            <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-primary" />
+                  Portfolio — Photos de vos travaux
+                </h3>
+                <span className="text-xs text-muted-foreground">{(user?.portfolio_photos || []).length}/12</span>
+              </div>
+              {(user?.portfolio_photos || []).length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {(user?.portfolio_photos || []).map((url, i) => (
+                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden group">
+                      <img src={url} alt={`Travail ${i + 1}`} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => handlePortfolioDelete(url)}
+                        className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 active:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(user?.portfolio_photos || []).length < 12 && (
+                <label className="flex flex-col items-center justify-center gap-2 py-5 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-muted/30 active:bg-muted/40 transition-colors">
+                  {uploadingPortfolio
+                    ? <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+                    : <>
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">Ajouter des photos</span>
+                        <span className="text-[10px] text-muted-foreground/60">JPEG, PNG · Sélection multiple</span>
+                      </>
+                  }
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handlePortfolioUpload} disabled={uploadingPortfolio} />
+                </label>
+              )}
+            </div>
 
             <Button
               onClick={() => updateMutation.mutate({ ...form, base_price: Number(form.base_price), hourly_rate: Number(form.hourly_rate) })}

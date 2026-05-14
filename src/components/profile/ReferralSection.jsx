@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Copy, Gift } from 'lucide-react';
+import { Check, Copy, Gift, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const STATUS_BADGE = {
@@ -45,6 +45,17 @@ export default function ReferralSection({ user }) {
     toast.success('Code copié !');
   };
 
+  const handleWhatsApp = () => {
+    if (!myCode) return;
+    const msg = encodeURIComponent(
+      `👋 Bonjour ! Je t'invite à rejoindre ServiGo, la plateforme de services à domicile en Belgique 🏠\n\n` +
+      `Utilise mon code *${myCode}* à l'inscription et reçois *-10% sur ta première mission* ! 🎁\n\n` +
+      `Et moi je gagne aussi une réduction — tout le monde est gagnant 😄\n\n` +
+      `➡️ Télécharge l'app : https://servigo.be`
+    );
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+  };
+
   const referred = referrals.filter(r => r.referred_email);
 
   return (
@@ -55,8 +66,10 @@ export default function ReferralSection({ user }) {
           <h3 className="font-semibold text-sm">Mes parrainages</h3>
         </div>
         <div className="px-5 py-4 space-y-4">
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-xs text-primary font-medium">
-            🎁 Parrainez un ami et gagnez une réduction de 10% sur votre prochaine mission
+          <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-1">
+            <p className="text-xs text-primary font-bold">🎁 Vous : -10% sur votre prochaine mission</p>
+            <p className="text-xs text-primary font-bold">🎁 Votre ami : -10% sur sa première mission</p>
+            <p className="text-[11px] text-primary/70 mt-1">Les deux parties sont récompensées !</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground mb-2">Votre code de parrainage</p>
@@ -68,6 +81,15 @@ export default function ReferralSection({ user }) {
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
+            <button
+              onClick={handleWhatsApp}
+              disabled={!myCode}
+              className="w-full h-11 rounded-xl flex items-center justify-center gap-2 font-semibold text-sm text-white disabled:opacity-40"
+              style={{ background: '#25D366' }}
+            >
+              <Share2 className="w-4 h-4" />
+              Partager sur WhatsApp
+            </button>
           </div>
           {referred.length > 0 ? (
             <div>

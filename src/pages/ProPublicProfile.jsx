@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Star, ShieldCheck, MapPin, Euro, Clock, Briefcase, MessageCircle, Flag, CalendarDays } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Euro, Clock, Briefcase, MessageCircle, Flag, CalendarDays, Camera, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -226,6 +226,28 @@ export default function ProPublicProfile() {
               <h3 className="font-semibold text-sm">À propos</h3>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">{pro.pro_description}</p>
+          </div>
+        )}
+
+        {/* Portfolio */}
+        {(pro.portfolio_photos || []).length > 0 && (
+          <div className="bg-card rounded-2xl border border-border p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Camera className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-sm">Réalisations</h3>
+              <span className="text-xs text-muted-foreground ml-auto">{pro.portfolio_photos.length} photo{pro.portfolio_photos.length > 1 ? 's' : ''}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {pro.portfolio_photos.map((url, i) => (
+                <div
+                  key={i}
+                  className="aspect-square rounded-xl overflow-hidden cursor-pointer active:scale-95 transition-transform"
+                  onClick={() => window.open(url, '_blank')}
+                >
+                  <img src={url} alt={`Réalisation ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

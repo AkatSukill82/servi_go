@@ -41,6 +41,39 @@ function isValidBce(v) {
   return v === '' || /^0[0-9]{3}\.[0-9]{3}\.[0-9]{3}$/.test(v.trim());
 }
 
+// ─── Password strength indicator ──────────────────────────────────────────────
+function PasswordStrength({ password }) {
+  if (!password) return null;
+  const checks = [
+    { label: '8+ caractères', ok: password.length >= 8 },
+    { label: 'Majuscule',     ok: /[A-Z]/.test(password) },
+    { label: 'Chiffre',       ok: /[0-9]/.test(password) },
+  ];
+  const score = checks.filter(c => c.ok).length;
+  const colors = ['#EF4444', '#F97316', '#22C55E'];
+  const labels = ['Faible', 'Moyen', 'Fort'];
+  return (
+    <div className="mt-2 space-y-1.5">
+      <div className="flex gap-1">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="h-1.5 flex-1 rounded-full transition-all duration-300"
+            style={{ background: i < score ? colors[score - 1] : '#E5E7EB' }} />
+        ))}
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex gap-3 flex-wrap">
+          {checks.map(c => (
+            <span key={c.label} className={`text-[10px] font-medium flex items-center gap-0.5 ${c.ok ? 'text-green-600' : 'text-gray-400'}`}>
+              {c.ok ? '✓' : '○'} {c.label}
+            </span>
+          ))}
+        </div>
+        {score > 0 && <span className="text-[10px] font-bold shrink-0" style={{ color: colors[score - 1] }}>{labels[score - 1]}</span>}
+      </div>
+    </div>
+  );
+}
+
 // ─── STEP 1: Email + Password (non-connectés) ─────────────────────────────────
 function StepCreateAccount({ userType, onNext, onBack }) {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -51,7 +84,7 @@ function StepCreateAccount({ userType, onNext, onBack }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) { toast.error('Remplis tous les champs'); return; }
-    if (form.password.length < 6) { toast.error('Mot de passe : 6 caractères minimum'); return; }
+    if (form.password.length < 8) { toast.error('Mot de passe : 8 caractères minimum'); return; }
     setLoading(true);
     try {
       await base44.auth.register(form.email.trim(), form.password, { user_type: userType });
@@ -89,13 +122,14 @@ function StepCreateAccount({ userType, onNext, onBack }) {
           type={showPass ? 'text' : 'password'}
           value={form.password}
           onChange={e => set('password', e.target.value)}
-          placeholder="6 caractères minimum"
+          placeholder="8 caractères minimum"
           suffix={
             <button type="button" onClick={() => setShowPass(s => !s)} className="text-[#9CA3AF]">
               {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           }
         />
+        <PasswordStrength password={form.password} />
       </div>
       <button type="submit" disabled={loading}
         className="w-full h-12 rounded-xl text-base font-semibold text-white transition-colors disabled:opacity-60"

@@ -148,10 +148,18 @@ export default function ServiceRequest() {
     }
   };
 
+  // ── Estimation de prix avec facteurs ──────────────────────────────────────
+  const baseCategoryPrice = category?.base_price || 80;
+  const nowHour    = new Date().getHours();
+  const nowDay     = new Date().getDay();
+  const isEvening  = nowHour >= 18 || nowHour < 7;
+  const isWeekend  = nowDay === 0 || nowDay === 6;
+  const hasTimeBonus = !isUrgent && (isEvening || isWeekend);
+  const estimatedPrice = Math.round(baseCategoryPrice * (isUrgent ? 1.5 : 1) * (hasTimeBonus ? 1.2 : 1));
+
   const handleConfirm = async () => {
     setStep(STEPS.SEARCHING);
     const answersArray = questions.map((q, i) => ({ question: q.question, answer: answers[i] || '' }));
-    const basePrice = isUrgent ? (category?.base_price || 80) * 1.5 : (category?.base_price || 80);
     const firstName = user?.first_name || user?.full_name?.split(' ')[0] || '';
     const lastName = user?.last_name || user?.full_name?.split(' ').slice(1).join(' ') || '';
 
@@ -178,7 +186,7 @@ export default function ServiceRequest() {
       scheduled_time: scheduledTime || null,
       status: 'searching',
       is_urgent: isUrgent,
-      estimated_price: basePrice,
+      estimated_price: estimatedPrice,
       tried_professionals: [],
     });
 
@@ -418,7 +426,31 @@ export default function ServiceRequest() {
                     </span>
                   </div>
                 )}
-                <p className="text-[11px] text-gray-400 pt-1">Le règlement se fait directement avec le professionnel</p>
+
+                {/* Price breakdown */}
+                <div className="border-t border-gray-200 pt-2.5 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">Prix de base</span>
+                    <span className="text-xs font-semibold text-gray-700">{baseCategoryPrice} €</span>
+                  </div>
+                  {isUrgent && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-red-500">⚡ Majoration urgence (+50%)</span>
+                      <span className="text-xs font-semibold text-red-500">+{Math.round(baseCategoryPrice * 0.5)} €</span>
+                    </div>
+                  )}
+                  {hasTimeBonus && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-amber-600">🌙 Majoration {isWeekend ? 'week-end' : 'soirée'} (+20%)</span>
+                      <span className="text-xs font-semibold text-amber-600">+{Math.round(baseCategoryPrice * 0.2)} €</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-200">
+                    <span className="text-sm font-bold text-gray-900">Estimation totale</span>
+                    <span className="text-base font-black" style={{ color: '#6C5CE7' }}>~{estimatedPrice} €</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400">Estimation indicative — le pro établit la facture finale</p>
+                </div>
               </div>
 
               <button
