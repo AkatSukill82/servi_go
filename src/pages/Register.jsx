@@ -716,7 +716,7 @@ export default function Register() {
       if (authed) {
         const user = await base44.auth.me();
         // Already has a full profile → redirect to dashboard
-        if (user?.role === 'admin') { navigate('/AdminDashboard', { replace: true }); return; }
+        if (user?.role === 'admin') { setCurrentUser(user); setIsAuthenticated(true); setStep(0); return; }
         if (user?.user_type === 'professionnel') { navigate('/ProDashboard', { replace: true }); return; }
         if (user?.user_type === 'particulier') { navigate('/Home', { replace: true }); return; }
         // Authenticated but no user_type yet (OAuth user) → skip to step 2
