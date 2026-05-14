@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import {
   CheckCircle, CreditCard, Calendar, Shield, Zap,
   RefreshCw, Receipt, Loader2, RotateCcw, ChevronRight,
-  Briefcase, MessageCircle, Star,
+  Briefcase, MessageCircle, Star, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -18,7 +18,6 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useAppleIAP } from '@/hooks/useAppleIAP';
 import { isIOSNow, isAndroidNow } from '@/lib/platform';
 import { BRAND } from '@/lib/theme';
 
@@ -33,15 +32,26 @@ const BENEFITS = [
   { icon: Star,           text: 'Profil mis en avant dans les résultats' },
 ];
 
+const STATUS_CONFIG = {
+  active:          { label: 'Actif',              color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+  trial:           { label: 'Essai gratuit',       color: 'text-blue-700 bg-blue-50 border-blue-200' },
+  expired:         { label: 'Expiré',              color: 'text-red-600 bg-red-50 border-red-200' },
+  cancelled:       { label: 'Annulé',              color: 'text-gray-600 bg-gray-50 border-gray-200' },
+  pending_payment: { label: 'Paiement en attente', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+};
+
 export default function ProSubscription() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [plan, setPlan] = useState('monthly');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showAutoRenewDialog, setShowAutoRenewDialog] = useState(false);
-  const [billingLoading, setBillingLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const isSuccess = new URLSearchParams(window.location.search).get('success') === 'true';
+  const onIOS = isIOSNow();
+  const onAndroid = isAndroidNow();
+  const inIframe = window.self !== window.top;
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -75,64 +85,42 @@ export default function ProSubscription() {
     staleTime: 60000,
   });
 
-  const { purchasing, restoring, purchase, restorePurchases, getProductInfo, storeReady } = useAppleIAP(user);
-
-  const monthlyInfo = getProductInfo('monthly');
-  const yearlyInfo  = getProductInfo('yearly');
-  const monthlyPrice = monthlyInfo?.price || '9,99 €';
-  const yearlyPrice  = yearlyInfo?.price  || '90,00 €';
-
-  const onIOS     = isIOSNow();
-  const onAndroid = isAndroidNow();
-  const inIframe  = window.self !== window.top;
-
+  // ─── Redirect vers Stripe / site web ───────────────────────────────────────
   const handleSubscribe = async (overridePlan) => {
     const activePlan = overridePlan || plan;
 
-    // iOS natif (hors iframe) → Apple IAP
-    if (isIOSNow() && !inIframe) {
-      await purchase(activePlan);
-      return;
-    }
-
-    // Android natif → redirection vers le site web ServiGo Pro
-    if (isAndroidNow() && !inIframe) {
+    if (onAndroid && !inIframe) {
       window.open(PRO_SITE_URL, '_system');
       return;
     }
 
-    // Web / iframe → Stripe
-    setBillingLoading(true);
+    if (inIframe) {
+      toast.info('Pour vous abonner, ouvrez l\'application depuis votre téléphone ou depuis le lien direct.');
+      return;
+    }
+
+    setLoading(true);
     try {
       const origin = window.location.origin;
       const res = await base44.functions.invoke('createProSubscription', {
         plan: activePlan,
         successUrl: `${origin}/ProSubscription?success=true&plan=${activePlan}`,
-        cancelUrl:  `${origin}/ProSubscription`,
+        cancelUrl: `${origin}/ProSubscription`,
       });
       if (res.data?.url) {
-        if (inIframe) {
-          window.open(res.data.url, '_blank');
-        } else {
-          window.location.href = res.data.url;
-        }
+        window.location.href = res.data.url;
       } else {
         toast.error(res.data?.error || 'Erreur. Réessayez.');
       }
     } catch (err) {
       toast.error('Erreur : ' + (err?.message || 'réessayez'));
     } finally {
-      setBillingLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleCancelSubscription = async () => {
-    await updateSubMutation.mutateAsync({ status: 'cancelled', auto_renew: false });
-    setShowCancelDialog(false);
-  };
-
   const handleOpenBillingPortal = async () => {
-    setBillingLoading(true);
+    setLoading(true);
     try {
       const res = await base44.functions.invoke('createBillingPortal', {
         returnUrl: `${window.location.origin}/ProSubscription`,
@@ -142,33 +130,19 @@ export default function ProSubscription() {
     } catch (err) {
       toast.error('Erreur : ' + (err?.message || 'réessayez'));
     } finally {
-      setBillingLoading(false);
+      setLoading(false);
     }
   };
 
-  const isActive = subscription?.status === 'active' || subscription?.status === 'trial';
-
-  const STATUS = {
-    active:          { label: 'Actif',              color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-    trial:           { label: 'Essai gratuit',       color: 'text-blue-700 bg-blue-50 border-blue-200' },
-    expired:         { label: 'Expiré',              color: 'text-red-600 bg-red-50 border-red-200' },
-    cancelled:       { label: 'Annulé',              color: 'text-gray-600 bg-gray-50 border-gray-200' },
-    pending_payment: { label: 'Paiement en attente', color: 'text-orange-600 bg-orange-50 border-orange-200' },
+  const handleCancelSubscription = async () => {
+    await updateSubMutation.mutateAsync({ status: 'cancelled', auto_renew: false });
+    setShowCancelDialog(false);
   };
-  const sc = STATUS[subscription?.status] || { label: 'Inactif', color: 'text-gray-600 bg-gray-50 border-gray-200' };
 
-  const isBusy = purchasing || billingLoading;
-  const ctaDisabled = isBusy;
+  const isActive = subscription?.status === 'active' || subscription?.status === 'trial';
+  const sc = STATUS_CONFIG[subscription?.status] || { label: 'Inactif', color: 'text-gray-600 bg-gray-50 border-gray-200' };
 
-  const ctaLabel = isBusy
-    ? 'Traitement…'
-    : onAndroid
-    ? 'S\'abonner sur le site web →'
-    : plan === 'annual'
-      ? `Commencer pour ${yearlyPrice}/an`
-      : `Commencer pour ${monthlyPrice}/mois`;
-
-  // ─── Abonnement actif ──────────────────────────────────────────────────────
+  // ─── Vue abonné actif ──────────────────────────────────────────────────────
   if (isActive && subscription) {
     return (
       <div className="min-h-screen bg-background">
@@ -181,8 +155,9 @@ export default function ProSubscription() {
         </div>
 
         <div className="px-4 py-5 space-y-4">
-          {/* Hero card actif */}
-          <div className="rounded-3xl p-5 text-white" style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)`, boxShadow: '0 8px 24px rgba(108,92,231,0.3)' }}>
+          {/* Hero card */}
+          <div className="rounded-3xl p-5 text-white"
+            style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)`, boxShadow: '0 8px 24px rgba(108,92,231,0.3)' }}>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Plan {subscription.plan === 'annual' ? 'Annuel' : 'Mensuel'}</p>
@@ -232,51 +207,45 @@ export default function ProSubscription() {
               </div>
               <Switch
                 checked={!!subscription.auto_renew}
-                onCheckedChange={(v) => v ? updateSubMutation.mutateAsync({ auto_renew: true }) : setShowAutoRenewDialog(true)}
+                onCheckedChange={(v) => v
+                  ? updateSubMutation.mutateAsync({ auto_renew: true })
+                  : setShowAutoRenewDialog(true)
+                }
                 disabled={updateSubMutation.isPending}
               />
             </div>
           </div>
 
-          {/* Upgrade vers annuel */}
+          {/* Upgrade annuel */}
           {subscription.plan === 'monthly' && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold text-amber-900">🎯 Passez à l'annuel</p>
-                <p className="text-xs text-amber-700 mt-0.5">Économisez 30 € — seulement {yearlyPrice}/an</p>
+                <p className="text-xs text-amber-700 mt-0.5">Économisez 30 € — seulement 90 €/an</p>
               </div>
-              <button onClick={() => handleSubscribe('annual')}
-                disabled={purchasing}
-                className="rounded-xl shrink-0 text-xs font-semibold text-white px-3 py-1.5 tap-scale disabled:opacity-60"
+              <button onClick={() => handleSubscribe('annual')} disabled={loading}
+                className="rounded-xl shrink-0 text-xs font-semibold text-white px-3 py-1.5 disabled:opacity-60 tap-scale"
                 style={{ background: '#D97706' }}>
                 Changer →
               </button>
             </div>
           )}
 
-          {/* Actions */}
-          {!onIOS && !onAndroid && (
-            <Button variant="outline" onClick={handleOpenBillingPortal} disabled={billingLoading}
-              className="w-full h-11 rounded-xl">
-              {billingLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
+          {/* Actions paiement */}
+          {!onIOS && !onAndroid && !inIframe && (
+            <Button variant="outline" onClick={handleOpenBillingPortal} disabled={loading} className="w-full h-11 rounded-xl">
+              {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
               Gérer le paiement
             </Button>
           )}
           {onAndroid && (
-            <Button variant="outline" onClick={() => window.open(PRO_SITE_URL, '_system')}
-              className="w-full h-11 rounded-xl">
+            <Button variant="outline" onClick={() => window.open(PRO_SITE_URL, '_system')} className="w-full h-11 rounded-xl">
               <CreditCard className="w-4 h-4 mr-2" />
               Gérer mon abonnement sur le site
             </Button>
           )}
-          {onIOS && (
-            <Button variant="outline" onClick={restorePurchases} disabled={restoring} className="w-full h-11 rounded-xl">
-              {restoring ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
-              Restaurer mes achats
-            </Button>
-          )}
 
-          {/* Historique */}
+          {/* Historique paiements */}
           {(historyLoading || paymentHistory.length > 0) && (
             <div className="bg-card rounded-2xl border border-border p-5">
               <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -339,7 +308,7 @@ export default function ProSubscription() {
             <AlertDialogHeader>
               <AlertDialogTitle>Désactiver le renouvellement ?</AlertDialogTitle>
               <AlertDialogDescription>
-                Votre accès aux missions prendra fin le {subscription?.renewal_date || '—'}. Vous devrez renouveler manuellement.
+                Votre accès prendra fin le {subscription?.renewal_date || '—'}. Vous devrez renouveler manuellement.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -358,6 +327,14 @@ export default function ProSubscription() {
   }
 
   // ─── Page d'abonnement (non abonné) ───────────────────────────────────────
+  const ctaLabel = loading
+    ? 'Chargement…'
+    : onAndroid
+    ? "S'abonner sur le site web →"
+    : plan === 'annual'
+    ? 'Commencer pour 90 €/an'
+    : 'Commencer pour 9,99 €/mois';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header gradient */}
@@ -367,7 +344,6 @@ export default function ProSubscription() {
           <BackButton fallback="/ProDashboard" iconColor="white" />
         </div>
 
-        {/* Success banner */}
         <AnimatePresence>
           {isSuccess && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -387,25 +363,27 @@ export default function ProSubscription() {
             Recevez des missions locales et développez votre activité
           </p>
         </div>
-
-        {/* iOS : store loading */}
-        {onIOS && !storeReady && (
-          <div className="mt-4 bg-white/10 backdrop-blur rounded-xl p-3 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 text-white/70 animate-spin shrink-0" />
-            <p className="text-xs text-white/70">Connexion à l'App Store…</p>
-          </div>
-        )}
       </div>
 
       <div className="px-4 -mt-4 pb-10 space-y-5">
 
+        {/* Avertissement iframe */}
+        {inIframe && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">Paiement indisponible en prévisualisation</p>
+              <p className="text-xs text-amber-700 mt-1">Pour vous abonner, ouvrez l'application directement sur votre téléphone.</p>
+            </div>
+          </div>
+        )}
+
         {/* Plan selector */}
         <div className="bg-card rounded-3xl shadow-lg border border-border overflow-hidden">
-          {/* Toggle mensuel / annuel */}
           <div className="flex border-b border-border">
             {[
-              { key: 'monthly', label: 'Mensuel', price: monthlyPrice, sub: '/mois', badge: null },
-              { key: 'annual',  label: 'Annuel',  price: yearlyPrice,  sub: '/an',   badge: '−25%' },
+              { key: 'monthly', label: 'Mensuel', price: '9,99 €', sub: '/mois', badge: null },
+              { key: 'annual',  label: 'Annuel',  price: '90 €',   sub: '/an',   badge: '−25%' },
             ].map(({ key, label, price, sub, badge }) => (
               <button
                 key={key}
@@ -431,7 +409,6 @@ export default function ProSubscription() {
             ))}
           </div>
 
-          {/* Économie annuelle */}
           {plan === 'annual' && (
             <div className="bg-emerald-50 px-4 py-2.5 text-center">
               <p className="text-xs font-semibold text-emerald-700">
@@ -459,30 +436,21 @@ export default function ProSubscription() {
         {/* CTA */}
         <div className="space-y-3">
           <Button
-            onClick={handleSubscribe}
-            disabled={ctaDisabled}
+            onClick={() => handleSubscribe()}
+            disabled={loading || inIframe}
             className="w-full h-14 rounded-2xl text-base font-bold shadow-lg"
-            style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)`, border: 'none' }}
+            style={{ background: inIframe ? '#9CA3AF' : `linear-gradient(135deg, ${BRAND}, #a78bfa)`, border: 'none' }}
           >
-            {isBusy
+            {loading
               ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               : <ChevronRight className="w-5 h-5 mr-2" />
             }
             {ctaLabel}
           </Button>
 
-          {onIOS && (
-            <button onClick={restorePurchases} disabled={restoring}
-              className="w-full text-center text-sm font-medium py-2 flex items-center justify-center gap-2"
-              style={{ color: BRAND }}>
-              {restoring && <Loader2 className="w-3 h-3 animate-spin" />}
-              Restaurer mes achats
-            </button>
-          )}
-
           {!isActive && subscription && (
-            <button onClick={handleSubscribe} disabled={isBusy}
-              className="w-full text-center text-sm font-semibold py-2"
+            <button onClick={() => handleSubscribe()} disabled={loading || inIframe}
+              className="w-full text-center text-sm font-semibold py-2 disabled:opacity-50"
               style={{ color: BRAND }}>
               Renouveler mon abonnement →
             </button>
@@ -492,9 +460,9 @@ export default function ProSubscription() {
         {/* Trust strip */}
         <div className="flex items-center justify-center gap-6 py-2">
           {[
-            { icon: Shield,   label: 'Sans engagement' },
+            { icon: Shield,    label: 'Sans engagement' },
             { icon: RefreshCw, label: 'Résiliable' },
-            { icon: CreditCard, label: onIOS ? 'Apple Pay' : onAndroid ? 'Google Play' : 'Stripe sécurisé' },
+            { icon: CreditCard, label: onAndroid ? 'Google Play' : 'Stripe sécurisé' },
           ].map(({ icon: Icon, label }) => (
             <div key={label} className="flex flex-col items-center gap-1">
               <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
@@ -504,10 +472,8 @@ export default function ProSubscription() {
         </div>
 
         <p className="text-center text-[10px] text-muted-foreground px-4 leading-relaxed">
-          {onIOS
-            ? 'Le paiement est géré par Apple. Gérez vos abonnements dans Réglages › Apple ID › Abonnements.'
-            : onAndroid
-            ? 'Sur Android, l\'abonnement se gère depuis notre site web. Vous serez redirigé automatiquement.'
+          {onAndroid
+            ? "Sur Android, l'abonnement se gère depuis notre site web. Vous serez redirigé automatiquement."
             : 'Paiement sécurisé par Stripe. Vous pouvez résilier à tout moment depuis votre espace Pro.'
           }
         </p>

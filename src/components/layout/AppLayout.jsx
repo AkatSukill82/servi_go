@@ -25,6 +25,7 @@ const ProAgenda = lazy(() => import('@/pages/ProAgenda'));
 
 const CUSTOMER_TABS = ['/Home', '/MissionHistory', '/Favorites', '/Messages', '/Profile'];
 const PRO_TABS = ['/ProDashboard', '/ProAgenda', '/ProMessages', '/ProProfile'];
+// Note: ProMessages uses the Messages component (filtered for pro)
 
 const TAB_COMPONENTS = {
   '/Home': Home,

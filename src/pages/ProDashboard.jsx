@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Check, Clock, MapPin, Star, ChevronRight, CreditCard, AlertCircle, Play, StopCircle } from 'lucide-react';
+import {
+  Check, Clock, MapPin, Star, ChevronRight, CreditCard,
+  AlertCircle, Play, StopCircle, Loader2,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import ProStats from '@/components/pro/ProStats';
@@ -16,11 +18,9 @@ import TopBar from '@/components/layout/TopBar';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
 
-const getTimeSinceCreated = (createdDate) => {
-  if (!createdDate) return 0;
-  const created = new Date(createdDate);
-  const now = new Date();
-  return Math.floor((now - created) / 60000);
+const getMinutesAgo = (date) => {
+  if (!date) return 0;
+  return Math.floor((Date.now() - new Date(date)) / 60000);
 };
 
 export default function ProDashboard() {
@@ -29,30 +29,38 @@ export default function ProDashboard() {
   const { requestPermission, notify } = useNotifications();
   const prevCountRef = useRef(null);
   const [activeTab, setActiveTab] = useState('missions');
-  const [showProReviewModal, setShowProReviewModal] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(null);
   const [proRating, setProRating] = useState(5);
   const [proComment, setProComment] = useState('');
 
   useEffect(() => { requestPermission(); }, []);
 
-  const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me(), staleTime: 60000 });
+  // ─── Data fetching ─────────────────────────────────────────────────────────
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    staleTime: 60000,
+  });
+
+  const firstName = getFirstName(user);
+  const greeting  = getGreeting();
+  const proCategory = user?.category_name;
 
   const { data: proVerif } = useQuery({
     queryKey: ['identityVerif', user?.email],
-    queryFn: () => base44.entities.IdentityVerification.filter({ user_email: user.email }, '-created_date', 1).then(r => r[0] || null),
+    queryFn: () =>
+      base44.entities.IdentityVerification
+        .filter({ user_email: user.email }, '-created_date', 1)
+        .then(r => r[0] || null),
     enabled: !!user?.email,
     staleTime: 60000,
   });
   const eidApproved = proVerif?.status === 'approved' || user?.eid_status === 'verified';
-  const proCategory = user?.category_name;
 
-  const firstName = getFirstName(user);
-  const greeting  = getGreeting();
-
-  // Gate: redirect if independence charter not signed (skip in preview)
+  // Independence charter gate
   useEffect(() => {
     if (!user) return;
-    const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('preview');
+    const isPreview = window.location.hostname.includes('preview');
     if (!isPreview && !user.independence_charter_signed) {
       navigate('/IndependenceCharter', { replace: true });
     }
@@ -60,86 +68,81 @@ export default function ProDashboard() {
 
   const { data: subscription } = useQuery({
     queryKey: ['proSubscription', user?.email],
-    queryFn: () => {
-      const PRIORITY = { active: 0, trial: 1, pending_payment: 2, expired: 3, cancelled: 4 };
-      return base44.entities.ProSubscription.filter({ professional_email: user.email }, '-created_date').then(subs => {
-        subs.sort((a, b) => (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9));
-        return subs[0] || null;
-      });
-    },
+    queryFn: () =>
+      base44.entities.ProSubscription
+        .filter({ professional_email: user.email }, '-created_date')
+        .then(subs => {
+          const PRIORITY = { active: 0, trial: 1, pending_payment: 2, expired: 3, cancelled: 4 };
+          return [...subs].sort((a, b) => (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9))[0] || null;
+        }),
     enabled: !!user?.email,
   });
 
-  // Auto-expire subscription if renewal_date has passed
+  // Auto-expire subscription
   useEffect(() => {
     if (!subscription || subscription.status !== 'active') return;
-    const renewalDate = new Date(subscription.renewal_date);
-    const today = new Date();
-    if (renewalDate < today) {
+    if (new Date(subscription.renewal_date) < new Date()) {
       base44.entities.ProSubscription.update(subscription.id, { status: 'expired', auto_renew: false }).catch(() => {});
-      if (user?.id) base44.entities.User.update(user.id, { subscription_active: false }).catch(() => {});
       queryClient.invalidateQueries({ queryKey: ['proSubscription', user?.email] });
     }
-  }, [subscription, user, queryClient]);
+  }, [subscription]);
 
-  const hasActiveSubscription = subscription?.status === 'active' || subscription?.status === 'trial';
+  const hasActiveSub = subscription?.status === 'active' || subscription?.status === 'trial';
 
-  // Query A: open pool (status='searching')
+  // Pool requests (open to all pros in this category)
   const { data: poolRequests = [] } = useQuery({
     queryKey: ['poolRequests', proCategory],
-    queryFn: async () => {
-      if (!proCategory) return [];
-      return base44.entities.ServiceRequestV2.filter({ category_name: proCategory, status: 'searching' }, '-created_date');
-    },
+    queryFn: () =>
+      base44.entities.ServiceRequestV2
+        .filter({ category_name: proCategory, status: 'searching' }, '-created_date'),
     enabled: !!proCategory,
     staleTime: 30000,
   });
 
-  // Query B: assigned to this pro (status='pending_pro')
+  // Requests assigned specifically to this pro
   const { data: assignedRequests = [] } = useQuery({
     queryKey: ['assignedRequests', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      return base44.entities.ServiceRequestV2.filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date');
-    },
+    queryFn: () =>
+      base44.entities.ServiceRequestV2
+        .filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date'),
     enabled: !!user?.email,
     staleTime: 30000,
   });
 
-  // Merge and deduplicate by id, assigned first
-  const mergedIds = new Set();
-  const incomingRequests = [
-    ...assignedRequests.filter(r => { if (mergedIds.has(r.id)) return false; mergedIds.add(r.id); return true; }),
-    ...poolRequests.filter(r => { if (mergedIds.has(r.id)) return false; mergedIds.add(r.id); return true; }),
-  ];
+  // Merge, deduplicate, assigned first
+  const incomingRequests = React.useMemo(() => {
+    const seen = new Set();
+    return [
+      ...assignedRequests.filter(r => !seen.has(r.id) && seen.add(r.id)),
+      ...poolRequests.filter(r => !seen.has(r.id) && seen.add(r.id)),
+    ];
+  }, [assignedRequests, poolRequests]);
 
+  // Real-time subscription for missions
   useEffect(() => {
     if (!proCategory || !user?.email) return;
-    const unsub = base44.entities.ServiceRequestV2.subscribe((event) => {
-      if (event.type === 'create' || event.type === 'update' || event.type === 'delete') {
-        queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
-        queryClient.invalidateQueries({ queryKey: ['assignedRequests', user.email] });
-      }
+    const unsub = base44.entities.ServiceRequestV2.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
+      queryClient.invalidateQueries({ queryKey: ['assignedRequests', user.email] });
     });
     return unsub;
-  }, [proCategory, user?.email, queryClient]);
+  }, [proCategory, user?.email]);
 
+  // Notification on new mission
   useEffect(() => {
-    if (!incomingRequests?.length) return;
     const count = incomingRequests.length;
-    if (prevCountRef.current !== null && count > prevCountRef.current) {
-      const newReq = incomingRequests[0];
-      notify('Nouvelle demande', `${newReq?.category_name} — ${newReq?.customer_address || ''}`);
+    if (prevCountRef.current !== null && count > prevCountRef.current && incomingRequests[0]) {
+      notify('Nouvelle demande', `${incomingRequests[0].category_name} — ${incomingRequests[0].customer_address || ''}`);
     }
     prevCountRef.current = count;
-  }, [incomingRequests?.length]);
+  }, [incomingRequests.length]);
 
+  // My jobs (all statuses)
   const { data: myJobs = [] } = useQuery({
     queryKey: ['myJobs', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      return base44.entities.ServiceRequestV2.filter({ professional_email: user.email }, '-created_date', 20);
-    },
+    queryFn: () =>
+      base44.entities.ServiceRequestV2
+        .filter({ professional_email: user.email }, '-created_date', 20),
     enabled: !!user?.email,
     staleTime: 60000,
   });
@@ -150,16 +153,25 @@ export default function ProDashboard() {
     const hasActive = myJobs.some(j => ['accepted', 'pro_en_route', 'in_progress'].includes(j.status));
     if (!hasActive || !navigator.geolocation) return;
     const watchId = navigator.geolocation.watchPosition(
-      (pos) => { base44.entities.User.update(user.id, { latitude: pos.coords.latitude, longitude: pos.coords.longitude }).catch(() => {}); },
+      (pos) => base44.entities.User.update(user.id, { latitude: pos.coords.latitude, longitude: pos.coords.longitude }).catch(() => {}),
       () => {},
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [user?.id, myJobs]);
 
+  const { data: myReviews = [] } = useQuery({
+    queryKey: ['myReviews', user?.email],
+    queryFn: () => base44.entities.Review.filter({ professional_email: user.email }, '-created_date', 5),
+    enabled: !!user?.email,
+    staleTime: 120000,
+  });
+
+  // ─── Mutations ─────────────────────────────────────────────────────────────
   const acceptMutation = useMutation({
     mutationFn: async ({ requestId, request }) => {
-      const fresh = await base44.entities.ServiceRequestV2.filter({ id: requestId }).then(r => r[0]);
+      const fresh = await base44.entities.ServiceRequestV2
+        .filter({ id: requestId }).then(r => r[0]);
       if (!fresh || !['searching', 'pending_pro'].includes(fresh.status)) {
         throw new Error('Mission déjà prise');
       }
@@ -169,10 +181,9 @@ export default function ProDashboard() {
         professional_name: user.full_name,
         professional_email: user.email,
       });
-      const contractNumber = `CTR-${Date.now()}`;
       await base44.entities.MissionContract.create({
         request_id: requestId,
-        contract_number: contractNumber,
+        contract_number: `CTR-${Date.now()}`,
         customer_email: request.customer_email,
         customer_name: request.customer_name,
         customer_phone: request.customer_phone || '',
@@ -203,7 +214,9 @@ export default function ProDashboard() {
         action_url: `/Chat?requestId=${requestId}`,
       });
       if (subscription?.id) {
-        await base44.entities.ProSubscription.update(subscription.id, { missions_received: (subscription.missions_received || 0) + 1 });
+        await base44.entities.ProSubscription.update(subscription.id, {
+          missions_received: (subscription.missions_received || 0) + 1,
+        });
       }
     },
     onMutate: async ({ requestId }) => {
@@ -234,7 +247,7 @@ export default function ProDashboard() {
           recipient_type: 'particulier',
           type: 'review_request',
           title: "Comment s'est passée votre mission ?",
-          body: `Évaluez ${user?.full_name || 'votre artisan'} pour sa prestation ${job.category_name}. Votre avis aide d'autres clients.`,
+          body: `Évaluez ${user?.full_name || 'votre artisan'} pour sa prestation ${job.category_name}.`,
           request_id: id,
           action_url: `/Chat?requestId=${id}`,
         });
@@ -244,38 +257,31 @@ export default function ProDashboard() {
       queryClient.invalidateQueries({ queryKey: ['myJobs'] });
       toast.success('Statut mis à jour !');
       if (variables.status === 'completed' && variables.job) {
-        setShowProReviewModal(variables.job);
+        setShowReviewModal(variables.job);
         setProRating(5);
         setProComment('');
       }
     },
   });
 
-  const { data: myReviews = [] } = useQuery({
-    queryKey: ['myReviews', user?.email],
-    queryFn: async () => {
-      if (!user?.email) return [];
-      return base44.entities.Review.filter({ professional_email: user.email }, '-created_date', 5);
-    },
-    enabled: !!user?.email,
-    staleTime: 120000,
-  });
+  // ─── Computed ──────────────────────────────────────────────────────────────
+  const activeJobs = myJobs.filter(j =>
+    ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status)
+  );
+  const completedJobs = myJobs.filter(j => j.status === 'completed');
 
   const upcomingJob = myJobs.find(j => {
     if (!['contract_signed', 'accepted'].includes(j.status) || !j.scheduled_date) return false;
     const d = new Date(j.scheduled_date);
-    const now = new Date();
-    return d >= now && d <= new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    return d >= new Date() && d <= new Date(Date.now() + 24 * 3600 * 1000);
   });
 
-  const completedJobs = myJobs.filter(j => j.status === 'completed');
-  const activeJobs = myJobs.filter(j => ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status));
-
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-background">
       <TopBar />
 
-      {/* ── Hero / Stats card — Uber Driver style ── */}
+      {/* Hero gradient */}
       <div className="relative px-4 pt-5 pb-6"
         style={{ background: `linear-gradient(160deg, #1a0533 0%, ${BRAND} 70%, #a78bfa 100%)` }}>
         <div className="mb-4">
@@ -284,8 +290,6 @@ export default function ProDashboard() {
           </p>
           <p className="text-white font-bold text-base mt-0.5">{proCategory || 'Professionnel ServiGo'}</p>
         </div>
-
-        {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Terminées', value: completedJobs.length },
@@ -302,7 +306,7 @@ export default function ProDashboard() {
 
       <div className="px-4 pt-4 pb-8 space-y-4">
 
-        {/* Upcoming mission reminder */}
+        {/* Mission demain */}
         {upcomingJob && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
             <span className="text-xl shrink-0">⏰</span>
@@ -315,9 +319,13 @@ export default function ProDashboard() {
           </div>
         )}
 
-        {/* Identity pending — bloque la réception de missions */}
+        {/* Vérification eID */}
         {user && !eidApproved && (
-          <div className={`border rounded-2xl p-4 flex items-center gap-3 ${proVerif?.status === 'pending_review' ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'}`}>
+          <div className={`border rounded-2xl p-4 flex items-center gap-3 ${
+            proVerif?.status === 'pending_review'
+              ? 'bg-blue-50 border-blue-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
             <span className="text-lg shrink-0">{proVerif?.status === 'pending_review' ? '⏳' : '🪪'}</span>
             <div className="flex-1">
               <p className={`text-sm font-bold ${proVerif?.status === 'pending_review' ? 'text-blue-900' : 'text-red-900'}`}>
@@ -325,7 +333,7 @@ export default function ProDashboard() {
               </p>
               <p className={`text-xs mt-0.5 ${proVerif?.status === 'pending_review' ? 'text-blue-600' : 'text-red-600'}`}>
                 {proVerif?.status === 'pending_review'
-                  ? 'Votre dossier est examiné — vous recevrez des missions dès approbation'
+                  ? 'Votre dossier est examiné — missions disponibles dès approbation'
                   : 'Soumettez votre carte eID pour recevoir des missions'}
               </p>
             </div>
@@ -338,10 +346,10 @@ export default function ProDashboard() {
           </div>
         )}
 
-        {/* Subscription banner */}
-        {!subscription || subscription.status === 'pending_payment' ? (
+        {/* Abonnement banner */}
+        {!hasActiveSub ? (
           <button onClick={() => navigate('/ProSubscription')}
-            className="w-full rounded-2xl p-4 text-left flex items-center gap-3 text-white"
+            className="w-full rounded-2xl p-4 text-left flex items-center gap-3 text-white tap-scale"
             style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)`, boxShadow: `0 4px 16px rgba(108,92,231,0.3)` }}>
             <CreditCard className="w-5 h-5 text-white/80 shrink-0" />
             <div className="flex-1">
@@ -350,30 +358,20 @@ export default function ProDashboard() {
             </div>
             <ChevronRight className="w-4 h-4 text-white/60 shrink-0" />
           </button>
-        ) : hasActiveSubscription ? (
+        ) : (
           <button onClick={() => navigate('/ProSubscription')}
-            className="w-full rounded-2xl p-4 border border-emerald-200 bg-emerald-50 flex items-center gap-3 text-left">
+            className="w-full rounded-2xl p-4 border border-emerald-200 bg-emerald-50 flex items-center gap-3 text-left tap-scale">
             <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0">
               <CreditCard className="w-4 h-4 text-white" />
             </div>
             <div className="flex-1">
               <p className="text-sm font-bold text-emerald-900">Abonnement actif ✓</p>
               <p className="text-xs text-emerald-700 mt-0.5">
-                {subscription.plan === 'annual' ? '90 €/an' : '9,99 €/mois'}
-                {subscription.renewal_date ? ` · Renouvellement le ${subscription.renewal_date}` : ''}
+                {subscription?.plan === 'annual' ? '90 €/an' : '9,99 €/mois'}
+                {subscription?.renewal_date ? ` · Renouvellement le ${subscription.renewal_date}` : ''}
               </p>
             </div>
             <ChevronRight className="w-4 h-4 text-emerald-400 shrink-0" />
-          </button>
-        ) : (
-          <button onClick={() => navigate('/ProSubscription')}
-            className="w-full rounded-2xl p-4 border border-red-200 bg-red-50 flex items-center gap-3 text-left">
-            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-bold text-red-900">Abonnement expiré</p>
-              <p className="text-xs text-red-600 mt-0.5">Renouvelez pour continuer à recevoir des missions</p>
-            </div>
-            <ChevronRight className="w-4 h-4 text-red-400 shrink-0" />
           </button>
         )}
 
@@ -403,18 +401,20 @@ export default function ProDashboard() {
           ))}
         </div>
 
+        {/* Stats tab */}
         {activeTab === 'stats' && <ProStats userEmail={user?.email} />}
 
+        {/* Missions tab */}
         {activeTab === 'missions' && (
           <div className="space-y-4">
 
-            {/* Locked preview */}
-            {!hasActiveSubscription && incomingRequests.length > 0 && (
+            {/* Preview floue si pas abonné */}
+            {!hasActiveSub && incomingRequests.length > 0 && (
               <div className="relative rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
                   <div className="text-center px-4">
                     <p className="text-white text-sm font-bold mb-3">
-                      {incomingRequests.length} demande{incomingRequests.length !== 1 ? 's' : ''} disponible{incomingRequests.length !== 1 ? 's' : ''}
+                      {incomingRequests.length} demande{incomingRequests.length > 1 ? 's' : ''} disponible{incomingRequests.length > 1 ? 's' : ''}
                     </p>
                     <Button onClick={() => navigate('/ProSubscription')} className="bg-white text-primary hover:bg-white/90">
                       S'abonner — 9,99 €/mois
@@ -422,7 +422,7 @@ export default function ProDashboard() {
                   </div>
                 </div>
                 <div className="pointer-events-none opacity-30 space-y-3">
-                  {incomingRequests.slice(0, 2).map((req) => (
+                  {incomingRequests.slice(0, 2).map(req => (
                     <div key={req.id} className="bg-white rounded-2xl p-4">
                       <p className="text-sm font-semibold">{req.category_name}</p>
                       <p className="text-xs text-muted-foreground mt-1">{req.customer_address || 'Adresse non précisée'}</p>
@@ -432,8 +432,8 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Incoming requests */}
-            {hasActiveSubscription && (
+            {/* Demandes disponibles */}
+            {hasActiveSub && (
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-base font-black text-foreground">
@@ -465,7 +465,7 @@ export default function ProDashboard() {
                   <div className="space-y-3">
                     {incomingRequests.map((req, i) => {
                       const isAssigned = assignedRequests.some(a => a.id === req.id);
-                      const createdMinutesAgo = isAssigned ? getTimeSinceCreated(req.created_date) : null;
+                      const minsAgo = isAssigned ? getMinutesAgo(req.created_date) : null;
                       return (
                         <motion.div
                           key={req.id}
@@ -484,14 +484,10 @@ export default function ProDashboard() {
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-bold text-sm text-foreground">{req.category_name}</p>
                                 {isAssigned && (
-                                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">
-                                    Pour vous
-                                  </span>
+                                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">Pour vous</span>
                                 )}
                                 {req.is_urgent && (
-                                  <span className="text-[10px] font-bold bg-red-100 text-red-600 rounded-full px-2 py-0.5">
-                                    ⚡ SOS
-                                  </span>
+                                  <span className="text-[10px] font-bold bg-red-100 text-red-600 rounded-full px-2 py-0.5">⚡ SOS</span>
                                 )}
                               </div>
                               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -503,30 +499,35 @@ export default function ProDashboard() {
                                   📅 {req.scheduled_date}{req.scheduled_time ? ` · ${req.scheduled_time}` : ''}
                                 </p>
                               )}
-                              {createdMinutesAgo !== null && (
+                              {minsAgo !== null && (
                                 <p className="text-xs text-orange-600 font-medium mt-1">
-                                  ⏰ En attente depuis {createdMinutesAgo} min — répondez vite !
+                                  ⏰ En attente depuis {minsAgo} min — répondez vite !
                                 </p>
                               )}
                             </div>
                           </div>
+
                           {req.answers?.length > 0 && (
                             <div className="bg-muted/50 rounded-xl p-3 mb-3 space-y-1">
                               {req.answers.slice(0, 2).map((a, idx) => (
                                 <p key={idx} className="text-xs">
                                   <span className="text-muted-foreground">{a.question} : </span>
-                                  <span className="font-semibold text-foreground">{a.answer}</span>
+                                  <span className="font-semibold">{a.answer}</span>
                                 </p>
                               ))}
                             </div>
                           )}
+
                           <button
                             onClick={() => acceptMutation.mutate({ requestId: req.id, request: req })}
                             disabled={acceptMutation.isPending}
                             className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white active:scale-[0.98] transition-transform disabled:opacity-50"
                             style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)` }}
                           >
-                            <Check className="w-4 h-4" strokeWidth={2.5} />
+                            {acceptMutation.isPending
+                              ? <Loader2 className="w-4 h-4 animate-spin" />
+                              : <Check className="w-4 h-4" strokeWidth={2.5} />
+                            }
                             Accepter cette mission
                           </button>
                         </motion.div>
@@ -537,8 +538,8 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Active missions */}
-            {hasActiveSubscription && activeJobs.length > 0 && (
+            {/* Missions en cours */}
+            {hasActiveSub && activeJobs.length > 0 && (
               <div>
                 <h2 className="text-base font-black text-foreground mb-3">Missions en cours</h2>
                 <div className="space-y-3">
@@ -550,7 +551,7 @@ export default function ProDashboard() {
                           {(job.customer_first_name || job.customer_name || 'C')[0]}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-bold text-sm text-foreground">
+                          <p className="font-bold text-sm">
                             {job.customer_first_name
                               ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.`
                               : (job.customer_name || 'Client')}
@@ -589,22 +590,20 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Recent completed */}
-            {hasActiveSubscription && completedJobs.length > 0 && (
+            {/* Missions récentes terminées */}
+            {hasActiveSub && completedJobs.length > 0 && (
               <div>
                 <h2 className="text-base font-black text-foreground mb-3">Missions récentes</h2>
                 <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
-                  {completedJobs.slice(0, 5).map((job, i) => (
-                    <button
-                      key={job.id}
+                  {completedJobs.slice(0, 5).map((job) => (
+                    <button key={job.id}
                       onClick={() => navigate(`/Chat?requestId=${job.id}`)}
-                      className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-muted/50 transition-colors border-b border-gray-50 last:border-0"
-                    >
+                      className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-muted/50 border-b border-gray-50 last:border-0">
                       <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-black text-muted-foreground">
                         {(job.customer_first_name || job.customer_name || 'C')[0]}
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">
+                        <p className="text-sm font-semibold truncate">
                           {job.customer_first_name
                             ? `${job.customer_first_name} ${job.customer_last_name?.[0] || ''}.`
                             : (job.customer_name || 'Client')}
@@ -619,8 +618,8 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Reviews */}
-            {hasActiveSubscription && myReviews.length > 0 && (
+            {/* Avis clients */}
+            {hasActiveSub && myReviews.length > 0 && (
               <div>
                 <h2 className="text-base font-black text-foreground mb-3">Avis clients</h2>
                 <div className="space-y-3">
@@ -628,7 +627,7 @@ export default function ProDashboard() {
                     <div key={review.id} className="bg-white rounded-2xl p-4"
                       style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-sm font-bold text-foreground">{review.customer_name || 'Client'}</p>
+                        <p className="text-sm font-bold">{review.customer_name || 'Client'}</p>
                         <div className="flex gap-0.5">
                           {[1,2,3,4,5].map(s => (
                             <Star key={s} style={{ width: 12, height: 12 }}
@@ -647,62 +646,56 @@ export default function ProDashboard() {
           </div>
         )}
 
-      {/* ProReview modal */}
-      <Dialog open={!!showProReviewModal} onOpenChange={(open) => { if (!open) setShowProReviewModal(null); }}>
-        <DialogContent className="max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Évaluez votre client</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">{showProReviewModal?.customer_first_name ? `${showProReviewModal.customer_first_name} ${showProReviewModal.customer_last_name || ''}`.trim() : (showProReviewModal?.customer_name || 'Client')}</p>
-            <div className="flex gap-1 justify-center">
-              {[1,2,3,4,5].map(s => (
-                <button key={s} onClick={() => setProRating(s)} className="p-1">
-                  <Star className={`w-8 h-8 transition-colors ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-border'}`} />
-                </button>
-              ))}
+        {/* Modal avis client */}
+        <Dialog open={!!showReviewModal} onOpenChange={(open) => { if (!open) setShowReviewModal(null); }}>
+          <DialogContent className="max-w-sm rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>Évaluez votre client</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-muted-foreground">
+                {showReviewModal?.customer_first_name
+                  ? `${showReviewModal.customer_first_name} ${showReviewModal.customer_last_name || ''}`.trim()
+                  : (showReviewModal?.customer_name || 'Client')}
+              </p>
+              <div className="flex gap-1 justify-center">
+                {[1,2,3,4,5].map(s => (
+                  <button key={s} onClick={() => setProRating(s)} className="p-1">
+                    <Star className={`w-8 h-8 transition-colors ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-border'}`} />
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                value={proComment}
+                onChange={e => setProComment(e.target.value)}
+                placeholder="Commentaire optionnel sur ce client..."
+                className="rounded-xl resize-none"
+                rows={3}
+              />
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowReviewModal(null)}>Passer</Button>
+                <Button className="flex-1 rounded-xl" onClick={async () => {
+                  const job = showReviewModal;
+                  await base44.entities.ProReview.create({
+                    request_id: job.id,
+                    professional_email: user.email,
+                    professional_name: user.full_name,
+                    customer_email: job.customer_email,
+                    customer_name: job.customer_name || `${job.customer_first_name || ''} ${job.customer_last_name || ''}`.trim(),
+                    rating: proRating,
+                    comment: proComment,
+                    category_name: job.category_name,
+                    is_visible: true,
+                  });
+                  setShowReviewModal(null);
+                  toast.success('Avis envoyé !');
+                }}>
+                  Soumettre mon avis
+                </Button>
+              </div>
             </div>
-            <Textarea
-              value={proComment}
-              onChange={e => setProComment(e.target.value)}
-              placeholder="Laissez un commentaire sur ce client (optionnel)..."
-              className="rounded-xl resize-none"
-              rows={3}
-            />
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowProReviewModal(null)}>Passer</Button>
-              <Button
-                className="flex-1 rounded-xl"
-                onClick={async () => {
-                  const job = showProReviewModal;
-                  try {
-                    await base44.entities.ProReview.create({
-                      request_id: job.id,
-                      professional_email: user.email,
-                      professional_name: user.full_name,
-                      customer_email: job.customer_email,
-                      customer_name: job.customer_name || `${job.customer_first_name || ''} ${job.customer_last_name || ''}`.trim(),
-                      rating: proRating,
-                      comment: proComment,
-                      category_name: job.category_name,
-                      is_visible: true,
-                    });
-                    setShowProReviewModal(null);
-                    setProRating(5);
-                    setProComment('');
-                    toast.success('Avis envoyé !');
-                  } catch (err) {
-                    toast.error('Erreur lors de l\'envoi de l\'avis');
-                    console.error(err);
-                  }
-                }}
-              >
-                Soumettre mon avis
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
