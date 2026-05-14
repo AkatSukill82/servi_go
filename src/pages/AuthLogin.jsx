@@ -119,7 +119,14 @@ export default function AuthLogin() {
             Mot de passe oublié ?
           </button>
           <p className="text-white/30 text-xs">
-            Pas de compte ? Créez-en un sur app.myservigo.be
+            Pas de compte ?{' '}
+            <button
+              type="button"
+              onClick={() => navigate('/Register')}
+              className="text-[#6C5CE7] hover:text-[#a78bfa] underline underline-offset-2 transition-colors"
+            >
+              Sign up
+            </button>
           </p>
         </div>
       </div>
