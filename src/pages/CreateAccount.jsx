@@ -49,10 +49,10 @@ function ProgressBar({ current, total, labels }) {
           <div key={i} className="flex flex-col items-center flex-1">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-colors ${
               i < current - 1
-                ? 'bg-[#1A365D] border-[#1A365D] text-white'
+                ? 'bg-[#6C5CE7] border-[#6C5CE7] text-white'
                 : i === current - 1
-                ? 'bg-[#1A365D] border-[#1A365D] text-white'
-                : 'bg-white border-[#CBD5E0] text-[#A0AEC0]'
+                ? 'bg-[#6C5CE7] border-[#6C5CE7] text-white'
+                : 'bg-white border-gray-300 text-gray-400'
             }`}>
               {i < current - 1 ? <CheckCircle className="w-4 h-4" /> : i + 1}
             </div>
@@ -62,7 +62,7 @@ function ProgressBar({ current, total, labels }) {
       </div>
       <div className="h-1.5 bg-[#E2E8F0] rounded-full overflow-hidden">
         <div
-          className="h-full bg-[#1A365D] rounded-full transition-all duration-500"
+          className="h-full bg-[#6C5CE7] rounded-full transition-all duration-500"
           style={{ width: `${((current - 1) / (total - 1)) * 100}%` }}
         />
       </div>
@@ -77,47 +77,45 @@ function StepTypeSelection({ onSelect }) {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-black text-[#1A365D]">Vous êtes ?</h2>
-        <p className="text-sm text-[#718096] mt-2">Choisissez votre profil pour commencer</p>
+        <h2 className="text-2xl font-black text-gray-900">Vous êtes ?</h2>
+        <p className="text-sm text-gray-500 mt-2">Choisissez votre profil pour commencer</p>
       </div>
 
       <div className="space-y-4">
         <button
           onClick={() => onSelect('particulier')}
-          className="w-full bg-white rounded-2xl border-2 border-[#E2E8F0] hover:border-[#FF6B35] hover:shadow-lg transition-all duration-200 p-5 text-left group"
+          className="w-full bg-white rounded-2xl border border-gray-200 active:scale-[0.98] transition-transform duration-150 p-5 text-left flex items-center gap-4 cursor-pointer"
+          style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}
         >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#FFF0EB] flex items-center justify-center shrink-0 group-hover:bg-[#FF6B35] transition-colors">
-              <Home className="w-7 h-7 text-[#FF6B35] group-hover:text-white transition-colors" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-[#1A365D] text-lg">Particulier</p>
-              <p className="text-sm text-[#718096]">Je cherche un professionnel</p>
-            </div>
-            <ArrowRight className="w-5 h-5 text-[#CBD5E0] group-hover:text-[#FF6B35] transition-colors shrink-0" />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: '#FDEEE8' }}>
+            <Home className="w-7 h-7" style={{ color: '#E17055' }} strokeWidth={1.8} />
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-gray-900 text-base">Particulier</p>
+            <p className="text-sm text-gray-500 mt-0.5">Je cherche un professionnel</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400 shrink-0" />
         </button>
 
         <button
           onClick={() => onSelect('professionnel')}
-          className="w-full bg-white rounded-2xl border-2 border-[#E2E8F0] hover:border-[#1A365D] hover:shadow-lg transition-all duration-200 p-5 text-left group"
+          className="w-full bg-white rounded-2xl border border-gray-200 active:scale-[0.98] transition-transform duration-150 p-5 text-left flex items-center gap-4 cursor-pointer"
+          style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)' }}
         >
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#1A365D] flex items-center justify-center shrink-0 group-hover:bg-[#0F2444] transition-colors">
-              <Wrench className="w-7 h-7 text-white transition-colors" />
-            </div>
-            <div className="flex-1">
-              <p className="font-bold text-[#1A365D] text-lg">Professionnel</p>
-              <p className="text-sm text-[#718096]">Je propose mes services</p>
-            </div>
-            <ArrowRight className="w-5 h-5 text-[#CBD5E0] group-hover:text-[#1A365D] transition-colors shrink-0" />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: '#E8E6F8' }}>
+            <Wrench className="w-7 h-7 text-gray-500" strokeWidth={1.8} />
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-gray-900 text-base">Professionnel</p>
+            <p className="text-sm text-gray-500 mt-0.5">Je propose mes services</p>
+          </div>
+          <ArrowRight className="w-5 h-5 text-gray-400 shrink-0" />
         </button>
       </div>
 
-      <p className="text-center text-sm text-[#718096]">
+      <p className="text-center text-sm text-gray-500">
         Déjà un compte ?{' '}
-        <button onClick={() => navigate('/se-connecter')} className="text-[#1A365D] font-bold hover:underline">
+        <button onClick={() => navigate('/se-connecter')} className="font-bold hover:underline cursor-pointer" style={{ color: '#6C5CE7' }}>
           Se connecter
         </button>
       </p>
@@ -213,11 +211,11 @@ function ParticulierSignup({ onBack, onRegistered }) {
           {cguAccepted && <CheckCircle className="w-3 h-3 text-white" />}
         </div>
         <span className="text-xs text-[#718096] leading-relaxed">
-          J'accepte les <a href="/cgu" target="_blank" rel="noopener noreferrer" className="text-[#1A365D] underline">CGU</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-[#1A365D] underline">Politique de confidentialité</a>
+          J'accepte les <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#6C5CE7' }}>CGU</a> et la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#6C5CE7' }}>Politique de confidentialité</a>
         </span>
       </label>
 
-      <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-[#FF6B35] hover:bg-[#E55A25] text-white font-bold text-base">
+      <Button type="submit" disabled={loading} className="w-full h-12 rounded-xl text-white font-bold text-base" style={{ background: '#6C5CE7' }}>
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Créer mon compte'}
       </Button>
     </form>
@@ -269,7 +267,7 @@ function ProStep1({ data, onChange, onNext, onBack }) {
           </button>
         </div>
       </div>
-      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
+      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl text-white font-bold" style={{ background: '#6C5CE7' }}>
         Continuer <ArrowRight className="w-4 h-4 ml-2" />
       </Button>
     </div>
@@ -346,7 +344,7 @@ function ProStep2({ data, onChange, onNext, onBack }) {
         <Label className="text-xs">Description de vos services</Label>
         <Textarea value={data.description} onChange={e => onChange('description', e.target.value)} placeholder="Décrivez vos compétences..." className="rounded-xl resize-none" rows={3} />
       </div>
-      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
+      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl text-white font-bold" style={{ background: '#6C5CE7' }}>
         Continuer <ArrowRight className="w-4 h-4 ml-2" />
       </Button>
     </div>
@@ -382,7 +380,7 @@ function ProStep3({ data, onChange, onNext, onBack }) {
         <h3 className="font-semibold text-sm flex items-center gap-2"><Shield className="w-4 h-4 text-[#1A365D]" /> Confirmations</h3>
         {INDEPENDENCE_ITEMS.map(item => (
           <label key={item.key} className="flex items-start gap-3 cursor-pointer">
-            <div onClick={() => setCheck(item.key, !checks[item.key])} className={`w-5 h-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors ${checks[item.key] ? 'bg-[#1A365D] border-[#1A365D]' : 'border-[#CBD5E0]'}`}>
+            <div onClick={() => setCheck(item.key, !checks[item.key])} className={`w-5 h-5 rounded border-2 shrink-0 mt-0.5 flex items-center justify-center transition-colors cursor-pointer ${checks[item.key] ? 'bg-[#6C5CE7] border-[#6C5CE7]' : 'border-gray-300'}`}>
               {checks[item.key] && <CheckCircle className="w-3 h-3 text-white" />}
             </div>
             <span className="text-sm leading-relaxed text-[#4A5568]">{item.label}{item.required && <span className="text-red-500 ml-1">*</span>}</span>
@@ -400,7 +398,7 @@ function ProStep3({ data, onChange, onNext, onBack }) {
           <Input value={data.insurance_policy || ''} onChange={e => onChange('insurance_policy', e.target.value)} placeholder="Ex: RC-2024-XXXXXX" className="h-11 rounded-xl" />
         </div>
       </div>
-      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
+      <Button onClick={() => validate() && onNext()} className="w-full h-12 rounded-xl text-white font-bold" style={{ background: '#6C5CE7' }}>
         Je confirme mon statut <ArrowRight className="w-4 h-4 ml-2" />
       </Button>
     </div>
@@ -487,7 +485,7 @@ function ProStep4({ data, onChange, onSubmit, onBack, loading }) {
         </div>
       </div>
 
-      <Button onClick={() => validate() && onSubmit()} disabled={loading} className="w-full h-12 rounded-xl bg-[#1A365D] hover:bg-[#2D4A7A] text-white font-bold">
+      <Button onClick={() => validate() && onSubmit()} disabled={loading} className="w-full h-12 rounded-xl text-white font-bold" style={{ background: '#6C5CE7' }}>
         {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Finaliser mon inscription <CheckCircle className="w-4 h-4 ml-2" /></>}
       </Button>
     </div>
@@ -662,14 +660,17 @@ export default function CreateAccount() {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#F7FAFC] flex flex-col">
-      {/* Header */}
-      <div className="px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 60px)', background: 'linear-gradient(135deg, #6C5CE7, #a78bfa)' }}>
-        <div className="flex justify-center mb-3">
-          <ServiGoIcon size={40} white />
+    <div className="fixed inset-0 bg-[#F2F3F7] flex flex-col">
+      {/* Header clean blanc — style mockup */}
+      <div className="bg-white border-b border-gray-100 px-5 pb-5 text-center shrink-0" style={{ paddingTop: 'max(env(safe-area-inset-top), 40px)' }}>
+        <div className="flex justify-center mb-2">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="#6C5CE7" />
+            <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
-        <h1 className="text-white font-black text-lg">ServiGo</h1>
-        <p className="text-white/60 text-xs mt-0.5">Créer un compte</p>
+        <h1 className="font-black text-lg" style={{ color: '#6C5CE7' }}>ServiGo</h1>
+        <p className="text-gray-500 text-xs mt-0.5">Créer un compte</p>
       </div>
 
       {/* Scrollable content */}
@@ -681,7 +682,7 @@ export default function CreateAccount() {
         </div>
       </div>
 
-      <div className="text-center py-3 text-xs text-[#A0AEC0] shrink-0 border-t border-[#E2E8F0]">
+      <div className="text-center py-3 text-xs text-gray-400 shrink-0 border-t border-gray-100 bg-white">
         <a href="/cgu" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#718096]">CGU</a>
         {' · '}
         <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#718096]">Confidentialité</a>

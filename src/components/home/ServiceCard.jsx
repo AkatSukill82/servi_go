@@ -36,8 +36,8 @@ export default function ServiceCard({ category, index, onSearch }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, ease: [0.25, 0.46, 0.45, 0.94] }}
       onClick={() => onSearch?.(category.name)}
-      className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-white active:scale-95 transition-transform text-center"
-      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.05)' }}
+      className="flex flex-col items-center gap-2 p-3.5 rounded-2xl bg-white active:scale-95 transition-transform text-center cursor-pointer"
+      style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.07)', border: '1px solid rgba(0,0,0,0.05)' }}
     >
       <div
         className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"

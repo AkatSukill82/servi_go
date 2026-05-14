@@ -100,7 +100,7 @@ export default function Home() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-full bg-[#F7F7F7]">
+      <div className="min-h-full bg-[#F2F3F7]">
         <OnboardingModal />
         <LocationPermissionModal />
         <TopBar />
@@ -202,7 +202,7 @@ export default function Home() {
         <div className="pb-8">
 
           {/* ── Hero section ── */}
-          <div className="bg-background px-5 pt-5 pb-6">
+          <div className="bg-white px-5 pt-5 pb-6">
             <h1 className="text-3xl font-black text-foreground tracking-tight leading-tight">
               {firstName ? `${greeting},\n${firstName} 👋` : `${greeting} 👋`}
             </h1>
@@ -218,7 +218,7 @@ export default function Home() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Plombier, électricien, peintre…"
-                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-foreground text-sm font-medium focus:outline-none transition-shadow bg-muted"
+                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-gray-900 text-sm font-medium focus:outline-none transition-shadow bg-gray-100"
                 style={{ boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none' }}
               />
               {searchQuery && (
@@ -304,7 +304,7 @@ export default function Home() {
               <HomeSkeleton />
             ) : filteredCategories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-14 text-center bg-white rounded-2xl"
-                style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+                style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)' }}>
                 <div className="w-16 h-16 rounded-2xl mb-3 flex items-center justify-center" style={{ background: `${BRAND}12` }}>
                   <Search className="w-8 h-8" style={{ color: BRAND }} strokeWidth={1.5} />
                 </div>
@@ -396,7 +396,7 @@ export default function Home() {
           )}
 
           {/* ── Trust strip — Airbnb style ── */}
-          <div className="mt-8 mx-4 bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+          <div className="mt-8 mx-4 bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)' }}>
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-center mb-4">
               Pourquoi ServiGo
             </p>

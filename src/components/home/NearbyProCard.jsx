@@ -17,8 +17,8 @@ export default function NearbyProCard({ pro, index, onPress }) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: index * 0.07, ease: [0.25, 0.46, 0.45, 0.94] }}
       onClick={onPress}
-      className="snap-start shrink-0 w-[185px] bg-white rounded-2xl overflow-hidden text-left active:scale-95 transition-transform"
-      style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.09)', border: '1px solid rgba(0,0,0,0.05)' }}
+      className="snap-start shrink-0 w-[185px] bg-white rounded-2xl overflow-hidden text-left active:scale-95 transition-transform cursor-pointer"
+      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.08)', border: '1px solid rgba(0,0,0,0.05)' }}
     >
       {/* Photo */}
       <div className="relative h-[110px] w-full overflow-hidden bg-gray-100">

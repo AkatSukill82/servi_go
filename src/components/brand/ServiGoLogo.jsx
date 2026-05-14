@@ -3,8 +3,8 @@ import React from 'react';
 export function ServiGoIcon({ size = 32, className = '', white = false, dark = false }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill={white ? '#FFFFFF' : '#FF6B35'} />
-      <path d="M9 12l2 2 4-4" stroke={white ? '#FF6B35' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill={white ? '#FFFFFF' : '#6C5CE7'} />
+      <path d="M9 12l2 2 4-4" stroke={white ? '#6C5CE7' : 'white'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
