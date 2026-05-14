@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Star, ShieldCheck, MapPin, Euro, Clock, Briefcase, MessageCircle, Flag, CalendarDays, Camera, X } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Euro, Clock, Briefcase, MessageCircle, Flag, CalendarDays, Camera, X, Shield, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -199,6 +199,34 @@ export default function ProPublicProfile() {
       </div>
 
       <div className="px-5 space-y-4 mt-4">
+        {/* Trust signals */}
+        <div className="flex gap-2 flex-wrap">
+          {pro.created_date && (
+            <div className="flex items-center gap-1.5 bg-card border border-border rounded-full px-3 py-1.5">
+              <CalendarDays className="w-3 h-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Depuis {format(new Date(pro.created_date), 'MMM yyyy', { locale: fr })}</span>
+            </div>
+          )}
+          {reviews.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-card border border-border rounded-full px-3 py-1.5">
+              <CheckCircle className="w-3 h-3 text-green-500" />
+              <span className="text-xs text-muted-foreground">{reviews.length} avis client{reviews.length > 1 ? 's' : ''}</span>
+            </div>
+          )}
+          {isVerified && (
+            <div className="flex items-center gap-1.5 bg-blue-50 border border-blue-200 rounded-full px-3 py-1.5">
+              <ShieldCheck className="w-3 h-3 text-blue-500" />
+              <span className="text-xs text-blue-700 font-medium">Identité vérifiée</span>
+            </div>
+          )}
+          {pro.insurance_url && (
+            <div className="flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-full px-3 py-1.5">
+              <Shield className="w-3 h-3 text-green-600" />
+              <span className="text-xs text-green-700 font-medium">Assuré RC Pro</span>
+            </div>
+          )}
+        </div>
+
         {/* Tarifs */}
         {(pro.base_price || pro.hourly_rate) && (
           <div className="bg-card rounded-2xl border border-border p-4 flex items-center gap-4">

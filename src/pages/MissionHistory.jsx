@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, ChevronRight, FileText } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, ChevronRight, FileText, XCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -38,7 +38,7 @@ function StatusBadge({ status }) {
   );
 }
 
-function MissionCard({ req, onRate, index }) {
+function MissionCard({ req, onRate, index, onCancel }) {
   const navigate = useNavigate();
   const canRate = req.status === 'completed' && !req.review_id && req.review_requested;
   const dateStr = req.scheduled_date
@@ -107,6 +107,14 @@ function MissionCard({ req, onRate, index }) {
               Noter
             </button>
           )}
+          {onCancel && req.status === 'searching' && (
+            <button
+              onClick={() => onCancel(req)}
+              className="flex items-center justify-center gap-1.5 h-10 px-3 rounded-xl border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors tap-scale"
+            >
+              <XCircle className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -144,6 +152,7 @@ export default function MissionHistory() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState('active');
   const [ratingTarget, setRatingTarget] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   const isPro = user?.user_type === 'professionnel';
@@ -159,6 +168,15 @@ export default function MissionHistory() {
 
   const active = useMemo(() => requests.filter(r => ACTIVE_STATUSES.includes(r.status)), [requests]);
   const done = useMemo(() => requests.filter(r => DONE_STATUSES.includes(r.status)), [requests]);
+
+  const cancelMutation = useMutation({
+    mutationFn: (req) => base44.entities.ServiceRequestV2.update(req.id, { status: 'cancelled' }),
+    onSuccess: () => {
+      setCancelTarget(null);
+      toast.success('Mission annulée');
+      queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
+    },
+  });
 
   const reviewMutation = useMutation({
     mutationFn: async ({ rating, comment }) => {
@@ -196,6 +214,33 @@ export default function MissionHistory() {
           onClose={() => setRatingTarget(null)}
           isSubmitting={reviewMutation.isPending}
         />
+      )}
+      {cancelTarget && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50" onClick={() => setCancelTarget(null)}>
+          <div className="bg-background rounded-t-2xl w-full max-w-lg p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <XCircle className="w-5 h-5 text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base">Annuler la mission ?</h3>
+                <p className="text-xs text-muted-foreground">{cancelTarget.category_name}</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">Cette action est irréversible. Aucun professionnel n'a encore accepté la mission.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setCancelTarget(null)}
+                className="flex-1 h-11 rounded-xl border border-border text-sm font-medium">
+                Garder
+              </button>
+              <button onClick={() => cancelMutation.mutate(cancelTarget)}
+                disabled={cancelMutation.isPending}
+                className="flex-1 h-11 rounded-xl bg-red-500 text-white text-sm font-semibold disabled:opacity-50">
+                {cancelMutation.isPending ? 'Annulation...' : 'Confirmer l\'annulation'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Header */}
@@ -265,7 +310,8 @@ export default function MissionHistory() {
           <div className="space-y-3">
             <AnimatePresence>
               {displayed.map((req, i) => (
-                <MissionCard key={req.id} req={req} onRate={setRatingTarget} index={i} />
+                <MissionCard key={req.id} req={req} onRate={setRatingTarget} index={i}
+                  onCancel={!isPro ? setCancelTarget : undefined} />
               ))}
             </AnimatePresence>
           </div>
