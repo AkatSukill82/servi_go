@@ -30,7 +30,6 @@ import MentionsLegales from './pages/MentionsLegales';
 import CGV from './pages/CGV';
 import PolitiqueCookies from './pages/PolitiqueCookies';
 import ErrorBoundary from './components/ui/ErrorBoundary';
-import AccountTypeSelection from './pages/AccountTypeSelection';
 import IndependenceCharter from './pages/IndependenceCharter';
 import DAC7Form from './pages/DAC7Form';
 import AuthLogin from './pages/AuthLogin';
@@ -111,7 +110,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<RootRedirect />} />
 
       {/* Public pages (no layout) */}
-      <Route path="/signup" element={<AccountTypeSelection />} />
+      <Route path="/signup" element={<Navigate to="/creer-compte" replace />} />
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminVerification />} />
