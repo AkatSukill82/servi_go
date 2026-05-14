@@ -182,6 +182,14 @@ export default function Chat() {
     return unsubscribe;
   }, [requestId]);
 
+  // Mark conversation as read when opened
+  useEffect(() => {
+    if (!conversationId || !user?.email) return;
+    const field = user.user_type === 'professionnel' ? 'unread_count_pro' : 'unread_count_customer';
+    base44.entities.Conversation.update(conversationId, { [field]: 0 }).catch(() => {});
+    queryClient.invalidateQueries({ queryKey: ['conversations', user.email] });
+  }, [conversationId, user?.email]);
+
   useEffect(() => {
     if (!request || !requestId) return;
     const checkAndUpdateContract = async () => {
@@ -202,7 +210,18 @@ export default function Chat() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 
   const sendMutation = useMutation({
-    mutationFn: (msgData) => base44.entities.Message.create(msgData),
+    mutationFn: async (msgData) => {
+      const msg = await base44.entities.Message.create(msgData);
+      if (conversationId) {
+        const senderIsPro = msgData.sender_type === 'professionnel';
+        base44.entities.Conversation.update(conversationId, {
+          last_message_preview: msgData.content || '📷 Photo',
+          last_message_at: new Date().toISOString(),
+          [senderIsPro ? 'unread_count_customer' : 'unread_count_pro']: 1,
+        }).catch(() => {});
+      }
+      return msg;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages', requestId] }),
   });
 

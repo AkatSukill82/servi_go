@@ -180,6 +180,42 @@ export default function ProAgenda() {
     [...appointments].sort((a, b) => (a.scheduled_date || '').localeCompare(b.scheduled_date || ''))
   , [appointments]);
 
+  // Grouped list views
+  const todayAppts = useMemo(() => {
+    const n = new Date();
+    return appointments.filter(a =>
+      a.scheduled_date &&
+      isSameDay(parseISO(a.scheduled_date), n) &&
+      !['completed', 'cancelled'].includes(a.status)
+    ).sort((a, b) => (a.scheduled_time || '').localeCompare(b.scheduled_time || ''));
+  }, [appointments]);
+
+  const upcomingAppts = useMemo(() => {
+    const n = new Date();
+    return [...appointments]
+      .filter(a =>
+        a.scheduled_date &&
+        !isSameDay(parseISO(a.scheduled_date), n) &&
+        parseISO(a.scheduled_date) > n &&
+        !['completed', 'cancelled'].includes(a.status)
+      )
+      .sort((a, b) => a.scheduled_date.localeCompare(b.scheduled_date));
+  }, [appointments]);
+
+  const unscheduledAppts = useMemo(() =>
+    appointments.filter(a =>
+      !a.scheduled_date &&
+      !['completed', 'cancelled'].includes(a.status)
+    ),
+  [appointments]);
+
+  const pastAppts = useMemo(() =>
+    [...appointments]
+      .filter(a => ['completed', 'cancelled'].includes(a.status))
+      .sort((a, b) => (b.scheduled_date || b.created_date || '').localeCompare(a.scheduled_date || a.created_date || ''))
+      .slice(0, 10),
+  [appointments]);
+
   // Calendar days
   const calendarDays = useMemo(() => {
     const start = startOfMonth(currentMonth);
@@ -362,9 +398,9 @@ export default function ProAgenda() {
           </div>
         </>
       ) : (
-        /* List view */
+        /* List view — grouped */
         <div className="space-y-6">
-          {upcomingList.length === 0 ? (
+          {todayAppts.length === 0 && upcomingAppts.length === 0 && unscheduledAppts.length === 0 && pastAppts.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <Calendar className="w-10 h-10 mx-auto mb-3 opacity-30" />
               <p className="text-sm font-medium">Aucun rendez-vous prévu</p>
@@ -372,36 +408,69 @@ export default function ProAgenda() {
             </div>
           ) : (
             <>
-              {/* Scheduled appointments */}
-              <div className="space-y-3">
-                {upcomingList.filter(r => r.scheduled_date).map(req => (
-                  <AppointmentCard
-                    key={req.id}
-                    req={req}
-                    user={user}
-                    onAccept={r => acceptMutation.mutate(r)}
-                    onDecline={r => setDecliningReq(r)}
-                    accepting={acceptingId === req.id && acceptMutation.isPending}
-                    declining={decliningReq?.id === req.id && declineMutation.isPending}
-                  />
-                ))}
-              </div>
-
-              {/* Unscheduled appointments */}
-              {upcomingList.filter(r => !r.scheduled_date).length > 0 && (
+              {/* TODAY */}
+              {todayAppts.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">📋 Demandes sans date précise</p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+                    <p className="text-xs font-bold text-green-600 uppercase tracking-wide">Aujourd'hui</p>
+                    <span className="text-xs font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">{todayAppts.length}</span>
+                  </div>
                   <div className="space-y-3">
-                    {upcomingList.filter(r => !r.scheduled_date).map(req => (
-                      <AppointmentCard
-                        key={req.id}
-                        req={req}
-                        user={user}
+                    {todayAppts.map(req => (
+                      <AppointmentCard key={req.id} req={req} user={user}
                         onAccept={r => acceptMutation.mutate(r)}
                         onDecline={r => setDecliningReq(r)}
                         accepting={acceptingId === req.id && acceptMutation.isPending}
-                        declining={decliningReq?.id === req.id && declineMutation.isPending}
-                      />
+                        declining={decliningReq?.id === req.id && declineMutation.isPending} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* UPCOMING */}
+              {upcomingAppts.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">📅 À venir</p>
+                  <div className="space-y-3">
+                    {upcomingAppts.map(req => (
+                      <AppointmentCard key={req.id} req={req} user={user}
+                        onAccept={r => acceptMutation.mutate(r)}
+                        onDecline={r => setDecliningReq(r)}
+                        accepting={acceptingId === req.id && acceptMutation.isPending}
+                        declining={decliningReq?.id === req.id && declineMutation.isPending} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* UNSCHEDULED */}
+              {unscheduledAppts.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">📋 Sans date précise</p>
+                  <div className="space-y-3">
+                    {unscheduledAppts.map(req => (
+                      <AppointmentCard key={req.id} req={req} user={user}
+                        onAccept={r => acceptMutation.mutate(r)}
+                        onDecline={r => setDecliningReq(r)}
+                        accepting={acceptingId === req.id && acceptMutation.isPending}
+                        declining={decliningReq?.id === req.id && declineMutation.isPending} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* PAST */}
+              {pastAppts.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">✅ Terminés / Annulés</p>
+                  <div className="space-y-3">
+                    {pastAppts.map(req => (
+                      <AppointmentCard key={req.id} req={req} user={user}
+                        onAccept={r => acceptMutation.mutate(r)}
+                        onDecline={r => setDecliningReq(r)}
+                        accepting={acceptingId === req.id && acceptMutation.isPending}
+                        declining={decliningReq?.id === req.id && declineMutation.isPending} />
                     ))}
                   </div>
                 </div>
