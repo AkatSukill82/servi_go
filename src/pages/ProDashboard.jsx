@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
 import {
   Check, Clock, MapPin, Star, ChevronRight, CreditCard,
-  AlertCircle, Play, StopCircle, Loader2,
+  Play, StopCircle, Loader2,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -110,7 +110,7 @@ export default function ProDashboard() {
   });
 
   // Merge, deduplicate, assigned first
-  const incomingRequests = React.useMemo(() => {
+  const incomingRequests = useMemo(() => {
     const seen = new Set();
     return [
       ...assignedRequests.filter(r => !seen.has(r.id) && seen.add(r.id)),
