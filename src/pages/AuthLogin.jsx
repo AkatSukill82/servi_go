@@ -22,7 +22,7 @@ export default function AuthLogin() {
   useEffect(() => {
     // On web only: redirect to Base44 hosted login
     if (!isCapacitor) {
-      base44.auth.redirectToLogin('/Home');
+      base44.auth.redirectToLogin('/');
     }
   }, []);
 
