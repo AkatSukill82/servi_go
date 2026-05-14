@@ -33,7 +33,6 @@ import ErrorBoundary from './components/ui/ErrorBoundary';
 import IndependenceCharter from './pages/IndependenceCharter';
 import DAC7Form from './pages/DAC7Form';
 import AuthLogin from './pages/AuthLogin';
-import CreateAccount from './pages/CreateAccount';
 import AdminTestEmail from './pages/AdminTestEmail';
 import ProReviews from './pages/ProReviews';
 import About from './pages/About';
@@ -58,7 +57,7 @@ const RootRedirect = () => {
     if (user.user_type === 'professionnel') return <Navigate to="/ProDashboard" replace />;
     return <Navigate to="/Home" replace />;
   }
-  return <CreateAccount />;
+  return <Navigate to="/Register" replace />;
 };
 
 const PUBLIC_PATHS = [
@@ -139,7 +138,7 @@ const AuthenticatedApp = () => {
 
       {/* Auth pages — custom login & signup */}
       <Route path="/se-connecter" element={<AuthLogin />} />
-      <Route path="/creer-compte" element={<CreateAccount />} />
+      <Route path="/creer-compte" element={<Navigate to="/Register" replace />} />
 
       {/* Pro legal & fiscal pages */}
       <Route path="/IndependenceCharter" element={<IndependenceCharter />} />

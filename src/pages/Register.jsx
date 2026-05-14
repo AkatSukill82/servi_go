@@ -11,11 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import {
   User, Briefcase, MapPin, CheckCircle, ChevronRight, ChevronLeft,
-  Upload, Loader2, ShieldCheck, Home, X, AlertCircle
+  Upload, Loader2, ShieldCheck, Home, X, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
 import ServiGoLogo, { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 
-const STEPS = ['Type', 'Infos', 'Identité', 'Confirmation'];
+const STEPS = ['Type', 'Compte', 'Infos', 'Identité', 'Confirmation'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isAdult(str) {
@@ -39,6 +39,72 @@ function isValidPhone(p) {
 
 function isValidBce(v) {
   return v === '' || /^0[0-9]{3}\.[0-9]{3}\.[0-9]{3}$/.test(v.trim());
+}
+
+// ─── STEP 1: Email + Password (non-connectés) ─────────────────────────────────
+function StepCreateAccount({ userType, onNext, onBack }) {
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.email || !form.password) { toast.error('Remplis tous les champs'); return; }
+    if (form.password.length < 6) { toast.error('Mot de passe : 6 caractères minimum'); return; }
+    setLoading(true);
+    try {
+      await base44.auth.register(form.email.trim(), form.password, { user_type: userType });
+      onNext({ email: form.email });
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || '';
+      if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exist')) {
+        toast.error('Un compte existe déjà avec cet email');
+      } else {
+        toast.error('Erreur lors de la création du compte');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="w-full md:max-w-lg mx-auto px-5 pb-10 space-y-5">
+      <div>
+        <button type="button" onClick={onBack} className="flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#111827] mb-4">
+          <ChevronLeft className="w-4 h-4" /> Retour
+        </button>
+        <h2 className="text-xl font-bold text-[#111827]">Créer votre compte</h2>
+        <p className="text-sm text-[#6B7280] mt-1">
+          {userType === 'professionnel' ? 'Professionnel — accès aux missions' : 'Particulier — accès aux services'}
+        </p>
+      </div>
+      <div>
+        <label className="block text-[13px] font-medium text-[#111827] mb-1">Email <span className="text-red-500">*</span></label>
+        <StyledInput type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="jean@email.com" />
+      </div>
+      <div>
+        <label className="block text-[13px] font-medium text-[#111827] mb-1">Mot de passe <span className="text-red-500">*</span></label>
+        <StyledInput
+          type={showPass ? 'text' : 'password'}
+          value={form.password}
+          onChange={e => set('password', e.target.value)}
+          placeholder="6 caractères minimum"
+          suffix={
+            <button type="button" onClick={() => setShowPass(s => !s)} className="text-[#9CA3AF]">
+              {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          }
+        />
+      </div>
+      <button type="submit" disabled={loading}
+        className="w-full h-12 rounded-xl text-base font-semibold text-white transition-colors disabled:opacity-60"
+        style={{ backgroundColor: '#6C5CE7' }}>
+        {loading ? <Loader2 className="inline w-4 h-4 mr-2 animate-spin" /> : null}
+        Créer mon compte <ChevronRight className="inline w-5 h-5 ml-1" />
+      </button>
+    </form>
+  );
 }
 
 // ─── ProgressBar ──────────────────────────────────────────────────────────────
@@ -631,6 +697,8 @@ function StepConfirmation({ userType, firstName, navigate }) {
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
+// Steps: 0=TypeChoice, 1=CreateAccount(email/pass), 2=PersonalInfo, 3=Identity, 4=Confirmation
+// For already-authenticated users: skip steps 0 and 1, start at step 2
 export default function Register() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -639,30 +707,25 @@ export default function Register() {
   const [userType, setUserType] = useState(null);
   const [personalData, setPersonalData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-  });
-
+  // On mount: check if already authenticated
   useEffect(() => {
-    // Si utilisateur déjà connecté avec un rôle complet → rediriger vers son dashboard
-    if (user) {
-      if (user.role === 'admin') { navigate('/AdminDashboard', { replace: true }); return; }
-      if (user.user_type === 'professionnel') { navigate('/ProDashboard', { replace: true }); return; }
-      if (user.user_type === 'particulier') { navigate('/Home', { replace: true }); return; }
-    }
-
-    const preselected = location.state?.preselectedType;
-    if (preselected) {
-      // Coming from /signup — new registration flow
-      setUserType(preselected);
-      setStep(1); // Skip type selection (step 0), go straight to personal info
-    } else {
-      // No type preselected — redirect to signup page
-      navigate('/signup', { replace: true });
-    }
-  }, [user]);
+    base44.auth.isAuthenticated().then(async (authed) => {
+      if (authed) {
+        const user = await base44.auth.me();
+        // Already has a full profile → redirect to dashboard
+        if (user?.role === 'admin') { navigate('/AdminDashboard', { replace: true }); return; }
+        if (user?.user_type === 'professionnel') { navigate('/ProDashboard', { replace: true }); return; }
+        if (user?.user_type === 'particulier') { navigate('/Home', { replace: true }); return; }
+        // Authenticated but no user_type yet (OAuth user) → skip to step 2
+        setCurrentUser(user);
+        setIsAuthenticated(true);
+        setStep(2);
+      }
+    });
+  }, []);
 
   const saveMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
@@ -674,11 +737,18 @@ export default function Register() {
     setStep(1);
   };
 
+  const handleAccountCreated = async ({ email }) => {
+    // After email/pass registration, fetch the new user
+    const user = await base44.auth.me();
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+    setStep(2);
+  };
+
   const handlePersonalNext = async (data) => {
     setSaving(true);
     setPersonalData(data);
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(' ');
-    // Convert DD/MM/YYYY to YYYY-MM-DD before saving
     const toISODate = (ddmmyyyy) => {
       if (!ddmmyyyy) return '';
       const parts = ddmmyyyy.split('/');
@@ -699,7 +769,7 @@ export default function Register() {
           pro_description: data.pro_description,
         } : {}),
       });
-      setStep(2);
+      setStep(3);
     } catch (err) {
       toast.error('Erreur lors de la sauvegarde. Vérifiez votre connexion.');
     } finally {
@@ -709,15 +779,17 @@ export default function Register() {
 
   return (
     <div className="bg-background overflow-y-auto" style={{ height: '100dvh' }}>
-      {/* Login link */}
+      {/* Header */}
       <div className="w-full md:max-w-lg mx-auto px-5 py-4 flex items-center justify-between">
         <ServiGoLogo size="sm" />
-        <button
-          onClick={() => base44.auth.redirectToLogin('/Home')}
-          className="text-sm font-semibold text-[#534AB7] border border-[#534AB7]/30 px-4 py-2 rounded-xl hover:bg-[#534AB7]/5 transition-colors"
-        >
-          Se connecter
-        </button>
+        {!isAuthenticated && (
+          <button
+            onClick={() => base44.auth.redirectToLogin('/Home')}
+            className="text-sm font-semibold text-[#534AB7] border border-[#534AB7]/30 px-4 py-2 rounded-xl hover:bg-[#534AB7]/5 transition-colors"
+          >
+            Se connecter
+          </button>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -728,31 +800,36 @@ export default function Register() {
         )}
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.25 }}>
-            <StepPersonalInfo
-              userType={userType}
-              initialData={{ ...personalData, ...user }}
-              onNext={handlePersonalNext}
-              onBack={() => setStep(0)}
-              isSaving={saving}
-            />
+            <StepCreateAccount userType={userType} onNext={handleAccountCreated} onBack={() => setStep(0)} />
           </motion.div>
         )}
         {step === 2 && (
           <motion.div key="step2" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.25 }}>
-            <StepIdentity
+            <StepPersonalInfo
               userType={userType}
-              userName={[personalData.first_name, personalData.last_name].filter(Boolean).join(' ')}
-              userEmail={user?.email}
-              onNext={() => setStep(3)}
-              onBack={() => setStep(1)}
+              initialData={{ ...personalData, ...currentUser }}
+              onNext={handlePersonalNext}
+              onBack={() => isAuthenticated && !userType ? null : setStep(isAuthenticated ? 0 : 1)}
+              isSaving={saving}
             />
           </motion.div>
         )}
         {step === 3 && (
-          <motion.div key="step3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+          <motion.div key="step3" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} transition={{ duration: 0.25 }}>
+            <StepIdentity
+              userType={userType}
+              userName={[personalData.first_name, personalData.last_name].filter(Boolean).join(' ')}
+              userEmail={currentUser?.email}
+              onNext={() => setStep(4)}
+              onBack={() => setStep(2)}
+            />
+          </motion.div>
+        )}
+        {step === 4 && (
+          <motion.div key="step4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
             <StepConfirmation
               userType={userType}
-              firstName={personalData.first_name || user?.first_name}
+              firstName={personalData.first_name || currentUser?.first_name}
               navigate={navigate}
             />
           </motion.div>
