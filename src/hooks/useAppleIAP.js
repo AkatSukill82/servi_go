@@ -16,9 +16,9 @@ import { isAndroid, platform, isIOSNow } from '@/lib/platform';
 export { isAndroid, platform, isIOSNow };
 
 export const PRODUCT_IDS = {
-  monthly: 'servigo.pro.monthly',
-  yearly:  'servigo.pro.yearly',
-  annual:  'servigo.pro.yearly',
+  monthly: 'be.servigo.app.pro.monthly',
+  yearly:  'be.servigo.app.pro.yearly',
+  annual:  'be.servigo.app.pro.yearly',
 };
 
 const FALLBACK_PRICES = { monthly: '9,99 €', yearly: '90,00 €' };
