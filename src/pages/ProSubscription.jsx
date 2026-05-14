@@ -98,21 +98,21 @@ export default function ProSubscription() {
     }
 
     // Web → Stripe
-    // Bloquer si dans un iframe (preview sandbox)
-    if (window.self !== window.top) {
-      toast.error('Le paiement n\'est disponible que depuis l\'application publiée, pas depuis la prévisualisation.');
-      return;
-    }
-
     setBillingLoading(true);
     try {
+      const origin = window.top?.location?.origin || window.location.origin;
       const res = await base44.functions.invoke('createProSubscription', {
         plan: activePlan,
-        successUrl: `${window.location.origin}/ProSubscription?success=true&plan=${activePlan}`,
-        cancelUrl:  `${window.location.origin}/ProSubscription`,
+        successUrl: `${origin}/ProSubscription?success=true&plan=${activePlan}`,
+        cancelUrl:  `${origin}/ProSubscription`,
       });
       if (res.data?.url) {
-        window.location.href = res.data.url;
+        // Depuis un iframe (preview Base44), ouvrir dans un nouvel onglet
+        if (window.self !== window.top) {
+          window.open(res.data.url, '_blank');
+        } else {
+          window.location.href = res.data.url;
+        }
       } else {
         toast.error(res.data?.error || 'Erreur. Réessayez.');
       }
