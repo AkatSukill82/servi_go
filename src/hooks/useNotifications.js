@@ -41,7 +41,8 @@ export function useNotifications(navigate) {
 
     let listeners = [];
 
-    import(/* @vite-ignore */ '@capacitor/push-notifications').then(({ PushNotifications }) => {
+    const pkg = '@capacitor' + '/push-notifications';
+    import(/* @vite-ignore */ pkg).then(({ PushNotifications }) => {
       // Token received — save to Base44
       PushNotifications.addListener('registration', (token) => {
         const platform = window.Capacitor.getPlatform?.() === 'android' ? 'android' : 'ios';
@@ -81,7 +82,8 @@ export function useNotifications(navigate) {
   const requestPermission = async () => {
     if (isNative()) {
       try {
-        const { PushNotifications } = await import(/* @vite-ignore */ '@capacitor/push-notifications');
+        const pkg = '@capacitor' + '/push-notifications';
+        const { PushNotifications } = await import(/* @vite-ignore */ pkg);
         const result = await PushNotifications.requestPermissions();
         if (result.receive === 'granted') {
           await PushNotifications.register();
