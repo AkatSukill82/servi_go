@@ -38,7 +38,7 @@ function makeSosIcon() {
 
 function UserLocationMarker({ center }) {
   const map = useMap();
-  React.useEffect(() => { map.setView(center, map.getZoom()); }, []);
+  React.useEffect(() => { map.setView(center, map.getZoom()); }, [map, center]);
   return null;
 }
 

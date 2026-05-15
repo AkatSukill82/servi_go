@@ -34,7 +34,7 @@ export default function ServiceRequest() {
 
   useEffect(() => {
     if (user?.address && !address) setAddress(user.address);
-  }, [user?.address]);
+  }, [user?.address, address]);
 
   useEffect(() => {
     if (!priorityProId && !priorityProEmail) return;
@@ -159,59 +159,64 @@ export default function ServiceRequest() {
 
   const handleConfirm = async () => {
     setStep(STEPS.SEARCHING);
-    const answersArray = questions.map((q, i) => ({ question: q.question, answer: answers[i] || '' }));
-    const firstName = user?.first_name || user?.full_name?.split(' ')[0] || '';
-    const lastName = user?.last_name || user?.full_name?.split(' ').slice(1).join(' ') || '';
+    try {
+      const answersArray = questions.map((q, i) => ({ question: q.question, answer: answers[i] || '' }));
+      const firstName = user?.first_name || user?.full_name?.split(' ')[0] || '';
+      const lastName = user?.last_name || user?.full_name?.split(' ').slice(1).join(' ') || '';
 
-    const newRequest = await createMutation.mutateAsync({
-      category_id: category?.id || categoryId,
-      category_name: category?.name,
-      ...(preselectedPro ? {
-        professional_id: preselectedPro.id,
-        professional_name: preselectedPro.full_name || `${preselectedPro.first_name || ''} ${preselectedPro.last_name || ''}`.trim(),
-        professional_email: preselectedPro.email,
-        status: 'pending_pro',
-      } : {}),
-      answers: answersArray,
-      customer_id: user?.id,
-      customer_first_name: firstName,
-      customer_last_name: lastName,
-      customer_name: user?.full_name || '',
-      customer_email: user?.email || '',
-      customer_phone: user?.phone || '',
-      customer_address: address,
-      customer_latitude: user?.latitude || 50.8503,
-      customer_longitude: user?.longitude || 4.3517,
-      scheduled_date: scheduledDate || null,
-      scheduled_time: scheduledTime || null,
-      status: 'searching',
-      is_urgent: isUrgent,
-      estimated_price: estimatedPrice,
-      tried_professionals: [],
-    });
+      const newRequest = await createMutation.mutateAsync({
+        category_id: category?.id || categoryId,
+        category_name: category?.name,
+        ...(preselectedPro ? {
+          professional_id: preselectedPro.id,
+          professional_name: preselectedPro.full_name || `${preselectedPro.first_name || ''} ${preselectedPro.last_name || ''}`.trim(),
+          professional_email: preselectedPro.email,
+          status: 'pending_pro',
+        } : {}),
+        answers: answersArray,
+        customer_id: user?.id,
+        customer_first_name: firstName,
+        customer_last_name: lastName,
+        customer_name: user?.full_name || '',
+        customer_email: user?.email || '',
+        customer_phone: user?.phone || '',
+        customer_address: address,
+        customer_latitude: user?.latitude || 50.8503,
+        customer_longitude: user?.longitude || 4.3517,
+        scheduled_date: scheduledDate || null,
+        scheduled_time: scheduledTime || null,
+        status: 'searching',
+        is_urgent: isUrgent,
+        estimated_price: estimatedPrice,
+        tried_professionals: [],
+      });
 
-    setRequestId(newRequest.id);
+      setRequestId(newRequest.id);
 
-    const matchingPros = await base44.entities.User.filter({
-      user_type: 'professionnel',
-      category_name: category.name,
-      available: true,
-      verification_status: 'verified',
-    }, '-created_date', 100).catch(() => []);
+      const matchingPros = await base44.entities.User.filter({
+        user_type: 'professionnel',
+        category_name: category.name,
+        available: true,
+        verification_status: 'verified',
+      }, '-created_date', 100).catch(() => []);
 
-    await Promise.all(matchingPros.map((pro) =>
-      base44.entities.Notification.create({
-        recipient_email: pro.email,
-        recipient_type: 'professionnel',
-        type: 'new_mission',
-        title: `Nouvelle mission : ${category.name}`,
-        body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
-        request_id: newRequest.id,
-        action_url: '/ProDashboard',
-      }).catch(() => {})
-    ));
+      await Promise.all(matchingPros.map((pro) =>
+        base44.entities.Notification.create({
+          recipient_email: pro.email,
+          recipient_type: 'professionnel',
+          type: 'new_mission',
+          title: `Nouvelle mission : ${category.name}`,
+          body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
+          request_id: newRequest.id,
+          action_url: '/ProDashboard',
+        }).catch(() => {})
+      ));
 
-    setStep(STEPS.CONFIRMED);
+      setStep(STEPS.CONFIRMED);
+    } catch {
+      toast.error('Une erreur est survenue. Veuillez réessayer.');
+      setStep(STEPS.SLOT);
+    }
   };
 
   const handleBack = () => {

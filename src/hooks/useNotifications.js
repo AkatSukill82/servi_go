@@ -77,5 +77,5 @@ export function usePollingNotification({ data, onNotify, notify }) {
       }
     }
     prevRef.current = data;
-  }, [data]);
+  }, [data, onNotify, notify]);
 }

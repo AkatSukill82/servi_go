@@ -37,7 +37,7 @@ export default function Messages() {
   const isPro = user?.user_type === 'professionnel';
 
   const { data: conversations = [], isLoading } = useQuery({
-    queryKey: ['conversations', user?.email],
+    queryKey: ['conversations', user?.email, isPro],
     queryFn: () => isPro
       ? base44.entities.Conversation.filter({ professional_email: user.email }, '-last_message_at', 50)
       : base44.entities.Conversation.filter({ customer_email: user.email }, '-last_message_at', 50),

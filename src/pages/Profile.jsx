@@ -69,7 +69,7 @@ export default function Profile() {
         photo_url: user.photo_url || ''
       });
     }
-  }, [user]);
+  }, [user?.id]);
 
   const CUSTOMER_SAFE_FIELDS = new Set(['first_name', 'last_name', 'phone', 'address', 'photo_url']);
 

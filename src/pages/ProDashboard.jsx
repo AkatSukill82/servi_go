@@ -34,7 +34,7 @@ export default function ProDashboard() {
   const [proRating, setProRating] = useState(5);
   const [proComment, setProComment] = useState('');
 
-  useEffect(() => { requestPermission(); }, []);
+  useEffect(() => { requestPermission(); }, [requestPermission]);
 
   // ─── Data fetching ─────────────────────────────────────────────────────────
   const { data: user } = useQuery({
@@ -136,7 +136,7 @@ export default function ProDashboard() {
       notify('Nouvelle demande', `${incomingRequests[0].category_name} — ${incomingRequests[0].customer_address || ''}`);
     }
     prevCountRef.current = count;
-  }, [incomingRequests.length]);
+  }, [incomingRequests, notify]);
 
   // My jobs (all statuses)
   const { data: myJobs = [] } = useQuery({
@@ -226,9 +226,9 @@ export default function ProDashboard() {
       return { previous };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['poolRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['assignedRequests'] });
-      queryClient.invalidateQueries({ queryKey: ['myJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
+      queryClient.invalidateQueries({ queryKey: ['assignedRequests', user?.email] });
+      queryClient.invalidateQueries({ queryKey: ['myJobs', user?.email] });
       toast.success('Mission acceptée ! Un contrat a été envoyé au client.');
     },
     onError: (_, __, ctx) => {
