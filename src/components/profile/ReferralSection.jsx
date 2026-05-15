@@ -34,7 +34,8 @@ export default function ReferralSection({ user }) {
       referrer_name: user.full_name || user.email,
       referral_code: code,
       status: 'pending',
-    }).then(() => queryClient.invalidateQueries({ queryKey: ['referrals', user.email] }));
+    }).then(() => queryClient.invalidateQueries({ queryKey: ['referrals', user.email] }))
+      .finally(() => setCodeCreating(false));
   }, [isSuccess, myCode, user?.email]);
 
   const handleCopy = () => {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { maskIban } from '@/utils/formatters';
 import { ServiGoIcon } from '@/components/brand/ServiGoLogo';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

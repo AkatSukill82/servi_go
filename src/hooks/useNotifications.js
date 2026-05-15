@@ -68,10 +68,8 @@ export function useNotifications(navigate) {
         navigate(url);
       }).then(l => listeners.push(l));
 
-      // Error logging
-      PushNotifications.addListener('registrationError', (err) => {
-        console.warn('[Push] Registration error:', err);
-      }).then(l => listeners.push(l));
+      PushNotifications.addListener('registrationError', () => {})
+        .then(l => listeners.push(l));
     }).catch(() => {});
 
     return () => {
