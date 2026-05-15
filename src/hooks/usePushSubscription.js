@@ -29,15 +29,12 @@ export function usePushSubscription(userEmail, userType) {
 
         // Request permission
         const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          console.log('Push permission denied');
-          return;
-        }
+        if (permission !== 'granted') return;
 
         // Fetch VAPID public key from backend
         const { data } = await base44.functions.invoke('getVapidPublicKey', {});
         const vapidKey = data?.vapidPublicKey;
-        if (!vapidKey) { console.warn('No VAPID key returned'); return; }
+        if (!vapidKey) return;
 
         // Subscribe
         const subscription = await registration.pushManager.subscribe({
@@ -53,9 +50,8 @@ export function usePushSubscription(userEmail, userType) {
         });
 
         subscribedRef.current = true;
-        console.log('Push subscription registered');
-      } catch (err) {
-        console.error('Push subscription error:', err);
+      } catch {
+        // Silently fail — backend functions may not be configured yet
       }
     }
 
