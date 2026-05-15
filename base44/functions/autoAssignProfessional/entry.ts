@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       tried_professionals: updatedTriedPros,
     });
 
-    // 8. Notify assigned pro
+    // 8. Notify assigned pro (in-app)
     await base44.asServiceRole.entities.Notification.create({
       recipient_email: pro.email,
       recipient_type: 'professionnel',
@@ -93,6 +93,16 @@ Deno.serve(async (req) => {
       request_id: requestId,
       action_url: '/ProDashboard',
     });
+
+    // 8b. Send push notification (fire-and-forget)
+    base44.asServiceRole.functions.invoke('sendPushNotification', {
+      email: pro.email,
+      title: `🔔 Nouvelle mission — ${request.category_name}`,
+      body: request.customer_address
+        ? `📍 ${request.customer_address}`
+        : 'Une nouvelle demande vous attend sur ServiGo',
+      url: '/ProDashboard',
+    }).catch(err => console.warn('Push notification skipped:', err.message));
 
     // 9. Return result
     return Response.json({ assigned: pro.full_name, email: pro.email, requestId });
