@@ -1,4 +1,3 @@
-import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -8,7 +7,8 @@ const paymentLabels = {
   cash: 'Espèces',
 };
 
-export function generateInvoicePDF(invoice) {
+export async function generateInvoicePDF(invoice) {
+  const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const W = 210;
   const H = 297;

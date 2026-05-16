@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -42,8 +42,16 @@ export default function Messages() {
       ? base44.entities.Conversation.filter({ professional_email: user.email }, '-last_message_at', 50)
       : base44.entities.Conversation.filter({ customer_email: user.email }, '-last_message_at', 50),
     enabled: !!user?.email,
-    refetchInterval: 10000,
+    refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    if (!user?.email) return;
+    const unsub = base44.entities.Conversation.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', user.email, isPro] });
+    });
+    return unsub;
+  }, [user?.email, isPro]);
 
   const chats = conversations.filter(item => {
     if (!search.trim()) return true;
@@ -51,7 +59,7 @@ export default function Messages() {
     return name?.toLowerCase().includes(search.toLowerCase());
   });
 
-  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['conversations', user?.email] });
+  const handleRefresh = () => queryClient.invalidateQueries({ queryKey: ['conversations', user?.email, isPro] });
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

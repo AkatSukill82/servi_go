@@ -33,6 +33,10 @@ export default function ProDashboard() {
   const [showReviewModal, setShowReviewModal] = useState(null);
   const [proRating, setProRating] = useState(5);
   const [proComment, setProComment] = useState('');
+  const [showInvoiceModal, setShowInvoiceModal] = useState(null);
+  const [invoiceAmount, setInvoiceAmount] = useState('');
+  const [invoicePaymentMethod, setInvoicePaymentMethod] = useState('cash');
+  const [invoiceCreating, setInvoiceCreating] = useState(false);
 
   useEffect(() => { requestPermission(); }, [requestPermission]);
 
@@ -262,15 +266,63 @@ export default function ProDashboard() {
       }
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['myJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['myJobs', user?.email] });
       toast.success('Statut mis à jour !');
       if (variables.status === 'completed' && variables.job) {
-        setShowReviewModal(variables.job);
-        setProRating(5);
-        setProComment('');
+        setShowInvoiceModal(variables.job);
+        setInvoiceAmount('');
+        setInvoicePaymentMethod('cash');
       }
     },
+    onError: () => {
+      toast.error('Erreur lors de la mise à jour. Réessayez.');
+    },
   });
+
+  const handleCreateInvoice = async () => {
+    const job = showInvoiceModal;
+    if (!job || !invoiceAmount || isNaN(parseFloat(invoiceAmount))) return;
+    setInvoiceCreating(true);
+    try {
+      const totalTTC = parseFloat(parseFloat(invoiceAmount).toFixed(2));
+      const htva = parseFloat((totalTTC / 1.21).toFixed(2));
+      const invoiceNumber = `INV-${Date.now()}`;
+      const invoice = await base44.entities.Invoice.create({
+        invoice_number: invoiceNumber,
+        request_id: job.id,
+        customer_email: job.customer_email,
+        customer_name: job.customer_name || `${job.customer_first_name || ''} ${job.customer_last_name || ''}`.trim() || 'Client',
+        professional_email: user.email,
+        professional_name: user.full_name,
+        category_name: job.category_name,
+        base_price: htva,
+        commission: 0,
+        total_price: totalTTC,
+        payment_method: invoicePaymentMethod,
+        payment_status: 'pending',
+      });
+      await base44.entities.Notification.create({
+        recipient_email: job.customer_email,
+        recipient_type: 'particulier',
+        type: 'invoice_ready',
+        title: 'Votre facture est disponible',
+        body: `${job.category_name} — ${totalTTC.toFixed(2)} € · Consultez-la dans vos reçus.`,
+        request_id: job.id,
+        action_url: '/Profile',
+      }).catch(() => {});
+      const { generateInvoicePDF } = await import('@/utils/generateInvoicePDF');
+      await generateInvoicePDF({ ...invoice, created_date: new Date().toISOString() });
+      toast.success('Facture créée et envoyée au client !');
+      setShowInvoiceModal(null);
+      setShowReviewModal(job);
+      setProRating(5);
+      setProComment('');
+    } catch {
+      toast.error('Erreur lors de la création de la facture.');
+    } finally {
+      setInvoiceCreating(false);
+    }
+  };
 
   // ─── Computed ──────────────────────────────────────────────────────────────
   const activeJobs = myJobs.filter(j =>
@@ -660,6 +712,70 @@ export default function ProDashboard() {
             )}
           </div>
         )}
+
+        {/* Modal facturation */}
+        <Dialog open={!!showInvoiceModal} onOpenChange={(open) => {
+          if (!open) {
+            const job = showInvoiceModal;
+            setShowInvoiceModal(null);
+            if (job) { setShowReviewModal(job); setProRating(5); setProComment(''); }
+          }
+        }}>
+          <DialogContent className="max-w-sm rounded-2xl">
+            <DialogHeader>
+              <DialogTitle>Créer la facture</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-muted-foreground">
+                {showInvoiceModal?.category_name} · {showInvoiceModal?.customer_first_name || showInvoiceModal?.customer_name || 'Client'}
+              </p>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">Montant total TTC (€)</p>
+                <input
+                  type="number"
+                  value={invoiceAmount}
+                  onChange={e => setInvoiceAmount(e.target.value)}
+                  placeholder="Ex : 120.00"
+                  min="0" step="0.01"
+                  className="w-full h-12 rounded-xl border border-border bg-muted/40 px-4 text-lg font-bold focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                {invoiceAmount && !isNaN(parseFloat(invoiceAmount)) && (
+                  <p className="text-[11px] text-muted-foreground">
+                    HTVA : {(parseFloat(invoiceAmount) / 1.21).toFixed(2)} € · TVA 21% : {(parseFloat(invoiceAmount) - parseFloat(invoiceAmount) / 1.21).toFixed(2)} €
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground font-medium">Mode de paiement</p>
+                <select
+                  value={invoicePaymentMethod}
+                  onChange={e => setInvoicePaymentMethod(e.target.value)}
+                  className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="cash">Espèces</option>
+                  <option value="bank_transfer">Virement bancaire</option>
+                  <option value="apple_pay">Apple Pay</option>
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1 rounded-xl" onClick={() => {
+                  const job = showInvoiceModal;
+                  setShowInvoiceModal(null);
+                  if (job) { setShowReviewModal(job); setProRating(5); setProComment(''); }
+                }}>
+                  Passer
+                </Button>
+                <Button
+                  className="flex-1 rounded-xl"
+                  disabled={!invoiceAmount || isNaN(parseFloat(invoiceAmount)) || invoiceCreating}
+                  onClick={handleCreateInvoice}
+                >
+                  {invoiceCreating ? 'Création...' : 'Créer & Envoyer'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Modal avis client */}
         <Dialog open={!!showReviewModal} onOpenChange={(open) => { if (!open) setShowReviewModal(null); }}>

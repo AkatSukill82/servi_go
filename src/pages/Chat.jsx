@@ -147,7 +147,7 @@ export default function Chat() {
     queryKey: ['messages', requestId],
     queryFn: () => base44.entities.Message.filter({ request_id: requestId }, 'created_date'),
     enabled: !!requestId,
-    refetchInterval: 3000,
+    refetchInterval: 15000,
   });
 
   useEffect(() => {
