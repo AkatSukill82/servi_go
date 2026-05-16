@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, Zap, X, Star, ChevronRight, Shield, FileText, CreditCard, MapPin, Clock } from 'lucide-react';
+import { Zap, X, Star, ChevronRight, Shield, FileText, CreditCard, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceCard from '@/components/home/ServiceCard';
@@ -19,7 +19,6 @@ import { BRAND } from '@/lib/theme';
 
 export default function Home() {
   const [viewingPro, setViewingPro] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [dismissedId, setDismissedId] = useState(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const queryClient = useQueryClient();
@@ -83,13 +82,6 @@ export default function Home() {
     queryClient.invalidateQueries({ queryKey: ['serviceCategories'] });
     queryClient.invalidateQueries({ queryKey: ['nearbyPros'] });
   };
-
-  const filteredCategories = searchQuery.trim() ?
-  categories.filter((c) =>
-  c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  c.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) :
-  categories;
 
   const firstName = getFirstName(user);
   const greeting = getGreeting();
@@ -209,29 +201,6 @@ export default function Home() {
               {firstName ? `${greeting},\n${firstName} 👋` : `${greeting} 👋`}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">Que puis-je faire pour vous aujourd'hui ?</p>
-
-            {/* Search bar */}
-            <div className="mt-4 relative">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
-                style={{ width: 18, height: 18 }} />
-              
-              
-
-
-
-
-              
-              
-              {searchQuery &&
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center tap-scale">
-                
-                  <X className="w-3.5 h-3.5 text-muted-foreground" />
-                </button>
-              }
-            </div>
           </div>
 
           {/* ── SOS / Urgence — Uber-style action card ── */}
@@ -291,37 +260,17 @@ export default function Home() {
           <div className="mt-6 px-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-black text-foreground">Nos services</h2>
-              {searchQuery &&
-              <button
-                onClick={() => setSearchQuery('')}
-                className="text-sm font-bold flex items-center gap-1"
-                style={{ color: BRAND }}>
-                
-                  <X className="w-3.5 h-3.5" /> Effacer
-                </button>
-              }
             </div>
 
             {isLoading ?
             <HomeSkeleton /> :
-            filteredCategories.length === 0 ?
-            <div className="flex flex-col items-center justify-center py-14 text-center bg-white rounded-2xl"
-            style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)' }}>
-                <div className="w-16 h-16 rounded-2xl mb-3 flex items-center justify-center" style={{ background: `${BRAND}12` }}>
-                  <Search className="w-8 h-8" style={{ color: BRAND }} strokeWidth={1.5} />
-                </div>
-                <p className="text-sm font-bold text-foreground">Aucun service trouvé</p>
-                <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
-              </div> :
-
             <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {filteredCategories.map((category, index) =>
+                {categories.map((category, index) =>
               <ServiceCard
                 key={category.id}
                 category={category}
                 index={index}
                 onSearch={() => navigate(`/ServiceRequest?categoryId=${category.id}`)} />
-
               )}
               </div>
             }
@@ -349,7 +298,6 @@ export default function Home() {
                 pro={pro}
                 index={i}
                 onPress={() => setViewingPro(pro)} />
-
               )}
               </div>
             </div>
@@ -455,9 +403,8 @@ export default function Home() {
             if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${pro.id}`);
             setViewingPro(null);
           }} />
-
         }
       </div>
-    </PullToRefresh>);
-
+    </PullToRefresh>
+  );
 }
