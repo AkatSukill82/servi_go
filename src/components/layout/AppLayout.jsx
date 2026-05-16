@@ -67,42 +67,55 @@ export default function AppLayout() {
     queryKey: ['proSubscription', userEmail],
     queryFn: () => base44.entities.ProSubscription.filter({ professional_email: userEmail }, '-created_date', 1).then(r => r[0] || null),
     enabled: !!userEmail && userType === 'professionnel',
-    staleTime: 60000,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
   });
   const proSubExpired = userType === 'professionnel' && proSubscription && !['active', 'trial'].includes(proSubscription?.status);
 
-  // Garde en mémoire les onglets déjà visités (pour ne monter qu'au premier accès)
+  // Garde en mémoire les onglets déjà visités et positions de scroll
   const visitedTabs = useRef(new Set());
   const scrollRefs = useRef({});
+  const scrollPositions = useRef({});
 
   useEffect(() => {
     const resolveUserType = async (user) => {
       if (!user?.user_type) {
-        // Silently default to 'particulier' — never redirect existing users to role selection
         await base44.auth.updateMe({ user_type: 'particulier' }).catch(() => {});
-        const updated = { ...user, user_type: 'particulier' };
-        queryClient.setQueryData(['currentUser'], updated);
-        setCurrentUser(updated);
+        setCurrentUser({ ...user, user_type: 'particulier' });
         setUserType('particulier');
       } else {
         setUserType(user.user_type);
       }
+      setLoading(false);
     };
 
-    const cached = queryClient.getQueryData(['currentUser']);
-    if (cached) {
-      setCurrentUser(cached);
-      resolveUserType(cached).then(() => setLoading(false));
-      return;
-    }
-    base44.auth.me().then(user => {
-      queryClient.setQueryData(['currentUser'], user);
-      setCurrentUser(user);
-      resolveUserType(user).then(() => setLoading(false));
-    }).catch(() => {
-      navigate('/', { replace: true });
-    });
+    base44.auth.me()
+      .then(resolveUserType)
+      .catch(() => navigate('/', { replace: true }));
   }, []);
+
+  // Sauvegarde position de scroll avant de quitter un tab
+  useEffect(() => {
+    const tabPath = location.pathname;
+    const scrollEl = scrollRefs.current[tabPath];
+    if (scrollEl) {
+      const unsubscribe = setInterval(() => {
+        scrollPositions.current[tabPath] = scrollEl.scrollTop;
+      }, 100);
+      return () => clearInterval(unsubscribe);
+    }
+  }, [location.pathname]);
+
+  // Restaure position de scroll quand on revient à un tab
+  useEffect(() => {
+    const tabPath = location.pathname;
+    const scrollEl = scrollRefs.current[tabPath];
+    if (scrollEl && scrollPositions.current[tabPath] !== undefined) {
+      setTimeout(() => {
+        scrollEl.scrollTop = scrollPositions.current[tabPath];
+      }, 0);
+    }
+  }, [location.pathname]);
 
   if (loading) {
     return (

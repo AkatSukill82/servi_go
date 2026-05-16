@@ -14,7 +14,6 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) {
-      console.warn('[createProSubscription] Unauthorized access attempt');
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -24,7 +23,6 @@ Deno.serve(async (req) => {
     const cancelUrl = body.cancelUrl || `${req.headers.get('origin')}/ProSubscription`;
 
     const isAnnual = plan === 'annual';
-    console.log('[createProSubscription] Starting session creation:', { email: user.email, plan });
 
     // Récupérer les prix depuis Stripe pour utiliser les bons price IDs
     let priceId;
@@ -35,11 +33,8 @@ Deno.serve(async (req) => {
         (isAnnual ? p.recurring.interval === 'year' : p.recurring.interval === 'month')
       );
       priceId = match?.id;
-      if (priceId) {
-        console.log('[createProSubscription] Prix Stripe trouvé:', { priceId, interval: isAnnual ? 'year' : 'month' });
-      }
     } catch (e) {
-      console.error('[createProSubscription] Erreur récupération prix Stripe:', { error: e.message, code: e.code });
+      console.error('[createProSubscription] Fetch price error:', { message: e.message });
     }
 
     let sessionConfig;
@@ -62,7 +57,6 @@ Deno.serve(async (req) => {
       };
     } else {
       // Fallback : one-time payment si pas de prix récurrent trouvé
-      console.warn('[createProSubscription] Aucun prix récurrent trouvé, utilisation fallback one-time payment');
       const amount = isAnnual ? 10000 : 1000;
       const name = isAnnual ? 'ServiGo Pro — Abonnement Annuel' : 'ServiGo Pro — Abonnement Mensuel';
       sessionConfig = {
@@ -109,22 +103,13 @@ Deno.serve(async (req) => {
         auto_renew: true,
         ...subData,
       });
-      console.log('[createProSubscription] Nouvelle ProSubscription créée:', { email: user.email, plan });
     } else {
       await base44.asServiceRole.entities.ProSubscription.update(existing[0].id, subData);
-      console.log('[createProSubscription] ProSubscription mise à jour:', { email: user.email, id: existing[0].id, plan });
     }
 
-    console.log('[createProSubscription] Session Stripe créée avec succès:', { sessionId: session.id, email: user.email, plan });
     return Response.json({ url: session.url, sessionId: session.id });
   } catch (error) {
-    console.error('[createProSubscription] ERREUR:', {
-      message: error.message,
-      type: error.type,
-      code: error.code,
-      statusCode: error.statusCode,
-      stack: error.stack,
-    });
-    return Response.json({ error: error.message || 'Erreur subscription' }, { status: 500 });
+    console.error('[createProSubscription] Error:', { message: error.message, status: error.statusCode });
+    return Response.json({ error: error.message || 'Subscription error' }, { status: 500 });
   }
 });

@@ -25,7 +25,8 @@ export default function TopBar() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 60000,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const { data: notifs = [] } = useQuery({
@@ -34,8 +35,9 @@ export default function TopBar() {
       { recipient_email: user.email, is_read: false }, '-created_date', 20
     ),
     enabled: !!user?.email,
-    refetchInterval: 60000,
-    staleTime: 30000,
+    refetchInterval: 30000,
+    staleTime: 15000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const unreadCount = notifs.length;
