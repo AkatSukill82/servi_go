@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { CheckCircle, Clock, Trash2, PenLine, X, Upload, Camera } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle, Clock, Trash2, PenLine, X, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';

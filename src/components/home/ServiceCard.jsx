@@ -6,7 +6,6 @@ import {
   SprayCan, Package, Lightbulb, Key, Thermometer,
   PaintBucket, Sofa, Bug, Fence, Trees
 } from 'lucide-react';
-import { BRAND } from '@/lib/theme';
 
 const ICON_MAP = {
   Wrench, Droplets, Paintbrush, Truck, Scissors, Leaf,
