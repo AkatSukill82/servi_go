@@ -59,27 +59,27 @@ export default function TopBar() {
   return (
     <>
       <div className="sticky top-0 z-30 bg-background border-b border-border/80" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
-        <div className="flex items-center justify-between px-5 h-14">
+        <div className="flex items-center justify-between px-5 h-14 relative">
 
           {/* Location pill */}
           <button
             onClick={() => navigate('/Map')}
-            className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 active:scale-95 transition-transform"
+            className="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 active:scale-95 transition-transform shrink-0 z-10"
           >
             <MapPin className="w-3.5 h-3.5 shrink-0" style={{ color: BRAND }} />
             <span className="text-xs font-semibold text-foreground max-w-[120px] truncate">{city}</span>
             <span className="text-muted-foreground text-xs">›</span>
           </button>
 
-          {/* Logo centré */}
-          <span className="absolute left-1/2 -translate-x-1/2 text-xl font-black tracking-tight select-none" style={{ color: BRAND }}>
+          {/* Logo centré — au-dessus mais ne chevauche pas */}
+          <span className="absolute left-1/2 -translate-x-1/2 text-xl font-black tracking-tight select-none pointer-events-none" style={{ color: BRAND }}>
             ServiGo
           </span>
 
           {/* Bell */}
           <button
             onClick={() => setNotifOpen(o => !o)}
-            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform"
+            className="relative w-10 h-10 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform shrink-0 z-10"
           >
             <Bell className="w-4.5 h-4.5 text-foreground" strokeWidth={1.8} style={{ width: 18, height: 18 }} />
             {unreadCount > 0 && (
