@@ -216,12 +216,12 @@ export default function Home() {
                 className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
                 style={{ width: 18, height: 18 }} />
               
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Plombier, électricien, peintre…"
-                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-gray-900 text-sm font-medium focus:outline-none transition-shadow bg-gray-100 hidden"
-                style={{ boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none' }} />
+              
+
+
+
+
+              
               
               {searchQuery &&
               <button
