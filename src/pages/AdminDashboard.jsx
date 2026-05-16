@@ -13,16 +13,16 @@ import DAC7Tab from '@/components/admin/DAC7Tab';
 import IndependenceTab from '@/components/admin/IndependenceTab';
 
 const TABS = [
-  { key: 'overview', label: 'Aperçu', icon: Activity },
-  { key: 'finance', label: 'Finances', icon: Euro },
-  { key: 'documents', label: 'Docs', icon: Receipt },
-  { key: 'disputes', label: 'Litiges', icon: AlertTriangle },
-  { key: 'blacklist', label: 'Blacklist', icon: Ban },
-  { key: 'reports', label: 'Rapports', icon: Flag },
-  { key: 'tickets', label: 'Tickets', icon: Ticket },
-  { key: 'dac7', label: 'DAC7', icon: FileText },
-  { key: 'independence', label: 'Indép.', icon: Shield },
-  { key: 'email', label: 'Email', icon: Mail },
+  { key: 'overview',     label: 'Aperçu',      icon: Activity },
+  { key: 'finance',      label: 'Finances',     icon: Euro },
+  { key: 'documents',    label: 'Documents',    icon: Receipt },
+  { key: 'disputes',     label: 'Litiges',      icon: AlertTriangle },
+  { key: 'blacklist',    label: 'Blacklist',    icon: Ban },
+  { key: 'reports',      label: 'Rapports',     icon: Flag },
+  { key: 'tickets',      label: 'Tickets',      icon: Ticket },
+  { key: 'dac7',         label: 'DAC7',         icon: FileText },
+  { key: 'independence', label: 'Indépendance', icon: Shield },
+  { key: 'email',        label: 'Email',        icon: Mail },
 ];
 
 export default function AdminDashboard() {
@@ -55,8 +55,6 @@ export default function AdminDashboard() {
     staleTime: 30000,
   });
 
-  // Auto-réassignation déplacée dans OverviewTab (bouton manuel) → supprime les race conditions
-
   if (currentUser && currentUser.role !== 'admin') {
     return (
       <div className="fixed inset-0 flex items-center justify-center text-center px-6">
@@ -67,55 +65,100 @@ export default function AdminDashboard() {
 
   const openDisputes = disputes.filter(d => d.status === 'open' || d.status === 'in_review').length;
 
-  return (
-    <div className="fixed inset-0 overflow-y-auto bg-background">
-      <div className="px-4 pt-6 pb-20 w-full md:max-w-2xl mx-auto">
-        <div className="mb-5">
-          <h1 className="text-2xl font-bold tracking-tight">Admin · Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Vue globale de la plateforme</p>
-        </div>
+  const badges = {
+    disputes:     openDisputes > 0 ? openDisputes : null,
+    reports:      pendingReports.length > 0 ? pendingReports.length : null,
+    tickets:      newTickets.length > 0 ? (newTickets.length > 9 ? '9+' : newTickets.length) : null,
+  };
 
-        <div className="grid grid-cols-4 gap-1.5 mb-5">
-          {TABS.map(({ key, label, icon: Icon }) => (
-            <button key={key} onClick={() => setTab(key)}
-              className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border transition-colors ${
-                tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
-              }`}>
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="text-center leading-tight">{label}</span>
-              {key === 'disputes' && openDisputes > 0 && (
-                <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-yellow-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{openDisputes}</span>
-              )}
-              {key === 'reports' && pendingReports.length > 0 && (
-                <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{pendingReports.length}</span>
-              )}
-              {key === 'tickets' && newTickets.length > 0 && (
-                <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{newTickets.length > 9 ? '9+' : newTickets.length}</span>
+  const badgeColor = {
+    disputes: 'bg-yellow-500',
+    reports:  'bg-red-500',
+    tickets:  'bg-blue-500',
+  };
+
+  return (
+    <div
+      className="flex flex-col bg-background"
+      style={{
+        height: '100dvh',
+        paddingTop: 'env(safe-area-inset-top)',
+      }}
+    >
+      {/* Header */}
+      <div className="shrink-0 px-4 pt-4 pb-3 border-b border-border bg-background">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black tracking-tight">Administration</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">ServiGo · Panel admin</p>
+          </div>
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Shield className="w-5 h-5 text-primary" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tab bar — horizontal scroll */}
+      <div
+        className="shrink-0 flex gap-2 overflow-x-auto border-b border-border bg-background px-4 py-2"
+        style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        {TABS.map(({ key, label, icon: Icon }) => {
+          const badge = badges[key];
+          const isActive = tab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className="relative shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors whitespace-nowrap"
+              style={isActive
+                ? { background: 'hsl(var(--primary))', color: 'white' }
+                : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }
+              }
+            >
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              {label}
+              {badge && (
+                <span className={`absolute -top-1 -right-1 text-[9px] font-bold text-white rounded-full w-4 h-4 flex items-center justify-center ${badgeColor[key] || 'bg-gray-500'}`}>
+                  {badge}
+                </span>
               )}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        {tab === 'overview' && <OverviewTab />}
+      {/* Content — scrollable */}
+      <div
+        className="flex-1 overflow-y-auto px-4 pt-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}
+      >
+        {tab === 'overview'     && <OverviewTab />}
+        {tab === 'documents'    && <AdminDocumentsTab />}
+        {tab === 'disputes'     && <DisputesTab />}
+        {tab === 'blacklist'    && <BlacklistTab />}
+        {tab === 'reports'      && <ReportsTab />}
+        {tab === 'tickets'      && <SupportTicketsTab />}
+        {tab === 'dac7'         && <DAC7Tab />}
+        {tab === 'independence' && <IndependenceTab />}
+
         {tab === 'finance' && (
           <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">Onglet finances en développement</p>
+            <Euro className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm font-medium">Onglet finances en développement</p>
           </div>
         )}
-        {tab === 'documents' && <AdminDocumentsTab />}
-        {tab === 'disputes' && <DisputesTab />}
-        {tab === 'blacklist' && <BlacklistTab />}
-        {tab === 'reports' && <ReportsTab />}
-        {tab === 'tickets' && <SupportTicketsTab />}
-        {tab === 'dac7' && <DAC7Tab />}
-        {tab === 'independence' && <IndependenceTab />}
+
         {tab === 'email' && (
           <div className="space-y-4">
-            <div className="bg-card rounded-xl border border-border p-5 text-center space-y-3">
+            <div className="bg-card rounded-2xl border border-border p-5 text-center space-y-3">
               <Mail className="w-10 h-10 mx-auto text-primary opacity-70" />
               <p className="font-semibold">Test d'envoi d'email</p>
               <p className="text-sm text-muted-foreground">Envoyez un email de test pour vérifier la configuration.</p>
-              <button onClick={() => window.location.href = '/AdminTestEmail'} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl text-sm">
+              <button
+                onClick={() => window.location.href = '/AdminTestEmail'}
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl text-sm"
+              >
                 <Mail className="w-4 h-4" /> Ouvrir le test email
               </button>
             </div>
