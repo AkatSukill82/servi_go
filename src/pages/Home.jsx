@@ -18,23 +18,23 @@ import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
 
 export default function Home() {
-  const [viewingPro, setViewingPro]   = useState(null);
+  const [viewingPro, setViewingPro] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dismissedId, setDismissedId] = useState(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const queryClient = useQueryClient();
-  const navigate    = useNavigate();
+  const navigate = useNavigate();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    staleTime: 60000,
+    staleTime: 60000
   });
 
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['serviceCategories'],
     queryFn: () => base44.entities.ServiceCategory.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: nearbyPros = [] } = useQuery({
@@ -42,33 +42,33 @@ export default function Home() {
     queryFn: () => base44.entities.User.filter(
       { user_type: 'professionnel', available: true, verification_status: 'verified' }, '-rating', 10
     ),
-    staleTime: 3 * 60 * 1000,
+    staleTime: 3 * 60 * 1000
   });
 
   const { data: recentReviews = [] } = useQuery({
     queryKey: ['recentReviews'],
     queryFn: () => base44.entities.Review.list('-created_date', 4),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: activeRequest } = useQuery({
     queryKey: ['activeRequest', user?.email],
     queryFn: () => base44.entities.ServiceRequestV2.filter(
       { customer_email: user.email }, '-created_date', 10
-    ).then(r => r.find(req => ['accepted', 'pro_en_route', 'in_progress'].includes(req.status)) || null),
+    ).then((r) => r.find((req) => ['accepted', 'pro_en_route', 'in_progress'].includes(req.status)) || null),
     enabled: !!user?.email,
     staleTime: 30000,
-    refetchInterval: 30000,
+    refetchInterval: 30000
   });
 
   const { data: unfinishedRequest } = useQuery({
     queryKey: ['unfinishedRequest', user?.email],
     queryFn: () => base44.entities.ServiceRequestV2.filter(
       { customer_email: user.email }, '-created_date', 10
-    ).then(r => r.find(req => ['searching', 'pending_pro'].includes(req.status)) || null),
+    ).then((r) => r.find((req) => ['searching', 'pending_pro'].includes(req.status)) || null),
     enabled: !!user?.email,
     staleTime: 90000,
-    refetchInterval: 90000,
+    refetchInterval: 90000
   });
 
   const cancelMutation = useMutation({
@@ -76,7 +76,7 @@ export default function Home() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['unfinishedRequest'] });
       setConfirmCancel(false);
-    },
+    }
   });
 
   const handleRefresh = () => {
@@ -84,20 +84,20 @@ export default function Home() {
     queryClient.invalidateQueries({ queryKey: ['nearbyPros'] });
   };
 
-  const filteredCategories = searchQuery.trim()
-    ? categories.filter(c =>
-        c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : categories;
+  const filteredCategories = searchQuery.trim() ?
+  categories.filter((c) =>
+  c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) :
+  categories;
 
   const firstName = getFirstName(user);
-  const greeting  = getGreeting();
+  const greeting = getGreeting();
 
   const activeStatusLabel = {
-    accepted:    { icon: '📍', text: 'Mission acceptée' },
+    accepted: { icon: '📍', text: 'Mission acceptée' },
     pro_en_route: { icon: '🚗', text: 'Technicien en route' },
-    in_progress:  { icon: '🔧', text: 'Mission en cours' },
+    in_progress: { icon: '🔧', text: 'Mission en cours' }
   };
 
   return (
@@ -109,32 +109,32 @@ export default function Home() {
 
         {/* ── Active mission banner — Uber Eats style ── */}
         <AnimatePresence>
-          {activeRequest && (
-            <motion.div
-              initial={{ opacity: 0, y: -16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ type: 'spring', damping: 24, stiffness: 280 }}
-              className="mx-4 mt-3 overflow-hidden"
-              style={{ borderRadius: 20 }}
-            >
+          {activeRequest &&
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+            className="mx-4 mt-3 overflow-hidden"
+            style={{ borderRadius: 20 }}>
+            
               <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
-                className="w-full text-left"
-                style={{
-                  background: 'linear-gradient(135deg, #00B894 0%, #00897B 100%)',
-                  borderRadius: 20,
-                  boxShadow: '0 6px 24px rgba(0,184,148,0.35)',
-                }}
-              >
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate(`/TrackingMap?requestId=${activeRequest.id}`)}
+              className="w-full text-left"
+              style={{
+                background: 'linear-gradient(135deg, #00B894 0%, #00897B 100%)',
+                borderRadius: 20,
+                boxShadow: '0 6px 24px rgba(0,184,148,0.35)'
+              }}>
+              
                 {/* Top row */}
                 <div className="px-4 pt-4 pb-3 flex items-center gap-3">
                   {/* Pro avatar */}
                   <div
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-base font-black text-white"
-                    style={{ background: 'rgba(255,255,255,0.25)' }}
-                  >
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 text-base font-black text-white"
+                  style={{ background: 'rgba(255,255,255,0.25)' }}>
+                  
                     {(activeRequest.professional_name || 'P')[0].toUpperCase()}
                   </div>
 
@@ -155,9 +155,9 @@ export default function Home() {
                   </div>
 
                   <div
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl shrink-0"
-                    style={{ background: 'rgba(255,255,255,0.22)' }}
-                  >
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl shrink-0"
+                  style={{ background: 'rgba(255,255,255,0.22)' }}>
+                  
                     <span className="text-white text-xs font-black">Suivre</span>
                     <ChevronRight className="w-3.5 h-3.5 text-white" />
                   </div>
@@ -166,39 +166,39 @@ export default function Home() {
                 {/* Bottom progress bar */}
                 <div className="h-1 mx-4 mb-4 rounded-full" style={{ background: 'rgba(255,255,255,0.2)' }}>
                   <motion.div
-                    className="h-full rounded-full bg-white"
-                    initial={{ width: '20%' }}
-                    animate={{ width: activeRequest.status === 'in_progress' ? '80%' : activeRequest.status === 'pro_en_route' ? '55%' : '25%' }}
-                    transition={{ duration: 1.2, ease: 'easeOut' }}
-                  />
+                  className="h-full rounded-full bg-white"
+                  initial={{ width: '20%' }}
+                  animate={{ width: activeRequest.status === 'in_progress' ? '80%' : activeRequest.status === 'pro_en_route' ? '55%' : '25%' }}
+                  transition={{ duration: 1.2, ease: 'easeOut' }} />
+                
                 </div>
               </motion.button>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
 
         {/* ── Unfinished request banner ── */}
         <AnimatePresence>
-          {unfinishedRequest && dismissedId !== unfinishedRequest.id && !activeRequest && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-amber-500 px-4 py-3 flex items-center gap-3 overflow-hidden"
-            >
+          {unfinishedRequest && dismissedId !== unfinishedRequest.id && !activeRequest &&
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-amber-500 px-4 py-3 flex items-center gap-3 overflow-hidden">
+            
               <Clock className="w-4 h-4 text-white shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-white truncate">{unfinishedRequest.category_name}</p>
                 <p className="text-xs text-white/80">Recherche d'un professionnel…</p>
               </div>
               <button
-                onClick={() => setDismissedId(unfinishedRequest.id)}
-                className="text-white/70 p-1 tap-scale"
-              >
+              onClick={() => setDismissedId(unfinishedRequest.id)}
+              className="text-white/70 p-1 tap-scale">
+              
                 <X className="w-4 h-4" />
               </button>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
 
         <div className="pb-8">
@@ -214,23 +214,23 @@ export default function Home() {
             <div className="mt-4 relative">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground"
-                style={{ width: 18, height: 18 }}
-              />
+                style={{ width: 18, height: 18 }} />
+              
               <input
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Plombier, électricien, peintre…"
-                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-gray-900 text-sm font-medium focus:outline-none transition-shadow bg-gray-100"
-                style={{ boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none' }}
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center tap-scale"
-                >
+                className="w-full h-[52px] pl-11 pr-11 rounded-2xl text-gray-900 text-sm font-medium focus:outline-none transition-shadow bg-gray-100 hidden"
+                style={{ boxShadow: searchQuery ? `0 0 0 2px ${BRAND}` : 'none' }} />
+              
+              {searchQuery &&
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-muted-foreground/20 flex items-center justify-center tap-scale">
+                
                   <X className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
-              )}
+              }
             </div>
           </div>
 
@@ -240,12 +240,12 @@ export default function Home() {
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate('/Emergency')}
               className="w-full rounded-2xl overflow-hidden"
-              style={{ boxShadow: '0 4px 20px rgba(225,112,85,0.3)' }}
-            >
+              style={{ boxShadow: '0 4px 20px rgba(225,112,85,0.3)' }}>
+              
               <div
                 className="px-5 py-4 flex items-center gap-4"
-                style={{ background: 'linear-gradient(135deg, #E17055 0%, #C0392B 100%)' }}
-              >
+                style={{ background: 'linear-gradient(135deg, #E17055 0%, #C0392B 100%)' }}>
+                
                 <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                   <Zap className="w-7 h-7 text-white fill-white" />
                 </div>
@@ -262,69 +262,69 @@ export default function Home() {
 
           {/* ── Confirm cancel (si requis) ── */}
           <AnimatePresence>
-            {unfinishedRequest && confirmCancel && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="mx-4 mt-3 bg-white rounded-2xl p-4 flex gap-2"
-                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
-              >
+            {unfinishedRequest && confirmCancel &&
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="mx-4 mt-3 bg-white rounded-2xl p-4 flex gap-2"
+              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+              
                 <button
-                  onClick={() => setConfirmCancel(false)}
-                  className="flex-1 h-11 rounded-xl border border-border text-sm font-semibold text-foreground tap-scale"
-                >
+                onClick={() => setConfirmCancel(false)}
+                className="flex-1 h-11 rounded-xl border border-border text-sm font-semibold text-foreground tap-scale">
+                
                   Conserver
                 </button>
                 <button
-                  onClick={() => cancelMutation.mutate(unfinishedRequest.id)}
-                  disabled={cancelMutation.isPending}
-                  className="flex-1 h-11 rounded-xl text-sm font-bold text-white tap-scale disabled:opacity-60 bg-destructive"
-                >
+                onClick={() => cancelMutation.mutate(unfinishedRequest.id)}
+                disabled={cancelMutation.isPending}
+                className="flex-1 h-11 rounded-xl text-sm font-bold text-white tap-scale disabled:opacity-60 bg-destructive">
+                
                   {cancelMutation.isPending ? 'Annulation…' : 'Annuler la demande'}
                 </button>
               </motion.div>
-            )}
+            }
           </AnimatePresence>
 
           {/* ── Services ── */}
           <div className="mt-6 px-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-black text-foreground">Nos services</h2>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-sm font-bold flex items-center gap-1"
-                  style={{ color: BRAND }}
-                >
+              {searchQuery &&
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-sm font-bold flex items-center gap-1"
+                style={{ color: BRAND }}>
+                
                   <X className="w-3.5 h-3.5" /> Effacer
                 </button>
-              )}
+              }
             </div>
 
-            {isLoading ? (
-              <HomeSkeleton />
-            ) : filteredCategories.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-14 text-center bg-white rounded-2xl"
-                style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)' }}>
+            {isLoading ?
+            <HomeSkeleton /> :
+            filteredCategories.length === 0 ?
+            <div className="flex flex-col items-center justify-center py-14 text-center bg-white rounded-2xl"
+            style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)' }}>
                 <div className="w-16 h-16 rounded-2xl mb-3 flex items-center justify-center" style={{ background: `${BRAND}12` }}>
                   <Search className="w-8 h-8" style={{ color: BRAND }} strokeWidth={1.5} />
                 </div>
                 <p className="text-sm font-bold text-foreground">Aucun service trouvé</p>
                 <p className="text-xs text-muted-foreground mt-1">Essayez un autre terme</p>
+              </div> :
+
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {filteredCategories.map((category, index) =>
+              <ServiceCard
+                key={category.id}
+                category={category}
+                index={index}
+                onSearch={() => navigate(`/ServiceRequest?categoryId=${category.id}`)} />
+
+              )}
               </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                {filteredCategories.map((category, index) => (
-                  <ServiceCard
-                    key={category.id}
-                    category={category}
-                    index={index}
-                    onSearch={() => navigate(`/ServiceRequest?categoryId=${category.id}`)}
-                  />
-                ))}
-              </div>
-            )}
+            }
           </div>
 
           {/* ── Stories before/after ── */}
@@ -334,55 +334,55 @@ export default function Home() {
           {user && <FreeMissionWidget userEmail={user.email} />}
 
           {/* ── Top professionnels ── */}
-          {nearbyPros.length > 0 && (
-            <div className="mt-8">
+          {nearbyPros.length > 0 &&
+          <div className="mt-8">
               <div className="flex items-center justify-between mb-4 px-4">
                 <h2 className="text-xl font-black text-foreground">Top professionnels</h2>
               </div>
               <div
-                className="flex gap-3 overflow-x-auto pb-2 pl-4 pr-4 snap-x snap-mandatory"
-                style={{ scrollbarWidth: 'none' }}
-              >
-                {nearbyPros.map((pro, i) => (
-                  <NearbyProCard
-                    key={pro.id}
-                    pro={pro}
-                    index={i}
-                    onPress={() => setViewingPro(pro)}
-                  />
-                ))}
+              className="flex gap-3 overflow-x-auto pb-2 pl-4 pr-4 snap-x snap-mandatory"
+              style={{ scrollbarWidth: 'none' }}>
+              
+                {nearbyPros.map((pro, i) =>
+              <NearbyProCard
+                key={pro.id}
+                pro={pro}
+                index={i}
+                onPress={() => setViewingPro(pro)} />
+
+              )}
               </div>
             </div>
-          )}
+          }
 
           {/* ── Avis récents ── */}
-          {recentReviews.length > 0 && (
-            <div className="mt-8 px-4">
+          {recentReviews.length > 0 &&
+          <div className="mt-8 px-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-black text-foreground">Ce qu'ils disent</h2>
                 <button
-                  onClick={() => navigate('/ProReviews')}
-                  className="text-sm font-bold flex items-center gap-1"
-                  style={{ color: BRAND }}
-                >
+                onClick={() => navigate('/ProReviews')}
+                className="text-sm font-bold flex items-center gap-1"
+                style={{ color: BRAND }}>
+                
                   Voir tout <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
               <div className="space-y-3">
-                {recentReviews.map((review, i) => (
-                  <motion.div
-                    key={review.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08 }}
-                    className="bg-white rounded-2xl p-4"
-                    style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}
-                  >
+                {recentReviews.map((review, i) =>
+              <motion.div
+                key={review.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-white rounded-2xl p-4"
+                style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+                
                     <div className="flex items-center gap-3 mb-2.5">
                       <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)` }}
-                      >
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                    style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)` }}>
+                    
                         {(review.customer_name || 'C')[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -394,14 +394,14 @@ export default function Home() {
                         <span className="text-xs font-bold text-amber-600">{review.rating}</span>
                       </div>
                     </div>
-                    {review.comment && (
-                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">"{review.comment}"</p>
-                    )}
+                    {review.comment &&
+                <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">"{review.comment}"</p>
+                }
                   </motion.div>
-                ))}
+              )}
               </div>
             </div>
-          )}
+          }
 
           {/* ── Trust strip — Airbnb style ── */}
           <div className="mt-8 mx-4 bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)' }}>
@@ -410,54 +410,54 @@ export default function Home() {
             </p>
             <div className="flex items-center justify-around gap-2">
               {[
-                { icon: Shield,     label: 'Pros vérifiés' },
-                { icon: FileText,   label: 'Contrat inclus' },
-                { icon: CreditCard, label: 'Paiement sécurisé' },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="flex flex-col items-center gap-2 text-center">
+              { icon: Shield, label: 'Pros vérifiés' },
+              { icon: FileText, label: 'Contrat inclus' },
+              { icon: CreditCard, label: 'Paiement sécurisé' }].
+              map(({ icon: Icon, label }) =>
+              <div key={label} className="flex flex-col items-center gap-2 text-center">
                   <div
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                    style={{ background: `${BRAND}10` }}
-                  >
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                  style={{ background: `${BRAND}10` }}>
+                  
                     <Icon className="w-5 h-5" style={{ color: BRAND }} strokeWidth={1.8} />
                   </div>
                   <span className="text-[11px] text-gray-500 font-semibold leading-tight">{label}</span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
           {/* ── Identity pending ── */}
-          {user && user.eid_status !== 'verified' && user.eid_status !== undefined && (
-            <div className="mx-4 mt-4 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3.5 flex items-center gap-3">
+          {user && user.eid_status !== 'verified' && user.eid_status !== undefined &&
+          <div className="mx-4 mt-4 rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3.5 flex items-center gap-3">
               <span className="text-xl shrink-0">⚠️</span>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-amber-900">Identité non vérifiée</p>
                 <p className="text-xs text-amber-700 mt-0.5">Certaines fonctionnalités sont limitées</p>
               </div>
               <button
-                onClick={() => navigate('/EidVerification')}
-                className="text-xs font-black whitespace-nowrap px-3 py-2 rounded-xl text-white shrink-0"
-                style={{ background: '#E2A000' }}
-              >
+              onClick={() => navigate('/EidVerification')}
+              className="text-xs font-black whitespace-nowrap px-3 py-2 rounded-xl text-white shrink-0"
+              style={{ background: '#E2A000' }}>
+              
                 Vérifier
               </button>
             </div>
-          )}
+          }
         </div>
 
-        {viewingPro && (
-          <ProProfileSheet
-            pro={viewingPro}
-            onClose={() => setViewingPro(null)}
-            onSelect={(pro) => {
-              const cat = categories.find(c => c.name === pro.category_name);
-              if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${pro.id}`);
-              setViewingPro(null);
-            }}
-          />
-        )}
+        {viewingPro &&
+        <ProProfileSheet
+          pro={viewingPro}
+          onClose={() => setViewingPro(null)}
+          onSelect={(pro) => {
+            const cat = categories.find((c) => c.name === pro.category_name);
+            if (cat) navigate(`/ServiceRequest?categoryId=${cat.id}&priorityProId=${pro.id}`);
+            setViewingPro(null);
+          }} />
+
+        }
       </div>
-    </PullToRefresh>
-  );
+    </PullToRefresh>);
+
 }
