@@ -449,7 +449,7 @@ export default function ProProfile() {
             {user?.role === 'admin' && (
               <Button
                 variant="outline"
-                onClick={() => navigate('/AdminDashboard')}
+                onClick={() => navigate('/admin')}
                 className="w-full h-12 rounded-xl text-sm border-purple-200 text-purple-700 hover:bg-purple-50"
               >
                 <LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard Admin

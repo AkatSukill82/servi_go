@@ -38,7 +38,7 @@ export default function AuthLogin() {
       base44.auth.setToken(access_token);
       await checkUserAuth();
       const user = await base44.auth.me();
-      if (user?.role === 'admin') navigate('/AdminDashboard', { replace: true });
+      if (user?.role === 'admin') navigate('/admin', { replace: true });
       else if (user?.user_type === 'professionnel') navigate('/ProDashboard', { replace: true });
       else navigate('/Home', { replace: true });
     } catch (err) {

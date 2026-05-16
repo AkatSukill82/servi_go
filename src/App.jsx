@@ -61,7 +61,7 @@ const AdminRoute = ({ children }) => {
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
   if (isAuthenticated && user) {
-    if (user.role === 'admin') return <Navigate to="/AdminDashboard" replace />;
+    if (user.role === 'admin') return <Navigate to="/admin" replace />;
     if (user.user_type === 'professionnel') return <Navigate to="/ProDashboard" replace />;
     return <Navigate to="/Home" replace />;
   }
@@ -121,7 +121,7 @@ const AuthenticatedApp = () => {
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminRoute><AdminVerification /></AdminRoute>} />
-      <Route path="/AdminDashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/AdminTestEmail" element={<AdminRoute><AdminTestEmail /></AdminRoute>} />
       <Route path="/CGU" element={<CGU />} />
       <Route path="/EidVerification" element={<EidVerification />} />
