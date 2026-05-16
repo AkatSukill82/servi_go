@@ -68,6 +68,14 @@ const RootRedirect = () => {
   return <Navigate to="/Register" replace />;
 };
 
+// Route protégée pour Pro qui redirige vers ProDashboard si non-pro
+const ProRoute = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
+  if (!isAuthenticated) return <Navigate to="/se-connecter" replace />;
+  if (user?.user_type !== 'professionnel') return <Navigate to="/Home" replace />;
+  return children;
+};
+
 const PUBLIC_PATHS = [
   '/se-connecter', '/creer-compte', '/cgu', '/cgv',
   '/confidentialite', '/mentions-legales', '/cookies',
@@ -132,17 +140,21 @@ const AuthenticatedApp = () => {
 <Route path="/Home" element={<AppLayout />} />
       <Route path="/MissionHistory" element={<AppLayout />} />
       <Route path="/Messages" element={<AppLayout />} />
-      <Route path="/ProAgenda" element={<AppLayout />} />
-      <Route path="/ProSubscription" element={<AppLayout />} />
-      <Route path="/ServiceRequest" element={<AppLayout />} />
-      <Route path="/Profile" element={<AppLayout />} />
-      <Route path="/ProDashboard" element={<AppLayout />} />
-      <Route path="/ProProfile" element={<AppLayout />} />
-      <Route path="/ProMessages" element={<AppLayout />} />
       <Route path="/Favorites" element={<AppLayout />} />
+      <Route path="/Profile" element={<AppLayout />} />
       <Route path="/Invoices" element={<AppLayout />} />
       <Route path="/Map" element={<AppLayout />} />
       <Route path="/Emergency" element={<AppLayout />} />
+      
+      {/* Pro-only routes */}
+      <Route path="/ProDashboard" element={<ProRoute><AppLayout /></ProRoute>} />
+      <Route path="/ProAgenda" element={<ProRoute><AppLayout /></ProRoute>} />
+      <Route path="/ProMessages" element={<ProRoute><AppLayout /></ProRoute>} />
+      <Route path="/ProProfile" element={<ProRoute><AppLayout /></ProRoute>} />
+      
+      {/* Stack pages */}
+      <Route path="/ProSubscription" element={<AppLayout />} />
+      <Route path="/ServiceRequest" element={<AppLayout />} />
 
       {/* Auth pages — custom login & signup */}
       <Route path="/se-connecter" element={<AuthLogin />} />
