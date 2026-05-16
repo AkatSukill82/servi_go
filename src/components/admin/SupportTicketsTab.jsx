@@ -1,42 +1,48 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Ticket, ChevronDown, ChevronUp, MessageSquare, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Ticket, ChevronDown, ChevronUp, MessageSquare, CheckCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const STATUS_CONFIG = {
-  new:              { label: 'Nouveau',          color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  in_progress:      { label: 'En cours',         color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  waiting_customer: { label: 'Attente client',   color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  resolved:         { label: 'Résolu',           color: 'bg-green-100 text-green-700 border-green-200' },
-  closed:           { label: 'Fermé',            color: 'bg-gray-100 text-gray-500 border-gray-200' },
+  new:              { label: 'Nouveau',        bg: 'bg-blue-100 text-blue-800' },
+  in_progress:      { label: 'En cours',       bg: 'bg-amber-100 text-amber-800' },
+  waiting_customer: { label: 'Attente client', bg: 'bg-orange-100 text-orange-800' },
+  resolved:         { label: 'Résolu',         bg: 'bg-emerald-100 text-emerald-800' },
+  closed:           { label: 'Fermé',          bg: 'bg-slate-100 text-slate-600' },
 };
 
 const PRIORITY_CONFIG = {
-  low:    { label: 'Faible', color: 'bg-gray-100 text-gray-500' },
-  medium: { label: 'Moyen', color: 'bg-yellow-100 text-yellow-700' },
-  high:   { label: 'Élevé', color: 'bg-orange-100 text-orange-700' },
-  urgent: { label: 'Urgent', color: 'bg-red-100 text-red-700' },
+  low:    { label: 'Faible',  bg: 'bg-slate-100 text-slate-600' },
+  medium: { label: 'Moyen',  bg: 'bg-amber-100 text-amber-700' },
+  high:   { label: 'Élevé',  bg: 'bg-orange-100 text-orange-700' },
+  urgent: { label: 'Urgent', bg: 'bg-red-100 text-red-700' },
 };
 
 const CATEGORY_LABELS = {
-  support_technique: '🔧 Support technique',
-  question_service:  '📋 Question service',
-  faq_generale:      '❓ FAQ générale',
-  facturation:       '💳 Facturation',
-  compte:            '👤 Compte',
-  autre:             '📌 Autre',
+  support_technique: '🔧 Technique',
+  question_service: '📋 Service',
+  faq_generale: '❓ FAQ',
+  facturation: '💳 Facturation',
+  compte: '👤 Compte',
+  autre: '📌 Autre',
 };
 
 const STATUS_TRANSITIONS = [
-  { value: 'new',              label: 'Nouveau' },
-  { value: 'in_progress',      label: 'En cours' },
+  { value: 'new', label: 'Nouveau' },
+  { value: 'in_progress', label: 'En cours' },
   { value: 'waiting_customer', label: 'Attente client' },
-  { value: 'resolved',         label: 'Résolu' },
-  { value: 'closed',           label: 'Fermé' },
+  { value: 'resolved', label: 'Résolu' },
+  { value: 'closed', label: 'Fermé' },
+];
+
+const FILTER_TABS = [
+  { value: 'all', label: 'Tous' },
+  { value: 'new', label: 'Nouveaux' },
+  { value: 'in_progress', label: 'En cours' },
+  { value: 'resolved', label: 'Résolus' },
 ];
 
 function TicketCard({ ticket }) {
@@ -56,96 +62,97 @@ function TicketCard({ ticket }) {
     },
   });
 
-  const dateStr = ticket.created_date ? (() => {
-    try { return format(new Date(ticket.created_date), 'dd MMM yyyy HH:mm', { locale: fr }); } catch { return ticket.created_date; }
-  })() : '';
+  const dateStr = ticket.created_date
+    ? (() => { try { return format(new Date(ticket.created_date), 'dd MMM · HH:mm', { locale: fr }); } catch { return ''; } })()
+    : '';
 
   return (
-    <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-xl border border-border overflow-hidden">
-      <button onClick={() => setExpanded(e => !e)} className="w-full text-left p-4">
-        <div className="flex items-start justify-between gap-3">
+    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="w-full text-left p-4 cursor-pointer active:bg-slate-50 transition-colors"
+      >
+        <div className="flex items-start gap-3">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+            ticket.status === 'new' ? 'bg-blue-50' : ticket.status === 'resolved' ? 'bg-emerald-50' : 'bg-slate-50'
+          }`}>
+            <Ticket className={`w-4 h-4 ${
+              ticket.status === 'new' ? 'text-blue-500' : ticket.status === 'resolved' ? 'text-emerald-500' : 'text-slate-400'
+            }`} />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <span className="font-mono text-[10px] text-muted-foreground">#{ticket.id.slice(-6).toUpperCase()}</span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${status.color}`}>{status.label}</span>
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${priority.color}`}>{priority.label}</span>
+              <span className="font-mono text-[9px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">#{ticket.id.slice(-6).toUpperCase()}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${status.bg}`}>{status.label}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.bg}`}>{priority.label}</span>
             </div>
-            <p className="font-semibold text-sm truncate">{ticket.subject}</p>
-            <p className="text-xs text-muted-foreground truncate">{ticket.customer_name} · {ticket.customer_email}</p>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              {ticket.category && <span className="text-[10px] text-muted-foreground">{CATEGORY_LABELS[ticket.category] || ticket.category}</span>}
-              <span className="text-[10px] text-muted-foreground">{dateStr}</span>
+            <p className="text-sm font-bold text-slate-900 truncate">{ticket.subject}</p>
+            <p className="text-xs text-slate-500 truncate mt-0.5">{ticket.customer_name || ticket.customer_email}</p>
+            <div className="flex items-center gap-2 mt-1">
+              {ticket.category && <span className="text-[10px] text-slate-400">{CATEGORY_LABELS[ticket.category] || ticket.category}</span>}
+              {dateStr && <span className="text-[10px] text-slate-400">{dateStr}</span>}
             </div>
           </div>
-          {expanded ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />}
+          <div className="shrink-0 mt-1">
+            {expanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+          </div>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-border/50 pt-3">
-          {/* AI summary */}
+        <div className="px-4 pb-4 space-y-4 border-t border-slate-100 pt-3">
           {ticket.ai_summary && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="text-[10px] font-semibold text-blue-700 uppercase mb-1">Résumé IA</p>
-              <p className="text-xs text-blue-900">{ticket.ai_summary}</p>
+            <div className="bg-violet-50 border border-violet-100 rounded-xl p-3">
+              <p className="text-[10px] font-bold text-violet-600 uppercase mb-1">✨ Résumé IA</p>
+              <p className="text-xs text-violet-900">{ticket.ai_summary}</p>
             </div>
           )}
-
-          {/* Original request */}
           {ticket.customer_request && (
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-[10px] font-semibold text-gray-500 uppercase mb-1">Demande originale</p>
-              <p className="text-xs text-gray-700 italic">"{ticket.customer_request}"</p>
+            <div className="bg-slate-50 rounded-xl p-3">
+              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Demande originale</p>
+              <p className="text-xs text-slate-700 leading-relaxed">"{ticket.customer_request}"</p>
             </div>
           )}
-
-          {/* Conversation */}
           {ticket.conversation_context && (
-            <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Historique de la conversation</p>
-              <div className="bg-muted/40 rounded-xl p-3 max-h-48 overflow-y-auto">
-                <p className="text-xs text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">{ticket.conversation_context}</p>
-              </div>
+            <div className="bg-slate-50 rounded-xl p-3">
+              <p className="text-[10px] font-bold text-slate-500 uppercase mb-1">Historique</p>
+              <p className="text-xs text-slate-600 whitespace-pre-wrap font-mono leading-relaxed max-h-40 overflow-y-auto">{ticket.conversation_context}</p>
             </div>
           )}
 
-          {/* Status change */}
           <div>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Changer le statut</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Changer le statut</p>
             <div className="flex flex-wrap gap-1.5">
               {STATUS_TRANSITIONS.filter(s => s.value !== ticket.status).map(s => (
-                <button key={s.value} onClick={() => updateMut.mutate({ status: s.value, ...(s.value === 'resolved' ? { resolved_at: new Date().toISOString() } : {}) })}
-                  className={`text-xs px-3 py-1.5 rounded-lg border font-medium transition-colors ${STATUS_CONFIG[s.value]?.color} border`}>
-                  {s.label}
-                </button>
+                <button key={s.value}
+                  onClick={() => updateMut.mutate({ status: s.value, ...(s.value === 'resolved' ? { resolved_at: new Date().toISOString() } : {}) })}
+                  className={`text-xs px-3 py-2 rounded-xl font-semibold cursor-pointer active:scale-95 transition-transform ${STATUS_CONFIG[s.value]?.bg || 'bg-slate-100 text-slate-600'}`}
+                >{s.label}</button>
               ))}
             </div>
           </div>
 
-          {/* Admin response */}
           <div>
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase mb-2">Réponse admin</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase mb-2">Réponse admin</p>
             <textarea
               rows={3}
               value={response}
               onChange={e => setResponse(e.target.value)}
-              placeholder="Répondre au client (envoyé par email)..."
-              className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-muted/40 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+              placeholder="Répondre au client…"
+              className="w-full text-sm border border-slate-200 rounded-xl px-3 py-2.5 bg-slate-50 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-400"
             />
             <button
               onClick={() => updateMut.mutate({ admin_response: response })}
               disabled={updateMut.isPending || !response.trim()}
-              className="mt-2 text-xs px-4 py-2 rounded-lg text-white font-semibold disabled:opacity-40 flex items-center gap-1.5"
-              style={{ backgroundColor: '#1a1a2e' }}
+              className="mt-2 w-full py-2.5 rounded-xl bg-violet-600 text-white text-xs font-semibold flex items-center justify-center gap-1.5 disabled:opacity-40 cursor-pointer active:scale-95 transition-transform"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              {updateMut.isPending ? 'Enregistrement...' : 'Enregistrer la réponse'}
+              {updateMut.isPending ? 'Enregistrement…' : 'Enregistrer la réponse'}
             </button>
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
 
@@ -160,6 +167,7 @@ export default function SupportTicketsTab() {
   });
 
   const newCount = tickets.filter(t => t.status === 'new').length;
+  const resolved = tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
 
   const filtered = tickets.filter(t => {
     const matchStatus = statusFilter === 'all' || t.status === statusFilter;
@@ -167,53 +175,61 @@ export default function SupportTicketsTab() {
     return matchStatus && matchPriority;
   });
 
+  if (isLoading) return (
+    <div className="space-y-3">
+      {[...Array(4)].map((_, i) => <div key={i} className="h-20 bg-slate-100 rounded-2xl animate-pulse" />)}
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {/* Summary */}
-      <div className="grid grid-cols-3 gap-2">
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Total', value: tickets.length, icon: Ticket, color: 'text-blue-600' },
-          { label: 'Nouveaux', value: newCount, icon: AlertTriangle, color: 'text-orange-600' },
-          { label: 'Résolus', value: tickets.filter(t => t.status === 'resolved' || t.status === 'closed').length, icon: CheckCircle, color: 'text-green-600' },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card rounded-xl border border-border p-3 text-center">
-            <Icon className={`w-4 h-4 mx-auto mb-1 ${color}`} />
-            <p className="text-lg font-bold">{value}</p>
-            <p className="text-[10px] text-muted-foreground">{label}</p>
+          { label: 'Total',    value: tickets.length, color: 'text-slate-800' },
+          { label: 'Nouveaux', value: newCount,        color: newCount > 0 ? 'text-blue-600' : 'text-slate-800' },
+          { label: 'Résolus',  value: resolved,        color: 'text-emerald-600' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="bg-white rounded-2xl border border-slate-100 p-3 text-center">
+            <p className={`text-2xl font-black tabular-nums ${color}`}>{value}</p>
+            <p className="text-[10px] text-slate-500 font-medium mt-0.5">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
       <div className="space-y-2">
-        <div className="flex gap-1.5 flex-wrap">
-          {[{ value: 'all', label: 'Tous' }, ...STATUS_TRANSITIONS].map(s => (
-            <button key={s.value} onClick={() => setStatusFilter(s.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusFilter === s.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
-              {s.label}
-              {s.value === 'new' && newCount > 0 && (
-                <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[9px] px-1.5 py-0.5">{newCount}</span>
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          {FILTER_TABS.map(f => (
+            <button key={f.value} onClick={() => setStatusFilter(f.value)}
+              className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                statusFilter === f.value ? 'bg-violet-600 text-white' : 'bg-white text-slate-600 border border-slate-200'
+              }`}>
+              {f.label}
+              {f.value === 'new' && newCount > 0 && (
+                <span className="bg-blue-500 text-white rounded-full text-[9px] px-1.5 py-0.5 font-bold">{newCount}</span>
               )}
             </button>
           ))}
         </div>
-        <div className="flex gap-1.5 flex-wrap">
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {[{ value: 'all', label: 'Toutes priorités' }, ...Object.entries(PRIORITY_CONFIG).map(([v, c]) => ({ value: v, label: c.label }))].map(p => (
             <button key={p.value} onClick={() => setPriorityFilter(p.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${priorityFilter === p.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
+              className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                priorityFilter === p.value ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200'
+              }`}>
               {p.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* List */}
-      {isLoading ? (
-        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-14 text-muted-foreground">
-          <Ticket className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Aucun ticket</p>
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-100 py-16 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+            <CheckCircle className="w-6 h-6 text-emerald-500" />
+          </div>
+          <p className="text-sm font-semibold text-slate-600">Aucun ticket</p>
         </div>
       ) : (
         <div className="space-y-3">
