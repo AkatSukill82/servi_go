@@ -153,34 +153,34 @@ export default function ProPublicProfile() {
   const isVerified = pro.verification_status === 'verified';
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-white pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-primary/80 text-white px-5 pt-14 pb-8 relative">
+      <div className="bg-white text-slate-900 px-5 pt-14 pb-8 relative border-b border-slate-200">
         <div className="absolute top-4 left-4">
           <BackButton fallback="/Home" />
         </div>
         <div className="flex items-start gap-4">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/30 shrink-0 bg-primary-foreground/20 flex items-center justify-center">
-            {pro.photo_url
-              ? <img src={pro.photo_url} alt={displayName} className="w-full h-full object-cover" />
-              : <span className="text-2xl font-bold text-white">{initials}</span>
-            }
+          <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-slate-200 shrink-0 bg-slate-100 flex items-center justify-center">
+           {pro.photo_url
+             ? <img src={pro.photo_url} alt={displayName} className="w-full h-full object-cover" />
+             : <span className="text-2xl font-bold text-slate-700">{initials}</span>
+           }
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold">{displayName}</h1>
               {isVerified && (
-                <span className="flex items-center gap-1 text-[10px] font-bold bg-white/20 text-white rounded-full px-2 py-0.5">
+                <span className="flex items-center gap-1 text-[10px] font-bold bg-green-100 text-green-700 rounded-full px-2 py-0.5">
                   <ShieldCheck className="w-3 h-3" /> Vérifié
                 </span>
               )}
             </div>
-            <p className="text-sm text-white/80 mt-0.5">{pro.category_name || 'Artisan ServiGo'}</p>
+            <p className="text-sm text-slate-600 mt-0.5">{pro.category_name || 'Artisan ServiGo'}</p>
             {avgRating && (
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <StarRating rating={Number(avgRating)} />
-                <span className="text-sm font-bold">{avgRating}</span>
-                <span className="text-xs text-white/70">({reviews.length} avis)</span>
+             <div className="flex items-center gap-2 mt-2 flex-wrap">
+               <StarRating rating={Number(avgRating)} />
+               <span className="text-sm font-bold text-slate-900">{avgRating}</span>
+               <span className="text-xs text-slate-600">({reviews.length} avis)</span>
                 {Number(avgRating) >= 4.5 && (
                   <span className="flex items-center gap-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
                     ⭐ Top Pro
@@ -189,7 +189,7 @@ export default function ProPublicProfile() {
               </div>
             )}
             {pro.address && (
-              <p className="flex items-center gap-1 text-xs text-white/70 mt-1">
+              <p className="flex items-center gap-1 text-xs text-slate-600 mt-1">
                 <MapPin className="w-3 h-3 shrink-0" />
                 {pro.address.split(',').slice(0, 2).join(',')}
               </p>
