@@ -16,6 +16,7 @@ import TopBar from '@/components/layout/TopBar';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
 import { useProDashboard } from '@/hooks/useProDashboard';
+import ExportComptaButton from '@/components/pro/ExportComptaButton';
 
 const getMinutesAgo = (date) => {
   if (!date) return 0;
@@ -214,7 +215,12 @@ export default function ProDashboard() {
           ))}
         </div>
 
-        {activeTab === 'stats' && <ProStats userEmail={user?.email} />}
+        {activeTab === 'stats' && (
+          <div className="space-y-4">
+            <ProStats userEmail={user?.email} />
+            <ExportComptaButton userEmail={user?.email} userName={user?.full_name} />
+          </div>
+        )}
 
         {activeTab === 'missions' && (
           <div className="space-y-4">
