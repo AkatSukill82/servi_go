@@ -209,7 +209,7 @@ export default function MissionHistory() {
   const displayed = tab === 'active' ? active : done;
 
   return (
-    <div className="min-h-full bg-background pb-6">
+    <div className="min-h-full bg-background pb-safe overflow-x-hidden">
       {ratingTarget && (
         <RatingModal
           request={ratingTarget}

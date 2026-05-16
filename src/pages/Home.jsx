@@ -100,7 +100,7 @@ export default function Home() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="min-h-full bg-[#F2F3F7]">
+      <div className="min-h-full bg-[#F2F3F7] overflow-x-hidden pb-safe">
         <OnboardingModal />
         <LocationPermissionModal />
         <TopBar />

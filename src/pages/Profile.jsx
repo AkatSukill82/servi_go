@@ -126,7 +126,7 @@ export default function Profile() {
   const eidVerified = user?.eid_status === 'verified';
 
   return (
-    <div className="min-h-full bg-background">
+    <div className="min-h-full bg-background overflow-x-hidden">
       <TopBar />
       {/* Hero Card */}
       <div className="bg-card border-b border-border/50 shadow-sm px-5 pt-8 pb-6">
@@ -211,7 +211,7 @@ export default function Profile() {
         )}
       </div>
 
-      <div className="px-4 pb-0 space-y-4 mt-1">
+      <div className="px-4 pb-safe space-y-4 mt-1">
         {/* ─── ONGLET INFOS ─── */}
         {tab === 'infos' &&
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
