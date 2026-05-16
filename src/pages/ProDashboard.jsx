@@ -16,6 +16,7 @@ import TopBar from '@/components/layout/TopBar';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
 import { useProDashboard } from '@/hooks/useProDashboard';
+import { useProMissions } from '@/hooks/useProMissions';
 import ExportComptaButton from '@/components/pro/ExportComptaButton';
 
 const getMinutesAgo = (date) => {
@@ -32,12 +33,16 @@ export default function ProDashboard() {
   const [invoiceAmount, setInvoiceAmount] = useState('');
   const [invoicePaymentMethod, setInvoicePaymentMethod] = useState('cash');
   const [invoiceCreating, setInvoiceCreating] = useState(false);
+  const [missionPage, setMissionPage] = useState(1);
 
   const {
     user, proVerif, eidApproved, subscription, hasActiveSub,
     incomingRequests, assignedRequests, activeJobs, completedJobs,
     upcomingJob, myReviews, acceptMutation, statusMutation, navigate,
   } = useProDashboard();
+
+  // Paginated missions (20 per page max)
+  const { missions: paginatedMissions, pagination: missionPagination } = useProMissions(missionPage, 'all', 20);
 
   const firstName = getFirstName(user);
   const greeting = getGreeting();

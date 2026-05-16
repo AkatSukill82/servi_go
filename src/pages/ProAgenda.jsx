@@ -2,12 +2,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { base44 } from '@/api/base44Client';
+import { useProMissions } from '@/hooks/useProMissions';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, List, MapPin, Clock, Phone, Euro, CheckCircle, XCircle, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BRAND } from '@/lib/theme';
 import { motion, AnimatePresence } from 'framer-motion';
+import ProPaginationControls from '@/components/pro/ProPaginationControls';
 
 const STATUS_CONFIG = {
   pending_pro:      { label: 'En attente',   bg: 'rgba(253,203,110,0.15)', color: '#B7870A' },
@@ -132,23 +134,14 @@ export default function ProAgenda() {
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [decliningReq, setDecliningReq] = useState(null);
   const [acceptingId, setAcceptingId] = useState(null);
+  const [agendaPage, setAgendaPage] = useState(1);
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
-  const thirtyDaysAgo = subDays(new Date(), 30).toISOString().split('T')[0];
-
-  const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ['proAgenda', user?.email],
-    queryFn: () => base44.entities.ServiceRequestV2.filter(
-      { professional_email: user.email },
-      '-created_date',
-      200
-    ).then(reqs => reqs.filter(r =>
-      ['pending_pro', 'accepted', 'contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'completed', 'cancelled'].includes(r.status)
-    )),
-    enabled: !!user?.email,
-    refetchInterval: 30000,
-  });
+  // Paginated missions (50 per page max)
+  const { missions: paginatedAppointments, pagination: agendaPagination } = useProMissions(agendaPage, 'all', 50);
+  const isLoading = !paginatedAppointments;
+  const appointments = paginatedAppointments || [];
 
   // Real-time updates
   React.useEffect(() => {
@@ -287,7 +280,7 @@ export default function ProAgenda() {
         <div>
           <h1 className="text-2xl font-black tracking-tight text-foreground">Agenda</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {appointments.length} rendez-vous
+            {agendaPagination.total} rendez-vous
             {pendingCount > 0 && <span className="ml-2 text-yellow-600 font-semibold">· {pendingCount} en attente</span>}
           </p>
         </div>
@@ -478,6 +471,15 @@ export default function ProAgenda() {
             </>
           )}
         </div>
+      )}
+
+      {/* Pagination for large datasets */}
+      {agendaPagination.totalPages > 1 && (
+        <ProPaginationControls
+          pagination={agendaPagination}
+          currentPage={agendaPage}
+          onPageChange={setAgendaPage}
+        />
       )}
 
       {/* Decline modal */}
