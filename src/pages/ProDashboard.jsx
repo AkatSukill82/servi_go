@@ -1,7 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Check, Clock, MapPin, Star, ChevronRight, CreditCard,
@@ -13,11 +10,12 @@ import ProStats from '@/components/pro/ProStats';
 import ClientScoreBadge from '@/components/pro/ClientScoreBadge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useNotifications } from '@/hooks/useNotifications';
+import { base44 } from '@/api/base44Client';
 import MissionProgress from '@/components/mission/MissionProgress';
 import TopBar from '@/components/layout/TopBar';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
+import { useProDashboard } from '@/hooks/useProDashboard';
 
 const getMinutesAgo = (date) => {
   if (!date) return 0;
@@ -25,10 +23,6 @@ const getMinutesAgo = (date) => {
 };
 
 export default function ProDashboard() {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { requestPermission, notify } = useNotifications();
-  const prevCountRef = useRef(null);
   const [activeTab, setActiveTab] = useState('missions');
   const [showReviewModal, setShowReviewModal] = useState(null);
   const [proRating, setProRating] = useState(5);
@@ -38,246 +32,29 @@ export default function ProDashboard() {
   const [invoicePaymentMethod, setInvoicePaymentMethod] = useState('cash');
   const [invoiceCreating, setInvoiceCreating] = useState(false);
 
-  useEffect(() => { requestPermission(); }, [requestPermission]);
-
-  // ─── Data fetching ─────────────────────────────────────────────────────────
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-    staleTime: 60000,
-  });
+  const {
+    user, proVerif, eidApproved, subscription, hasActiveSub,
+    incomingRequests, assignedRequests, activeJobs, completedJobs,
+    upcomingJob, myReviews, acceptMutation, statusMutation, navigate,
+  } = useProDashboard();
 
   const firstName = getFirstName(user);
-  const greeting  = getGreeting();
-  const proCategory = user?.category_name;
+  const greeting = getGreeting();
 
-  const { data: proVerif } = useQuery({
-    queryKey: ['identityVerif', user?.email],
-    queryFn: () =>
-      base44.entities.IdentityVerification
-        .filter({ user_email: user.email }, '-created_date', 1)
-        .then(r => r[0] || null),
-    enabled: !!user?.email,
-    staleTime: 60000,
-  });
-  const eidApproved = proVerif?.status === 'approved' || user?.eid_status === 'verified';
-
-  // Independence charter gate
-  useEffect(() => {
-    if (!user) return;
-    const isPreview = window.location.hostname.includes('preview');
-    if (!isPreview && !user.independence_charter_signed) {
-      navigate('/IndependenceCharter', { replace: true });
-    }
-  }, [user, navigate]);
-
-  const { data: subscription } = useQuery({
-    queryKey: ['proSubscription', user?.email],
-    queryFn: () =>
-      base44.entities.ProSubscription
-        .filter({ professional_email: user.email }, '-created_date')
-        .then(subs => {
-          const PRIORITY = { active: 0, trial: 1, pending_payment: 2, expired: 3, cancelled: 4 };
-          return [...subs].sort((a, b) => (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9))[0] || null;
-        }),
-    enabled: !!user?.email,
-  });
-
-  // Auto-expire subscription
-  useEffect(() => {
-    if (!subscription || subscription.status !== 'active') return;
-    if (new Date(subscription.renewal_date) < new Date()) {
-      base44.entities.ProSubscription.update(subscription.id, { status: 'expired', auto_renew: false }).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ['proSubscription', user?.email] });
-    }
-  }, [subscription]);
-
-  const hasActiveSub = subscription?.status === 'active' || subscription?.status === 'trial';
-
-  // Pool requests (open to all pros in this category)
-  const { data: poolRequests = [] } = useQuery({
-    queryKey: ['poolRequests', proCategory],
-    queryFn: () =>
-      base44.entities.ServiceRequestV2
-        .filter({ category_name: proCategory, status: 'searching' }, '-created_date'),
-    enabled: !!proCategory,
-    staleTime: 30000,
-  });
-
-  // Requests assigned specifically to this pro
-  const { data: assignedRequests = [] } = useQuery({
-    queryKey: ['assignedRequests', user?.email],
-    queryFn: () =>
-      base44.entities.ServiceRequestV2
-        .filter({ professional_email: user.email, status: 'pending_pro' }, '-created_date'),
-    enabled: !!user?.email,
-    staleTime: 30000,
-  });
-
-  // Merge, deduplicate, assigned first
-  const incomingRequests = useMemo(() => {
-    const seen = new Set();
-    return [
-      ...assignedRequests.filter(r => !seen.has(r.id) && seen.add(r.id)),
-      ...poolRequests.filter(r => !seen.has(r.id) && seen.add(r.id)),
-    ];
-  }, [assignedRequests, poolRequests]);
-
-  // Real-time subscription for missions
-  useEffect(() => {
-    if (!proCategory || !user?.email) return;
-    const unsub = base44.entities.ServiceRequestV2.subscribe(() => {
-      queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
-      queryClient.invalidateQueries({ queryKey: ['assignedRequests', user.email] });
+  const handleStatusUpdate = (id, status, job) => {
+    statusMutation.mutate({ id, status, job }, {
+      onSuccess: () => {
+        if (status === 'completed' && job) {
+          setShowInvoiceModal(job);
+          setInvoiceAmount('');
+          setInvoicePaymentMethod('cash');
+        }
+      },
+      onError: () => {
+        toast.error('Erreur lors de la mise à jour. Réessayez.');
+      },
     });
-    return unsub;
-  }, [proCategory, user?.email]);
-
-  // Notification on new mission
-  useEffect(() => {
-    const count = incomingRequests.length;
-    if (prevCountRef.current !== null && count > prevCountRef.current && incomingRequests[0]) {
-      notify('Nouvelle demande', `${incomingRequests[0].category_name} — ${incomingRequests[0].customer_address || ''}`);
-    }
-    prevCountRef.current = count;
-  }, [incomingRequests, notify]);
-
-  // My jobs (all statuses)
-  const { data: myJobs = [] } = useQuery({
-    queryKey: ['myJobs', user?.email],
-    queryFn: () =>
-      base44.entities.ServiceRequestV2
-        .filter({ professional_email: user.email }, '-created_date', 20),
-    enabled: !!user?.email,
-    staleTime: 60000,
-  });
-
-  // GPS tracking for active missions — dépend d'un boolean stable, pas du tableau entier
-  const hasActiveMission = myJobs.some(j => ['accepted', 'pro_en_route', 'in_progress'].includes(j.status));
-  useEffect(() => {
-    if (!user?.id || !hasActiveMission || !navigator.geolocation) return;
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => base44.entities.User.update(user.id, { latitude: pos.coords.latitude, longitude: pos.coords.longitude }).catch(() => {}),
-      () => {},
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
-    );
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, [user?.id, hasActiveMission]);
-
-  const { data: myReviews = [] } = useQuery({
-    queryKey: ['myReviews', user?.email],
-    queryFn: () => base44.entities.Review.filter({ professional_email: user.email }, '-created_date', 5),
-    enabled: !!user?.email,
-    staleTime: 120000,
-  });
-
-  // ─── Mutations ─────────────────────────────────────────────────────────────
-  const acceptMutation = useMutation({
-    mutationFn: async ({ requestId, request }) => {
-      const fresh = await base44.entities.ServiceRequestV2
-        .filter({ id: requestId }).then(r => r[0]);
-      if (!fresh || !['searching', 'pending_pro'].includes(fresh.status)) {
-        throw new Error('Mission déjà prise');
-      }
-      await base44.entities.ServiceRequestV2.update(requestId, {
-        status: 'contract_pending',
-        professional_id: user.id,
-        professional_name: user.full_name,
-        professional_email: user.email,
-      });
-      await base44.entities.MissionContract.create({
-        request_id: requestId,
-        contract_number: `CTR-${Date.now()}`,
-        customer_email: request.customer_email,
-        customer_name: request.customer_name,
-        customer_phone: request.customer_phone || '',
-        customer_address: request.customer_address,
-        professional_email: user.email,
-        professional_name: user.full_name,
-        professional_phone: user.phone,
-        professional_bce: user.bce_number,
-        category_name: request.category_name,
-        service_description: request.answers?.length > 0
-          ? request.answers.map(a => `${a.question}: ${a.answer}`).join(' | ')
-          : request.category_name,
-        scheduled_date: request.scheduled_date,
-        scheduled_time: request.scheduled_time,
-        estimated_duration_hours: 2,
-        agreed_price: request.estimated_price || 0,
-        cancellation_policy: 'free_24h',
-        payment_terms: 'after_completion',
-        status: 'sent_to_customer',
-      });
-      await base44.entities.Notification.create({
-        recipient_email: request.customer_email,
-        recipient_type: 'particulier',
-        type: 'contract_to_sign',
-        title: `Mission acceptée par ${user.full_name}`,
-        body: 'Un contrat de mission vous a été envoyé. Signez-le pour démarrer.',
-        request_id: requestId,
-        action_url: `/Chat?requestId=${requestId}`,
-      });
-      if (subscription?.id) {
-        await base44.entities.ProSubscription.update(subscription.id, {
-          missions_received: (subscription.missions_received || 0) + 1,
-        });
-      }
-    },
-    onMutate: async ({ requestId }) => {
-      await queryClient.cancelQueries({ queryKey: ['poolRequests', proCategory] });
-      const previous = queryClient.getQueryData(['poolRequests', proCategory]);
-      queryClient.setQueryData(['poolRequests', proCategory], old => (old || []).filter(r => r.id !== requestId));
-      return { previous };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['poolRequests', proCategory] });
-      queryClient.invalidateQueries({ queryKey: ['assignedRequests', user?.email] });
-      queryClient.invalidateQueries({ queryKey: ['myJobs', user?.email] });
-      toast.success('Mission acceptée ! Un contrat a été envoyé au client.');
-    },
-    onError: (_, __, ctx) => {
-      if (ctx?.previous) queryClient.setQueryData(['poolRequests', proCategory], ctx.previous);
-      toast.error('Mission déjà prise. Réessayez.');
-    },
-  });
-
-  const statusMutation = useMutation({
-    mutationFn: async ({ id, status, job }) => {
-      await base44.entities.ServiceRequestV2.update(id, { status });
-      if (status === 'completed' && job && !job.review_requested) {
-        await base44.entities.ServiceRequestV2.update(id, { review_requested: true });
-        await base44.entities.Notification.create({
-          recipient_email: job.customer_email,
-          recipient_type: 'particulier',
-          type: 'review_request',
-          title: "Comment s'est passée votre mission ?",
-          body: `Évaluez ${user?.full_name || 'votre artisan'} pour sa prestation ${job.category_name}.`,
-          request_id: id,
-          action_url: `/Chat?requestId=${id}`,
-        });
-        // Award loyalty points to customer
-        base44.functions.invoke('awardLoyaltyPoints', {
-          user_email: job.customer_email,
-          user_name: job.customer_name || '',
-          user_type: 'particulier',
-          points_to_add: 50,
-          reason: `Mission ${job.category_name} complétée`,
-        }).catch(() => {});
-      }
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['myJobs', user?.email] });
-      toast.success('Statut mis à jour !');
-      if (variables.status === 'completed' && variables.job) {
-        setShowInvoiceModal(variables.job);
-        setInvoiceAmount('');
-        setInvoicePaymentMethod('cash');
-      }
-    },
-    onError: () => {
-      toast.error('Erreur lors de la mise à jour. Réessayez.');
-    },
-  });
+  };
 
   const handleCreateInvoice = async () => {
     const job = showInvoiceModal;
@@ -324,37 +101,23 @@ export default function ProDashboard() {
     }
   };
 
-  // ─── Computed ──────────────────────────────────────────────────────────────
-  const activeJobs = myJobs.filter(j =>
-    ['contract_pending', 'contract_signed', 'pro_en_route', 'in_progress', 'accepted'].includes(j.status)
-  );
-  const completedJobs = myJobs.filter(j => j.status === 'completed');
-
-  const upcomingJob = myJobs.find(j => {
-    if (!['contract_signed', 'accepted'].includes(j.status) || !j.scheduled_date) return false;
-    const d = new Date(j.scheduled_date);
-    return d >= new Date() && d <= new Date(Date.now() + 24 * 3600 * 1000);
-  });
-
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-full bg-background">
       <TopBar />
 
-      {/* Hero gradient */}
       <div className="relative px-4 pt-5 pb-6"
         style={{ background: `linear-gradient(160deg, #1a0533 0%, ${BRAND} 70%, #a78bfa 100%)` }}>
         <div className="mb-4">
           <p className="text-white/60 text-sm font-medium">
             {greeting}{firstName ? `, ${firstName}` : ''} 👋
           </p>
-          <p className="text-white font-bold text-base mt-0.5">{proCategory || 'Professionnel ServiGo'}</p>
+          <p className="text-white font-bold text-base mt-0.5">{user?.category_name || 'Professionnel ServiGo'}</p>
         </div>
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Terminées', value: completedJobs.length },
-            { label: 'En cours',  value: activeJobs.length },
-            { label: 'Note',      value: user?.rating ? `${user.rating.toFixed(1)} ⭐` : '—' },
+            { label: 'En cours', value: activeJobs.length },
+            { label: 'Note', value: user?.rating ? `${user.rating.toFixed(1)} ⭐` : '—' },
           ].map(({ label, value }) => (
             <div key={label} className="bg-white/10 rounded-2xl p-3 text-center backdrop-blur">
               <p className="text-2xl font-black text-white leading-none">{value}</p>
@@ -366,7 +129,6 @@ export default function ProDashboard() {
 
       <div className="px-4 pt-4 pb-8 space-y-4">
 
-        {/* Mission demain */}
         {upcomingJob && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
             <span className="text-xl shrink-0">⏰</span>
@@ -379,12 +141,9 @@ export default function ProDashboard() {
           </div>
         )}
 
-        {/* Vérification eID */}
         {user && !eidApproved && (
           <div className={`border rounded-2xl p-4 flex items-center gap-3 ${
-            proVerif?.status === 'pending_review'
-              ? 'bg-blue-50 border-blue-200'
-              : 'bg-red-50 border-red-200'
+            proVerif?.status === 'pending_review' ? 'bg-blue-50 border-blue-200' : 'bg-red-50 border-red-200'
           }`}>
             <span className="text-lg shrink-0">{proVerif?.status === 'pending_review' ? '⏳' : '🪪'}</span>
             <div className="flex-1">
@@ -398,15 +157,13 @@ export default function ProDashboard() {
               </p>
             </div>
             {proVerif?.status !== 'pending_review' && (
-              <button onClick={() => navigate('/EidVerification')}
-                className="text-xs font-black text-red-700 underline shrink-0">
+              <button onClick={() => navigate('/EidVerification')} className="text-xs font-black text-red-700 underline shrink-0">
                 Vérifier →
               </button>
             )}
           </div>
         )}
 
-        {/* Abonnement banner */}
         {!hasActiveSub ? (
           <button onClick={() => navigate('/ProSubscription')}
             className="w-full rounded-2xl p-4 text-left flex items-center gap-3 text-white tap-scale"
@@ -435,18 +192,14 @@ export default function ProDashboard() {
           </button>
         )}
 
-        {/* Tabs */}
         <div className="flex gap-2 bg-muted p-1 rounded-2xl">
           {[['missions', 'Missions', incomingRequests.length], ['stats', 'Statistiques', 0]].map(([key, label, count]) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
+            <button key={key} onClick={() => setActiveTab(key)}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-all"
               style={activeTab === key
                 ? { background: 'white', color: BRAND, boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }
                 : { color: '#9CA3AF' }
-              }
-            >
+              }>
               {label}
               {count > 0 && (
                 <span className="text-[10px] font-black rounded-full px-1.5 py-0.5"
@@ -461,14 +214,11 @@ export default function ProDashboard() {
           ))}
         </div>
 
-        {/* Stats tab */}
         {activeTab === 'stats' && <ProStats userEmail={user?.email} />}
 
-        {/* Missions tab */}
         {activeTab === 'missions' && (
           <div className="space-y-4">
 
-            {/* Preview floue si pas abonné */}
             {!hasActiveSub && incomingRequests.length > 0 && (
               <div className="relative rounded-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
@@ -492,15 +242,13 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Demandes disponibles */}
             {hasActiveSub && (
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-base font-black text-foreground">
                     Demandes disponibles
                     {incomingRequests.length > 0 && (
-                      <span className="ml-2 text-xs font-bold rounded-full px-2 py-0.5 text-white"
-                        style={{ background: BRAND }}>
+                      <span className="ml-2 text-xs font-bold rounded-full px-2 py-0.5 text-white" style={{ background: BRAND }}>
                         {incomingRequests.length}
                       </span>
                     )}
@@ -518,7 +266,7 @@ export default function ProDashboard() {
                     <Clock className="w-8 h-8 text-border mx-auto mb-2" strokeWidth={1.5} />
                     <p className="text-sm font-bold text-foreground">Aucune demande pour l'instant</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Les nouvelles missions de {proCategory || 'votre métier'} apparaîtront ici
+                      Les nouvelles missions de {user?.category_name || 'votre métier'} apparaîtront ici
                     </p>
                   </div>
                 ) : (
@@ -527,28 +275,17 @@ export default function ProDashboard() {
                       const isAssigned = assignedRequests.some(a => a.id === req.id);
                       const minsAgo = isAssigned ? getMinutesAgo(req.created_date) : null;
                       return (
-                        <motion.div
-                          key={req.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="bg-white rounded-2xl p-4"
-                          style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
-                        >
+                        <motion.div key={req.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                          className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
                           <div className="flex items-start gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg"
-                              style={{ background: `${BRAND}10` }}>
+                            <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 text-lg" style={{ background: `${BRAND}10` }}>
                               {req.is_urgent ? '⚡' : '📋'}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-bold text-sm text-foreground">{req.category_name}</p>
-                                {isAssigned && (
-                                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">Pour vous</span>
-                                )}
-                                {req.is_urgent && (
-                                  <span className="text-[10px] font-bold bg-red-100 text-red-600 rounded-full px-2 py-0.5">⚡ SOS</span>
-                                )}
+                                {isAssigned && <span className="text-[10px] font-bold bg-blue-100 text-blue-700 rounded-full px-2 py-0.5">Pour vous</span>}
+                                {req.is_urgent && <span className="text-[10px] font-bold bg-red-100 text-red-600 rounded-full px-2 py-0.5">⚡ SOS</span>}
                               </div>
                               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                                 <MapPin className="w-3 h-3 shrink-0" />
@@ -560,13 +297,10 @@ export default function ProDashboard() {
                                 </p>
                               )}
                               {minsAgo !== null && (
-                                <p className="text-xs text-orange-600 font-medium mt-1">
-                                  ⏰ En attente depuis {minsAgo} min — répondez vite !
-                                </p>
+                                <p className="text-xs text-orange-600 font-medium mt-1">⏰ En attente depuis {minsAgo} min — répondez vite !</p>
                               )}
                             </div>
                           </div>
-
                           {req.answers?.length > 0 && (
                             <div className="bg-muted/50 rounded-xl p-3 mb-3 space-y-1">
                               {req.answers.slice(0, 2).map((a, idx) => (
@@ -577,24 +311,18 @@ export default function ProDashboard() {
                               ))}
                             </div>
                           )}
-
-                          {/* Score client */}
                           {req.customer_email && (
                             <div className="mb-3">
                               <ClientScoreBadge customerEmail={req.customer_email} compact />
                             </div>
                           )}
-
                           <button
                             onClick={() => acceptMutation.mutate({ requestId: req.id, request: req })}
                             disabled={acceptMutation.isPending}
                             className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-white active:scale-[0.98] transition-transform disabled:opacity-50"
                             style={{ background: `linear-gradient(135deg, ${BRAND}, #a78bfa)` }}
                           >
-                            {acceptMutation.isPending
-                              ? <Loader2 className="w-4 h-4 animate-spin" />
-                              : <Check className="w-4 h-4" strokeWidth={2.5} />
-                            }
+                            {acceptMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" strokeWidth={2.5} />}
                             Accepter cette mission
                           </button>
                         </motion.div>
@@ -605,14 +333,12 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Missions en cours */}
             {hasActiveSub && activeJobs.length > 0 && (
               <div>
                 <h2 className="text-base font-black text-foreground mb-3">Missions en cours</h2>
                 <div className="space-y-3">
                   {activeJobs.map(job => (
-                    <div key={job.id} className="bg-white rounded-2xl p-4 space-y-3"
-                      style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+                    <div key={job.id} className="bg-white rounded-2xl p-4 space-y-3" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-black text-muted-foreground">
                           {(job.customer_first_name || job.customer_name || 'C')[0]}
@@ -634,19 +360,19 @@ export default function ProDashboard() {
                         </Button>
                         {job.status === 'contract_signed' && (
                           <Button size="sm" className="flex-1 rounded-xl h-10 text-xs bg-emerald-500 hover:bg-emerald-600 border-0"
-                            onClick={() => statusMutation.mutate({ id: job.id, status: 'pro_en_route', job })}>
+                            onClick={() => handleStatusUpdate(job.id, 'pro_en_route', job)}>
                             <Play className="w-3.5 h-3.5 mr-1" /> En route
                           </Button>
                         )}
                         {job.status === 'pro_en_route' && (
                           <Button size="sm" className="flex-1 rounded-xl h-10 text-xs bg-blue-600 hover:bg-blue-700 border-0"
-                            onClick={() => statusMutation.mutate({ id: job.id, status: 'in_progress', job })}>
+                            onClick={() => handleStatusUpdate(job.id, 'in_progress', job)}>
                             <Play className="w-3.5 h-3.5 mr-1" /> Démarrer
                           </Button>
                         )}
                         {job.status === 'in_progress' && (
                           <Button size="sm" className="flex-1 rounded-xl h-10 text-xs bg-emerald-500 hover:bg-emerald-600 border-0"
-                            onClick={() => statusMutation.mutate({ id: job.id, status: 'completed', job })}>
+                            onClick={() => handleStatusUpdate(job.id, 'completed', job)}>
                             <StopCircle className="w-3.5 h-3.5 mr-1" /> Terminer
                           </Button>
                         )}
@@ -657,14 +383,12 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Missions récentes terminées */}
             {hasActiveSub && completedJobs.length > 0 && (
               <div>
                 <h2 className="text-base font-black text-foreground mb-3">Missions récentes</h2>
                 <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                   {completedJobs.slice(0, 5).map((job) => (
-                    <button key={job.id}
-                      onClick={() => navigate(`/Chat?requestId=${job.id}`)}
+                    <button key={job.id} onClick={() => navigate(`/Chat?requestId=${job.id}`)}
                       className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-muted/50 border-b border-gray-50 last:border-0">
                       <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-black text-muted-foreground">
                         {(job.customer_first_name || job.customer_name || 'C')[0]}
@@ -685,26 +409,22 @@ export default function ProDashboard() {
               </div>
             )}
 
-            {/* Avis clients */}
             {hasActiveSub && myReviews.length > 0 && (
               <div>
                 <h2 className="text-base font-black text-foreground mb-3">Avis clients</h2>
                 <div className="space-y-3">
                   {myReviews.map(review => (
-                    <div key={review.id} className="bg-white rounded-2xl p-4"
-                      style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+                    <div key={review.id} className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
                       <div className="flex items-center justify-between mb-2">
                         <p className="text-sm font-bold">{review.customer_name || 'Client'}</p>
                         <div className="flex gap-0.5">
-                          {[1,2,3,4,5].map(s => (
+                          {[1, 2, 3, 4, 5].map(s => (
                             <Star key={s} style={{ width: 12, height: 12 }}
                               className={s <= review.rating ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'} />
                           ))}
                         </div>
                       </div>
-                      {review.comment && (
-                        <p className="text-xs text-muted-foreground leading-relaxed">"{review.comment}"</p>
-                      )}
+                      {review.comment && <p className="text-xs text-muted-foreground leading-relaxed">"{review.comment}"</p>}
                     </div>
                   ))}
                 </div>
@@ -790,19 +510,14 @@ export default function ProDashboard() {
                   : (showReviewModal?.customer_name || 'Client')}
               </p>
               <div className="flex gap-1 justify-center">
-                {[1,2,3,4,5].map(s => (
+                {[1, 2, 3, 4, 5].map(s => (
                   <button key={s} onClick={() => setProRating(s)} className="p-1">
                     <Star className={`w-8 h-8 transition-colors ${s <= proRating ? 'text-yellow-400 fill-yellow-400' : 'text-border'}`} />
                   </button>
                 ))}
               </div>
-              <Textarea
-                value={proComment}
-                onChange={e => setProComment(e.target.value)}
-                placeholder="Commentaire optionnel sur ce client..."
-                className="rounded-xl resize-none"
-                rows={3}
-              />
+              <Textarea value={proComment} onChange={e => setProComment(e.target.value)}
+                placeholder="Commentaire optionnel sur ce client..." className="rounded-xl resize-none" rows={3} />
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1 rounded-xl" onClick={() => setShowReviewModal(null)}>Passer</Button>
                 <Button className="flex-1 rounded-xl" onClick={async () => {

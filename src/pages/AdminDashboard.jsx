@@ -1,18 +1,16 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket, FileText, Shield, Mail, Receipt, Eye, X } from 'lucide-react';
-import MissionContractFull from '@/components/mission/MissionContractFull';
+import { Euro, AlertTriangle, Ban, Activity, Flag, Ticket, FileText, Shield, Mail, Receipt } from 'lucide-react';
+
+import OverviewTab from '@/components/admin/OverviewTab';
+import DisputesTab from '@/components/admin/DisputesTab';
+import BlacklistTab from '@/components/admin/BlacklistTab';
+import AdminDocumentsTab from '@/components/admin/AdminDocumentsTab';
+import ReportsTab from '@/components/admin/ReportsTab';
 import SupportTicketsTab from '@/components/admin/SupportTicketsTab';
 import DAC7Tab from '@/components/admin/DAC7Tab';
 import IndependenceTab from '@/components/admin/IndependenceTab';
-import { formatPrice, formatDateFr } from '@/utils/formatters';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { motion } from 'framer-motion';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 const TABS = [
   { key: 'overview', label: 'Aperçu', icon: Activity },
@@ -27,690 +25,6 @@ const TABS = [
   { key: 'email', label: 'Email', icon: Mail },
 ];
 
-const REASON_LABELS = {
-  comportement_agressif: 'Comportement agressif',
-  arnaque: 'Arnaque',
-  no_show: 'No-show',
-  travail_non_conforme: 'Travail non conforme',
-  fausse_identite: 'Fausse identité',
-  harcelement: 'Harcèlement',
-  danger_securite: 'Danger sécurité',
-  autre: 'Autre',
-};
-
-const PRIORITY_CONFIG = {
-  low: { label: 'Faible', color: 'bg-gray-100 text-gray-600' },
-  medium: { label: 'Moyen', color: 'bg-yellow-100 text-yellow-700' },
-  high: { label: 'Haut', color: 'bg-orange-100 text-orange-700' },
-  urgent: { label: 'Urgent', color: 'bg-red-100 text-red-700' },
-};
-
-const DISPUTE_STATUS = {
-  open: { label: 'Ouvert', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-  in_review: { label: 'En cours', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  resolved_customer: { label: 'Résolu (client)', color: 'bg-green-100 text-green-700 border-green-200' },
-  resolved_pro: { label: 'Résolu (pro)', color: 'bg-green-100 text-green-700 border-green-200' },
-  closed: { label: 'Fermé', color: 'bg-gray-100 text-gray-600 border-gray-200' },
-};
-
-const REPORT_STATUS = [
-  { value: 'all', label: 'Tous' },
-  { value: 'pending', label: 'En attente' },
-  { value: 'under_review', label: 'En examen' },
-  { value: 'resolved_warning', label: 'Avertissement' },
-  { value: 'resolved_banned', label: 'Banni' },
-  { value: 'dismissed', label: 'Rejeté' },
-];
-
-function ReportsTab() {
-  const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState('all');
-
-  const { data: reports = [], isLoading } = useQuery({
-    queryKey: ['adminReports'],
-    queryFn: () => base44.entities.Report.list('-created_date', 200),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data, report }) => {
-      await base44.entities.Report.update(id, data);
-      if (data.user_suspended) {
-        const users = await base44.entities.User.filter({ email: report.reported_user_email }, '-created_date', 1);
-        if (users.length > 0) await base44.entities.User.update(users[0].id, { is_blacklisted: true, blacklist_reason: `Banni suite signalement: ${REASON_LABELS[report.reason] || report.reason}` });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminReports'] });
-      toast.success('Signalement mis à jour');
-    },
-  });
-
-  const filtered = statusFilter === 'all' ? reports : reports.filter(r => r.status === statusFilter);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-2 flex-wrap">
-        {REPORT_STATUS.map(s => (
-          <button key={s.value} onClick={() => setStatusFilter(s.value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusFilter === s.value ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'}`}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-      {isLoading ? (
-        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-14 text-muted-foreground">
-          <Flag className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Aucun signalement</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map(r => {
-            const priority = PRIORITY_CONFIG[r.priority] || PRIORITY_CONFIG.medium;
-            return (
-              <div key={r.id} className="bg-card rounded-xl border border-border p-4 space-y-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm truncate">{r.reported_user_name}</p>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${r.reported_user_type === 'professionnel' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {r.reported_user_type === 'professionnel' ? 'Pro' : 'Client'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">{r.reported_user_email}</p>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      <span className="text-xs font-medium text-foreground">{REASON_LABELS[r.reason] || r.reason}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${priority.color}`}>{priority.label}</span>
-                    </div>
-                  </div>
-                </div>
-                {r.description && <p className="text-xs text-muted-foreground leading-relaxed">{r.description}</p>}
-                <div className="flex flex-wrap gap-2">
-                  {r.status !== 'under_review' && (
-                    <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'under_review' }, report: r })}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">En examen</button>
-                  )}
-                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'resolved_warning', user_suspended: false }, report: r })}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-yellow-200 text-yellow-700 bg-yellow-50 font-medium">Avertissement</button>
-                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'resolved_banned', user_suspended: true }, report: r })}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-700 bg-red-50 font-medium">Bannir</button>
-                  <button onClick={() => updateMutation.mutate({ id: r.id, data: { status: 'dismissed' }, report: r })}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">Rejeter</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Overview Tab ─────────────────────────────────────────────────────────────
-function OverviewTab() {
-  const queryClient = useQueryClient();
-  const [repairingRequests, setRepairingRequests] = useState(false);
-
-  const { data: allSubs = [] } = useQuery({
-    queryKey: ['adminAllSubsOv'],
-    queryFn: () => base44.entities.ProSubscription.list('-created_date', 300),
-  });
-  const { data: allRequests = [] } = useQuery({
-    queryKey: ['adminAllRequestsOv'],
-    queryFn: () => base44.entities.ServiceRequestV2.list('-created_date', 300),
-  });
-  const { data: allDisputes = [] } = useQuery({
-    queryKey: ['adminDisputesOv'],
-    queryFn: () => base44.entities.Dispute.list('-created_date', 100),
-  });
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['adminAllUsersOv'],
-    queryFn: () => base44.entities.User.list('-created_date', 200),
-  });
-
-  // Maintenance handlers
-  const handleRepairRequests = async () => {
-    const todayKey = `repairRun_${new Date().toISOString().slice(0, 10)}`;
-    if (localStorage.getItem(todayKey)) {
-      toast.error('Réparation déjà exécutée aujourd\'hui.');
-      return;
-    }
-    setRepairingRequests(true);
-    try {
-      // Fix duplicates in tried_professionals
-      const pendingPros = await base44.entities.ServiceRequestV2.filter({ status: 'pending_pro' }, '-created_date', 200);
-      for (const req of pendingPros) {
-        if (req.tried_professionals?.length > 0) {
-          const dedup = [...new Set(req.tried_professionals)];
-          if (dedup.length !== req.tried_professionals.length) {
-            await base44.entities.ServiceRequestV2.update(req.id, { tried_professionals: dedup });
-          }
-        }
-      }
-      // Cancel expired requests (>3 days old)
-      const expiredCutoff = new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0];
-      const allRequests = await base44.entities.ServiceRequestV2.list('-created_date', 300);
-      const expired = allRequests.filter(r => ['searching', 'pending_pro'].includes(r.status) && r.scheduled_date && r.scheduled_date < expiredCutoff);
-      for (const req of expired) {
-        await base44.entities.ServiceRequestV2.update(req.id, { status: 'cancelled', cancellation_reason: 'Expirée automatiquement' });
-      }
-      queryClient.invalidateQueries({ queryKey: ['adminAllRequestsOv'] });
-      localStorage.setItem(todayKey, '1');
-      toast.success(`Réparé: ${pendingPros.length} dédupliquées, ${expired.length} annulées`);
-    } catch (e) {
-      toast.error('Erreur: ' + e.message);
-    } finally {
-      setRepairingRequests(false);
-    }
-  };
-
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const today = now.toISOString().split('T')[0];
-
-  const activeSubs = allSubs.filter(s => s.status === 'active' || s.status === 'trial');
-  const expiredSubs = allSubs.filter(s => s.status === 'expired' && s.renewal_date && s.renewal_date < today);
-  const ongoingMissions = allRequests.filter(r => !['completed', 'cancelled'].includes(r.status));
-  const completedThisMonth = allRequests.filter(r => r.status === 'completed' && r.updated_date && new Date(r.updated_date) >= monthStart);
-  const monthRevenue = activeSubs.length * 10;
-  const openDisputes = allDisputes.filter(d => ['open', 'in_review'].includes(d.status));
-  const lastUsers = allUsers.slice(0, 5);
-  const lastRequests = allRequests.slice(0, 5);
-
-  const kpis = [
-    { label: 'Utilisateurs inscrits', value: allUsers.length, icon: Users, color: 'text-blue-600' },
-    { label: 'Abonnements actifs', value: activeSubs.length, icon: CheckCircle, color: 'text-green-600' },
-    { label: 'Abonnements expirés', value: expiredSubs.length, icon: AlertTriangle, color: 'text-red-500' },
-    { label: 'Missions en cours', value: ongoingMissions.length, icon: Activity, color: 'text-orange-600' },
-    { label: 'Terminées ce mois', value: completedThisMonth.length, icon: TrendingUp, color: 'text-purple-600' },
-    { label: 'Revenus abonnements', value: `${monthRevenue} €`, icon: Euro, color: 'text-green-700' },
-    { label: 'Litiges ouverts', value: openDisputes.length, icon: AlertTriangle, color: 'text-red-600' },
-  ];
-
-  return (
-    <div className="space-y-4">
-      {/* Expired subscriptions alert */}
-      {expiredSubs.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            <h3 className="font-semibold text-red-700">{expiredSubs.length} abonnement{expiredSubs.length !== 1 ? 's' : ''} expiré{expiredSubs.length !== 1 ? 's' : ''}</h3>
-          </div>
-          <div className="space-y-1.5">
-            {expiredSubs.slice(0, 5).map(s => (
-              <p key={s.id} className="text-xs text-red-600">
-                <span className="font-medium">{s.professional_name}</span> — Date d'expiration : {s.renewal_date}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="grid grid-cols-2 gap-3">
-        {kpis.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-card rounded-xl p-4 border border-border">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Icon className={`w-3.5 h-3.5 ${color}`} strokeWidth={1.8} />
-              <p className="text-xs text-muted-foreground font-medium">{label}</p>
-            </div>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border">Dernières inscriptions</p>
-        {lastUsers.map((u, i) => (
-          <div key={u.id} className={`flex items-center gap-3 px-4 py-3 ${i < lastUsers.length - 1 ? 'border-b border-border/50' : ''}`}>
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold shrink-0">{(u.full_name || u.email || '?')[0].toUpperCase()}</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : (u.full_name || u.email)}</p>
-              <p className="text-xs text-muted-foreground">{u.user_type || 'user'} · {formatDateFr(u.created_date)}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border">Dernières missions</p>
-        {lastRequests.map((r, i) => (
-          <div key={r.id} className={`flex items-center gap-3 px-4 py-3 ${i < lastRequests.length - 1 ? 'border-b border-border/50' : ''}`}>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{r.category_name}</p>
-              <p className="text-xs text-muted-foreground truncate">{r.customer_name || r.customer_email} · {formatDateFr(r.created_date)}</p>
-            </div>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-              r.status === 'completed' ? 'bg-green-100 text-green-700' :
-              r.status === 'cancelled' ? 'bg-gray-100 text-gray-500' :
-              'bg-blue-100 text-blue-700'
-            }`}>{r.status}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Maintenance des données */}
-      <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <p className="text-xs font-semibold text-muted-foreground px-4 py-3 border-b border-border bg-muted/50">🔧 Maintenance des données</p>
-        <div className="px-4 py-3 space-y-2">
-          <Button
-            onClick={handleRepairRequests}
-            disabled={repairingRequests}
-            className="w-full h-10 text-xs rounded-lg bg-amber-600 hover:bg-amber-700"
-          >
-            {repairingRequests ? 'Réparation...' : '🔨 Réparer les demandes bloquées'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Finance Tab ─────────────────────────────────────────────────────────────
-function FinanceTab() {
-  return (
-    <div className="space-y-4">
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-sm">Onglet finances en développement</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Disputes Tab ─────────────────────────────────────────────────────────────
-function DisputesTab() {
-  const queryClient = useQueryClient();
-  const [expanded, setExpanded] = useState(null);
-  const [adminNote, setAdminNote] = useState({});
-
-  const { data: disputes = [], isLoading } = useQuery({
-    queryKey: ['adminDisputes'],
-    queryFn: () => base44.entities.Dispute.list('-created_date', 100),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data, dispute }) => {
-      await base44.entities.Dispute.update(id, data);
-      const isResolved = data.status?.startsWith('resolved');
-      if (isResolved && dispute) {
-        const inFavorOf = data.status === 'resolved_customer' ? 'client' : 'professionnel';
-        const msg = `Votre litige a été résolu en faveur du ${inFavorOf}. ${data.admin_note ? 'Note : ' + data.admin_note : ''}`;
-        await Promise.all([
-          dispute.customer_email && base44.entities.Notification.create({
-            recipient_email: dispute.customer_email, recipient_type: 'particulier',
-            type: 'dispute_resolved', title: 'Litige résolu', body: msg,
-            request_id: dispute.request_id, action_url: `/Chat?requestId=${dispute.request_id}`,
-          }),
-          dispute.professional_email && base44.entities.Notification.create({
-            recipient_email: dispute.professional_email, recipient_type: 'professionnel',
-            type: 'dispute_resolved', title: 'Litige résolu', body: msg,
-            request_id: dispute.request_id, action_url: `/Chat?requestId=${dispute.request_id}`,
-          }),
-        ].filter(Boolean));
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminDisputes'] });
-      toast.success('Litige mis à jour');
-    },
-  });
-
-  const openCount = disputes.filter(d => d.status === 'open' || d.status === 'in_review').length;
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <p className="text-sm text-muted-foreground">{disputes.length} litige{disputes.length !== 1 ? 's' : ''}</p>
-        {openCount > 0 && <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200 text-xs">{openCount} ouvert{openCount !== 1 ? 's' : ''}</Badge>}
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
-      ) : disputes.length === 0 ? (
-        <div className="text-center py-14 text-muted-foreground">
-          <CheckCircle className="w-10 h-10 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Aucun litige en cours</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {disputes.map(d => {
-            const s = DISPUTE_STATUS[d.status] || DISPUTE_STATUS.open;
-            const isOpen = expanded === d.id;
-            return (
-              <motion.div key={d.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                className="bg-card rounded-xl border border-border overflow-hidden">
-                <button onClick={() => setExpanded(isOpen ? null : d.id)}
-                  className="w-full text-left p-4 flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm truncate">{d.reason}</p>
-                      <Badge className={`${s.color} border text-xs shrink-0`}>{s.label}</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">{d.customer_name} vs {d.professional_name}</p>
-                    {d.amount_disputed > 0 && <p className="text-xs text-muted-foreground">{d.amount_disputed} € en litige</p>}
-                  </div>
-                  {isOpen ? <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-1" />}
-                </button>
-
-                {isOpen && (
-                  <div className="px-4 pb-4 space-y-3 border-t border-border/50 pt-3">
-                    {d.description && <p className="text-sm text-muted-foreground">{d.description}</p>}
-
-                    {/* Note admin */}
-                    <textarea
-                      rows={2}
-                      value={adminNote[d.id] ?? d.admin_note ?? ''}
-                      onChange={e => setAdminNote(n => ({ ...n, [d.id]: e.target.value }))}
-                      placeholder="Note interne (visible admin uniquement)..."
-                      className="w-full text-sm border border-border rounded-xl px-3 py-2 bg-muted/40 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-                    />
-
-                    {/* Status actions */}
-                    <div className="flex flex-wrap gap-2">
-                      {d.status !== 'in_review' && (
-                        <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'in_review', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
-                          className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 bg-blue-50 font-medium">
-                          Prendre en charge
-                        </button>
-                      )}
-                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_customer', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
-                        className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
-                        Résolu → Client
-                      </button>
-                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'resolved_pro', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
-                        className="text-xs px-3 py-1.5 rounded-lg border border-green-200 text-green-700 bg-green-50 font-medium">
-                        Résolu → Pro
-                      </button>
-                      <button onClick={() => updateMutation.mutate({ id: d.id, data: { status: 'closed', admin_note: adminNote[d.id] ?? d.admin_note }, dispute: d })}
-                        className="text-xs px-3 py-1.5 rounded-lg border border-border text-muted-foreground bg-muted font-medium">
-                        Fermer
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Blacklist Tab ────────────────────────────────────────────────────────────
-function BlacklistTab() {
-  const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [reason, setReason] = useState({});
-
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['adminAllUsers'],
-    queryFn: () => base44.entities.User.list('-created_date', 200),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminAllUsers'] });
-      toast.success('Utilisateur mis à jour');
-    },
-  });
-
-  const blacklisted = users.filter(u => u.is_blacklisted);
-  const filtered = users.filter(u =>
-    !u.is_blacklisted &&
-    (u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-     u.email?.toLowerCase().includes(search.toLowerCase()))
-  );
-
-  return (
-    <div className="space-y-5">
-      {/* Blacklisted users */}
-      {blacklisted.length > 0 && (
-        <div>
-          <p className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <Ban className="w-4 h-4 text-destructive" /> Utilisateurs bloqués ({blacklisted.length})
-          </p>
-          <div className="space-y-2">
-            {blacklisted.map(u => (
-              <div key={u.id} className="bg-card rounded-xl border border-destructive/30 p-3 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 text-sm font-bold text-destructive">
-                  {u.full_name?.[0] || '?'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{u.full_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                  {u.blacklist_reason && <p className="text-xs text-destructive mt-0.5 truncate">Motif : {u.blacklist_reason}</p>}
-                </div>
-                <button
-                  onClick={() => updateMutation.mutate({ id: u.id, data: { is_blacklisted: false, blacklist_reason: '' } })}
-                  className="text-xs px-2.5 py-1.5 rounded-lg border border-border bg-muted text-foreground font-medium shrink-0"
-                >
-                  Débloquer
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Search to add to blacklist */}
-      <div>
-        <p className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Users className="w-4 h-4" /> Tous les utilisateurs
-        </p>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Rechercher par nom ou email..."
-          className="w-full h-10 px-3 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-ring mb-3"
-        />
-        {search.length > 1 && (
-          <div className="space-y-2">
-            {filtered.slice(0, 10).map(u => (
-              <div key={u.id} className="bg-card rounded-xl border border-border p-3 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-bold">
-                    {u.full_name?.[0] || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{u.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{u.email} · {u.user_type || 'user'}</p>
-                  </div>
-                </div>
-                <input
-                  value={reason[u.id] || ''}
-                  onChange={e => setReason(r => ({ ...r, [u.id]: e.target.value }))}
-                  placeholder="Motif du blocage..."
-                  className="w-full h-9 px-3 rounded-lg border border-border bg-muted/40 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                />
-                <button
-                  onClick={() => {
-                    if (!reason[u.id]?.trim()) { toast.error('Indiquez un motif'); return; }
-                    updateMutation.mutate({ id: u.id, data: { is_blacklisted: true, blacklist_reason: reason[u.id] } });
-                    setReason(r => ({ ...r, [u.id]: '' }));
-                    setSearch('');
-                  }}
-                  className="w-full text-xs py-2 rounded-lg bg-destructive text-white font-semibold"
-                >
-                  <Ban className="w-3 h-3 inline mr-1" /> Blacklister cet utilisateur
-                </button>
-              </div>
-            ))}
-            {filtered.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">Aucun résultat</p>}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Admin Documents Tab ──────────────────────────────────────────────────────
-function AdminDocumentsTab() {
-  const [subTab, setSubTab] = useState('contracts');
-  const [selectedContract, setSelectedContract] = useState(null);
-  const [search, setSearch] = useState('');
-
-  const { data: contracts = [], isLoading: loadingContracts } = useQuery({
-    queryKey: ['adminAllContracts'],
-    queryFn: () => base44.entities.MissionContract.list('-created_date', 200),
-  });
-
-  const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
-    queryKey: ['adminAllInvoices'],
-    queryFn: () => base44.entities.Invoice.list('-created_date', 200),
-  });
-
-  const filteredContracts = contracts.filter(c =>
-    !search ||
-    c.contract_number?.toLowerCase().includes(search.toLowerCase()) ||
-    c.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.professional_name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.category_name?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const filteredInvoices = invoices.filter(i =>
-    !search ||
-    i.invoice_number?.toLowerCase().includes(search.toLowerCase()) ||
-    i.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
-    i.professional_name?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="space-y-4">
-      {/* Sub-tabs */}
-      <div className="flex gap-2">
-        {[['contracts', `Contrats (${contracts.length})`], ['invoices', `Factures (${invoices.length})`]].map(([k, l]) => (
-          <button key={k} onClick={() => setSubTab(k)}
-            className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
-              subTab === k ? 'bg-primary text-primary-foreground border-primary' : 'bg-card border-border'
-            }`}>
-            {l}
-          </button>
-        ))}
-      </div>
-
-      {/* Search */}
-      <input
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Rechercher par nom, numéro..."
-        className="w-full h-10 px-3 rounded-xl border border-border bg-card text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-      />
-
-      {/* CONTRACTS */}
-      {subTab === 'contracts' && (
-        loadingContracts ? (
-          <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
-        ) : filteredContracts.length === 0 ? (
-          <div className="text-center py-14 text-muted-foreground">
-            <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Aucun contrat</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredContracts.map(c => {
-              const bothSigned = !!(c.signature_customer && c.signature_pro);
-              return (
-                <div key={c.id} className="bg-card rounded-xl border border-border p-4 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{c.contract_number}</p>
-                      <p className="text-xs text-muted-foreground">{c.category_name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{c.customer_name} ↔ {c.professional_name}</p>
-                      {c.scheduled_date && (
-                        <p className="text-xs text-muted-foreground">
-                          📅 {format(new Date(c.scheduled_date), 'dd MMM yyyy', { locale: fr })}
-                          {c.scheduled_time ? ` à ${c.scheduled_time}` : ''}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        c.status === 'completed' ? 'bg-gray-100 text-gray-600' :
-                        bothSigned ? 'bg-green-100 text-green-700' :
-                        c.signature_pro ? 'bg-blue-100 text-blue-700' :
-                        'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {c.status === 'completed' ? '✓ Terminé' : bothSigned ? '✓ Signé' : c.signature_pro ? 'Att. client' : 'En attente'}
-                      </span>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                        <span>{c.signature_customer ? '✅ Client' : '⏳ Client'}</span>
-                        <span>{c.signature_pro ? '✅ Pro' : '⏳ Pro'}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setSelectedContract(c)}
-                    className="w-full flex items-center justify-center gap-1.5 h-9 rounded-xl border border-border text-xs font-medium hover:bg-muted transition-colors"
-                  >
-                    <Eye className="w-3.5 h-3.5" /> Visualiser le contrat
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )
-      )}
-
-      {/* INVOICES */}
-      {subTab === 'invoices' && (
-        loadingInvoices ? (
-          <div className="flex justify-center py-10"><div className="w-6 h-6 border-2 border-border border-t-foreground rounded-full animate-spin" /></div>
-        ) : filteredInvoices.length === 0 ? (
-          <div className="text-center py-14 text-muted-foreground">
-            <Receipt className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Aucune facture</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {filteredInvoices.map(inv => (
-              <div key={inv.id} className="bg-card rounded-xl border border-border p-4 space-y-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{inv.invoice_number}</p>
-                    <p className="text-xs text-muted-foreground truncate">{inv.customer_name} ↔ {inv.professional_name}</p>
-                    <p className="text-xs text-muted-foreground">{inv.category_name}</p>
-                    {inv.created_date && <p className="text-xs text-muted-foreground">{format(new Date(inv.created_date), 'dd MMM yyyy', { locale: fr })}</p>}
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold text-base">{(inv.total_price || inv.total_ttc || 0).toFixed(2)} €</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      inv.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {inv.payment_status === 'paid' ? '✓ Payée' : 'En attente'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
-      )}
-
-      {/* Contract fullscreen modal */}
-      {selectedContract && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex flex-col">
-          <div className="bg-card flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
-            <p className="font-semibold text-sm">Contrat {selectedContract.contract_number}</p>
-            <button onClick={() => setSelectedContract(null)} className="p-2 rounded-xl hover:bg-muted">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            <MissionContractFull
-              contract={selectedContract}
-              userEmail="admin"
-              userType="admin"
-              onContractUpdate={() => {}}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Main ────────────────────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const [tab, setTab] = useState('overview');
 
@@ -728,47 +42,6 @@ export default function AdminDashboard() {
     staleTime: 30000,
   });
 
-  // Auto-réassignation des missions bloquées au chargement admin (max 1x/jour)
-  useEffect(() => {
-    if (currentUser?.role !== 'admin') return;
-    const todayKey = `autoReassign_${new Date().toISOString().slice(0, 10)}`;
-    if (localStorage.getItem(todayKey)) return;
-    (async () => {
-      try {
-        const stuckRequests = await base44.entities.ServiceRequestV2.filter({ status: 'searching' }, '-created_date', 100);
-        if (stuckRequests.length === 0) return;
-        const availablePros = await base44.entities.User.filter({ user_type: 'professionnel', available: true, verification_status: 'verified' }, '-created_date', 200);
-        for (const req of stuckRequests) {
-          const tried = req.tried_professionals || [];
-          const eligible = availablePros.filter(p =>
-            p.email && p.category_name === req.category_name && !tried.includes(p.email)
-          ).sort((a, b) => (b.rating || 0) - (a.rating || 0));
-          if (eligible.length === 0) continue;
-          const best = eligible[0];
-          await base44.entities.ServiceRequestV2.update(req.id, {
-            status: 'pending_pro',
-            professional_id: best.id,
-            professional_name: best.full_name,
-            professional_email: best.email,
-            tried_professionals: [...tried, best.email],
-          });
-          await base44.entities.Notification.create({
-            recipient_email: best.email,
-            recipient_type: 'professionnel',
-            type: 'new_mission',
-            title: `Nouvelle mission : ${req.category_name}`,
-            body: `Une mission vous a été assignée. Client : ${req.customer_name || req.customer_email}.`,
-            request_id: req.id,
-            action_url: `/Chat?requestId=${req.id}`,
-          });
-        }
-        localStorage.setItem(todayKey, '1');
-      } catch (e) {
-        console.warn('Auto-reassign error:', e);
-      }
-    })();
-  }, [currentUser?.role]);
-
   const { data: disputes = [] } = useQuery({
     queryKey: ['adminDisputes'],
     queryFn: () => base44.entities.Dispute.list('-created_date', 100),
@@ -782,6 +55,8 @@ export default function AdminDashboard() {
     staleTime: 30000,
   });
 
+  // Auto-réassignation déplacée dans OverviewTab (bouton manuel) → supprime les race conditions
+
   if (currentUser && currentUser.role !== 'admin') {
     return (
       <div className="fixed inset-0 flex items-center justify-center text-center px-6">
@@ -794,67 +69,70 @@ export default function AdminDashboard() {
 
   return (
     <div className="fixed inset-0 overflow-y-auto bg-background">
-    <div className="px-4 pt-6 pb-20 w-full md:max-w-2xl mx-auto">
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Admin · Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Vue globale de la plateforme</p>
-      </div>
-
-      {/* Tabs */}
-      <div className="grid grid-cols-4 gap-1.5 mb-5">
-        {TABS.map(({ key, label, icon: Icon }) => (
-          <button key={key} onClick={() => setTab(key)}
-            className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border transition-colors ${
-              tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
-            }`}>
-            <Icon className="w-4 h-4 shrink-0" />
-            <span className="text-center leading-tight">{label}</span>
-            {key === 'disputes' && openDisputes > 0 && (
-              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-yellow-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{openDisputes}</span>
-            )}
-            {key === 'reports' && pendingReports.length > 0 && (
-              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{pendingReports.length}</span>
-            )}
-            {key === 'tickets' && newTickets.length > 0 && (
-              <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{newTickets.length > 9 ? '9+' : newTickets.length}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'overview' && <OverviewTab />}
-      {tab === 'finance' && <FinanceTab />}
-      {tab === 'documents' && <AdminDocumentsTab />}
-      {tab === 'disputes' && <DisputesTab />}
-      {tab === 'blacklist' && <BlacklistTab />}
-      {tab === 'reports' && <ReportsTab />}
-      {tab === 'tickets' && <SupportTicketsTab />}
-      {tab === 'dac7' && <DAC7Tab />}
-      {tab === 'independence' && <IndependenceTab />}
-      {tab === 'email' && (
-        <div className="space-y-4">
-          <div className="bg-card rounded-xl border border-border p-5 text-center space-y-3">
-            <Mail className="w-10 h-10 mx-auto text-primary opacity-70" />
-            <p className="font-semibold">Test d'envoi d'email</p>
-            <p className="text-sm text-muted-foreground">Envoyez un email de test pour vérifier la configuration.</p>
-            <button onClick={() => window.location.href = '/AdminTestEmail'} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl text-sm">
-              <Mail className="w-4 h-4" /> Ouvrir le test email
-            </button>
-          </div>
-          <div className="bg-muted/40 rounded-xl border border-border p-4 space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Automations actives</p>
-            {[
-              '✅ Nouvelle demande client → Email de confirmation',
-              '🎉 Mission acceptée → Email au client',
-              '📝 Contrat créé → Invitation à signer',
-              '🚀 Abonnement Pro actif → Email de bienvenue',
-            ].map((item, i) => (
-              <p key={i} className="text-sm text-foreground">{item}</p>
-            ))}
-          </div>
+      <div className="px-4 pt-6 pb-20 w-full md:max-w-2xl mx-auto">
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold tracking-tight">Admin · Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Vue globale de la plateforme</p>
         </div>
-      )}
-    </div>
+
+        <div className="grid grid-cols-4 gap-1.5 mb-5">
+          {TABS.map(({ key, label, icon: Icon }) => (
+            <button key={key} onClick={() => setTab(key)}
+              className={`relative flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-[11px] font-medium border transition-colors ${
+                tab === key ? 'bg-primary text-primary-foreground border-primary' : 'bg-card text-foreground border-border'
+              }`}>
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="text-center leading-tight">{label}</span>
+              {key === 'disputes' && openDisputes > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-yellow-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{openDisputes}</span>
+              )}
+              {key === 'reports' && pendingReports.length > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{pendingReports.length}</span>
+              )}
+              {key === 'tickets' && newTickets.length > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-bold bg-blue-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{newTickets.length > 9 ? '9+' : newTickets.length}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'overview' && <OverviewTab />}
+        {tab === 'finance' && (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-sm">Onglet finances en développement</p>
+          </div>
+        )}
+        {tab === 'documents' && <AdminDocumentsTab />}
+        {tab === 'disputes' && <DisputesTab />}
+        {tab === 'blacklist' && <BlacklistTab />}
+        {tab === 'reports' && <ReportsTab />}
+        {tab === 'tickets' && <SupportTicketsTab />}
+        {tab === 'dac7' && <DAC7Tab />}
+        {tab === 'independence' && <IndependenceTab />}
+        {tab === 'email' && (
+          <div className="space-y-4">
+            <div className="bg-card rounded-xl border border-border p-5 text-center space-y-3">
+              <Mail className="w-10 h-10 mx-auto text-primary opacity-70" />
+              <p className="font-semibold">Test d'envoi d'email</p>
+              <p className="text-sm text-muted-foreground">Envoyez un email de test pour vérifier la configuration.</p>
+              <button onClick={() => window.location.href = '/AdminTestEmail'} className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl text-sm">
+                <Mail className="w-4 h-4" /> Ouvrir le test email
+              </button>
+            </div>
+            <div className="bg-muted/40 rounded-xl border border-border p-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Automations actives</p>
+              {[
+                '✅ Nouvelle demande client → Email de confirmation',
+                '🎉 Mission acceptée → Email au client',
+                '📝 Contrat créé → Invitation à signer',
+                '🚀 Abonnement Pro actif → Email de bienvenue',
+              ].map((item, i) => (
+                <p key={i} className="text-sm text-foreground">{item}</p>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
