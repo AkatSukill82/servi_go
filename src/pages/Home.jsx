@@ -14,6 +14,7 @@ import HomeSkeleton from '@/components/home/HomeSkeleton';
 import NearbyProCard from '@/components/home/NearbyProCard';
 import ProStoriesCarousel from '@/components/home/ProStoriesCarousel';
 import FreeMissionWidget from '@/components/loyalty/FreeMissionWidget';
+import LazyProGrid from '@/components/home/LazyProGrid';
 import { getFirstName, getGreeting } from '@/lib/userUtils';
 import { BRAND } from '@/lib/theme';
 
@@ -36,12 +37,17 @@ export default function Home() {
     staleTime: 5 * 60 * 1000
   });
 
-  const { data: nearbyPros = [] } = useQuery({
-    queryKey: ['nearbyPros'],
-    queryFn: () => base44.entities.User.filter(
-      { user_type: 'professionnel', available: true, verification_status: 'verified' }, '-rating', 10
-    ),
-    staleTime: 3 * 60 * 1000
+  const { data: nearbyPros = [], isLoading: loadingNearby } = useQuery({
+    queryKey: ['nearbyProsOptimized'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getProfessionalsOptimized', {
+        category_name: null,
+        page: 1,
+        limit: 10,
+      });
+      return res.data || [];
+    },
+    staleTime: 3 * 60 * 1000,
   });
 
   const { data: recentReviews = [] } = useQuery({
@@ -283,25 +289,27 @@ export default function Home() {
           {user && <FreeMissionWidget userEmail={user.email} />}
 
           {/* ── Top professionnels ── */}
-          {nearbyPros.length > 0 &&
-          <div className="mt-8">
-              <div className="flex items-center justify-between mb-4 px-4">
-                <h2 className="text-xl font-black text-foreground">Top professionnels</h2>
-              </div>
-              <div
-              className="flex gap-3 overflow-x-auto pb-2 pl-4 pr-4 snap-x snap-mandatory"
-              style={{ scrollbarWidth: 'none' }}>
-              
-                {nearbyPros.map((pro, i) =>
-              <NearbyProCard
-                key={pro.id}
-                pro={pro}
-                index={i}
-                onPress={() => setViewingPro(pro)} />
-              )}
-              </div>
-            </div>
-          }
+           {!loadingNearby && nearbyPros.length > 0 &&
+           <div className="mt-8">
+               <div className="flex items-center justify-between mb-4 px-4">
+                 <h2 className="text-xl font-black text-foreground">Top professionnels</h2>
+               </div>
+               <div className="px-4">
+                 <LazyProGrid
+                   items={nearbyPros}
+                   columns={3}
+                   renderItem={(pro) => (
+                     <button
+                       onClick={() => setViewingPro(pro)}
+                       className="cursor-pointer"
+                     >
+                       <NearbyProCard pro={pro} onPress={() => setViewingPro(pro)} />
+                     </button>
+                   )}
+                 />
+               </div>
+             </div>
+           }
 
           {/* ── Avis récents ── */}
           {recentReviews.length > 0 &&

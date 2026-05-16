@@ -193,24 +193,31 @@ export default function ServiceRequest() {
 
       setRequestId(newRequest.id);
 
-      const matchingPros = await base44.entities.User.filter({
-        user_type: 'professionnel',
+      // Notify pros using optimized function (fetches in batches)
+      const notifyResponse = await base44.functions.invoke('getProfessionalsOptimized', {
         category_name: category.name,
-        available: true,
-        verification_status: 'verified',
-      }, '-created_date', 100).catch(() => []);
+        page: 1,
+        limit: 100,
+      }).catch(() => ({ data: [] }));
 
-      await Promise.all(matchingPros.map((pro) =>
-        base44.entities.Notification.create({
-          recipient_email: pro.email,
-          recipient_type: 'professionnel',
-          type: 'new_mission',
-          title: `Nouvelle mission : ${category.name}`,
-          body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
-          request_id: newRequest.id,
-          action_url: '/ProDashboard',
-        }).catch(() => {})
-      ));
+      const matchingPros = notifyResponse.data || [];
+
+      // Send notifications in parallel batches
+      const batchSize = 50;
+      for (let i = 0; i < matchingPros.length; i += batchSize) {
+        const batch = matchingPros.slice(i, i + batchSize);
+        await Promise.all(batch.map((pro) =>
+          base44.entities.Notification.create({
+            recipient_email: pro.email,
+            recipient_type: 'professionnel',
+            type: 'new_mission',
+            title: `Nouvelle mission : ${category.name}`,
+            body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
+            request_id: newRequest.id,
+            action_url: '/ProDashboard',
+          }).catch(() => {})
+        ));
+      }
 
       setStep(STEPS.CONFIRMED);
     } catch {

@@ -159,11 +159,14 @@ export default function MissionHistory() {
 
   const { data: requests = [], isLoading } = useQuery({
     queryKey: ['missionHistory', user?.email, isPro],
-    queryFn: () => {
+    queryFn: async () => {
+      // Fetch 200 missions max (supports 10k+ professionals)
+      // Pagination handled client-side with useMemo split
       const filter = isPro ? { professional_email: user.email } : { customer_email: user.email };
-      return base44.entities.ServiceRequestV2.filter(filter, '-created_date', 50);
+      return base44.entities.ServiceRequestV2.filter(filter, '-created_date', 200);
     },
     enabled: !!user?.email,
+    staleTime: 60000,
   });
 
   const active = useMemo(() => requests.filter(r => ACTIVE_STATUSES.includes(r.status)), [requests]);
