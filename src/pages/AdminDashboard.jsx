@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import {
   LayoutDashboard, Euro, Receipt, AlertTriangle, Ban, Flag,
   Ticket, FileText, Shield, Mail, Menu, X, Bell, ChevronRight,
-  Activity, TrendingUp, Users, Zap, PieChart, Clock, CheckCircle2, AlertCircle,
+  Activity, TrendingUp, Users, Zap, PieChart, Clock, CheckCircle2, AlertCircle, User,
 } from 'lucide-react';
 
 import OverviewTab from '@/components/admin/OverviewTab';
@@ -34,6 +35,7 @@ const BADGE_COLORS = {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -159,15 +161,20 @@ export default function AdminDashboard() {
 
       {/* User footer */}
       <div className="px-4 py-4 border-t border-slate-100 shrink-0">
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
+        <button
+          onClick={() => { navigate('/Profile'); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer"
+          title="Accéder à mon profil"
+        >
           <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
             <span className="text-xs font-bold text-white">{initials}</span>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 text-left">
             <p className="text-xs font-semibold text-slate-800 truncate">{currentUser?.full_name || 'Admin'}</p>
             <p className="text-[10px] text-slate-500 truncate">{currentUser?.email}</p>
           </div>
-        </div>
+          <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+        </button>
       </div>
     </>
   );
@@ -254,14 +261,18 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          <div className="hidden md:flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2">
+          <button
+            onClick={() => navigate('/Profile')}
+            className="hidden md:flex items-center gap-2 bg-slate-100 hover:bg-slate-200 rounded-lg px-3 py-2 transition-colors cursor-pointer"
+            title="Accéder à mon profil"
+          >
             <div className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
               <span className="text-[10px] font-bold text-white">{initials}</span>
             </div>
             <span className="text-xs font-semibold text-slate-700 max-w-[100px] truncate">
               {currentUser?.first_name || currentUser?.email?.split('@')[0] || 'Admin'}
             </span>
-          </div>
+          </button>
         </header>
 
         {/* Quick stats grid */}
