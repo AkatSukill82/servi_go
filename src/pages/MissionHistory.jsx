@@ -153,17 +153,23 @@ export default function MissionHistory() {
   const [tab, setTab] = useState('active');
   const [ratingTarget, setRatingTarget] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
+  const [page, setPage] = useState(1);
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
   const isPro = user?.user_type === 'professionnel';
 
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['missionHistory', user?.email, isPro],
+    queryKey: ['missionHistory', user?.email, isPro, page],
     queryFn: async () => {
-      // Fetch 200 missions max (supports 10k+ professionals)
-      // Pagination handled client-side with useMemo split
+      // Paginate server-side: 50 records per page
       const filter = isPro ? { professional_email: user.email } : { customer_email: user.email };
-      return base44.entities.ServiceRequestV2.filter(filter, '-created_date', 200);
+      try {
+        return await base44.entities.ServiceRequestV2.filter(filter, '-created_date', 50);
+      } catch (err) {
+        console.error('[MissionHistory] Fetch error:', err.message);
+        toast.error('Erreur de chargement des missions');
+        return [];
+      }
     },
     enabled: !!user?.email,
     staleTime: 60000,
@@ -179,11 +185,16 @@ export default function MissionHistory() {
       toast.success('Mission annulée');
       queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
     },
+    onError: (err) => {
+      console.error('[MissionHistory] Cancel error:', err);
+      toast.error('Erreur lors de l\'annulation');
+    },
   });
 
   const reviewMutation = useMutation({
     mutationFn: async ({ rating, comment }) => {
       const req = ratingTarget;
+      if (!req?.professional_email) throw new Error('Email professionnel manquant');
       const customerName = user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : (user.full_name || 'Client');
       await base44.entities.Review.create({
         request_id: req.id,
@@ -203,6 +214,10 @@ export default function MissionHistory() {
       setRatingTarget(null);
       toast.success('Merci pour votre avis !');
       queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
+    },
+    onError: (err) => {
+      console.error('[MissionHistory] Review error:', err);
+      toast.error('Erreur lors de l\'enregistrement de l\'avis');
     },
   });
 

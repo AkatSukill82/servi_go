@@ -41,6 +41,10 @@ export default function Register() {
   const saveMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['currentUser'] }),
+    onError: (err) => {
+      console.error('[Register] Update error:', err.message);
+      toast.error('Erreur lors de la sauvegarde. Vérifiez votre connexion.');
+    },
   });
 
   const handlePersonalNext = async (data) => {
@@ -55,6 +59,13 @@ export default function Register() {
       return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
     };
     try {
+      // Validation
+      if (!data.first_name || !data.last_name) {
+        throw new Error('Nom et prénom requis');
+      }
+      if (userType === 'professionnel' && !data.bce_number) {
+        throw new Error('Numéro BCE requis pour les professionnels');
+      }
       await saveMutation.mutateAsync({
         user_type: userType,
         first_name: data.first_name,
@@ -68,8 +79,9 @@ export default function Register() {
         } : {}),
       });
       setStep(3);
-    } catch {
-      toast.error('Erreur lors de la sauvegarde. Vérifiez votre connexion.');
+    } catch (err) {
+      console.error('[Register] handlePersonalNext error:', err.message);
+      toast.error(err.message || 'Erreur lors de la sauvegarde.');
     } finally {
       setSaving(false);
     }

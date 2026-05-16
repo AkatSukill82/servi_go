@@ -65,6 +65,10 @@ export default function ServiceRequest() {
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.ServiceRequestV2.create(data),
+    onError: (err) => {
+      console.error('[ServiceRequest] Create error:', err.message);
+      toast.error('Erreur lors de la création de la demande. Veuillez réessayer.');
+    },
   });
 
   // ── eID gate — vérifie via IdentityVerification en complément du champ user ──
@@ -160,6 +164,9 @@ export default function ServiceRequest() {
   const handleConfirm = async () => {
     setStep(STEPS.SEARCHING);
     try {
+      if (!category?.name || !address) {
+        throw new Error('Données manquantes (catégorie ou adresse)');
+      }
       const answersArray = questions.map((q, i) => ({ question: q.question, answer: answers[i] || '' }));
       const firstName = user?.first_name || user?.full_name?.split(' ')[0] || '';
       const lastName = user?.last_name || user?.full_name?.split(' ').slice(1).join(' ') || '';
@@ -194,33 +201,38 @@ export default function ServiceRequest() {
       setRequestId(newRequest.id);
 
       // Notify pros using optimized function (fetches in batches)
-      const notifyResponse = await base44.functions.invoke('getProfessionalsOptimized', {
-        category_name: category.name,
-        page: 1,
-        limit: 100,
-      }).catch(() => ({ data: [] }));
+      try {
+        const notifyResponse = await base44.functions.invoke('getProfessionalsOptimized', {
+          category_name: category.name,
+          page: 1,
+          limit: 100,
+        });
+        const matchingPros = notifyResponse?.data || [];
 
-      const matchingPros = notifyResponse.data || [];
-
-      // Send notifications in parallel batches
-      const batchSize = 50;
-      for (let i = 0; i < matchingPros.length; i += batchSize) {
-        const batch = matchingPros.slice(i, i + batchSize);
-        await Promise.all(batch.map((pro) =>
-          base44.entities.Notification.create({
-            recipient_email: pro.email,
-            recipient_type: 'professionnel',
-            type: 'new_mission',
-            title: `Nouvelle mission : ${category.name}`,
-            body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
-            request_id: newRequest.id,
-            action_url: '/ProDashboard',
-          }).catch(() => {})
-        ));
+        // Send notifications in parallel batches
+        const batchSize = 50;
+        for (let i = 0; i < matchingPros.length; i += batchSize) {
+          const batch = matchingPros.slice(i, i + batchSize);
+          await Promise.all(batch.map((pro) =>
+            base44.entities.Notification.create({
+              recipient_email: pro.email,
+              recipient_type: 'professionnel',
+              type: 'new_mission',
+              title: `Nouvelle mission : ${category.name}`,
+              body: `${address} · ${scheduledDate ? `Le ${scheduledDate}` : 'Dès que possible'}`,
+              request_id: newRequest.id,
+              action_url: '/ProDashboard',
+            }).catch(err => console.warn('[ServiceRequest] Notif batch warn:', err.message))
+          ));
+        }
+      } catch (notifErr) {
+        console.warn('[ServiceRequest] Notification fetch failed:', notifErr.message);
+        // Non-critical — demande créée, notifications non-indispensables
       }
 
       setStep(STEPS.CONFIRMED);
-    } catch {
+    } catch (err) {
+      console.error('[ServiceRequest] handleConfirm error:', err.message);
       toast.error('Une erreur est survenue. Veuillez réessayer.');
       setStep(STEPS.SLOT);
     }
