@@ -8,9 +8,18 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const { requestId, totalPrice, categoryName, proName, successUrl, cancelUrl } = await req.json();
 
-    if (!requestId || !totalPrice) {
-      return Response.json({ error: 'Paramètres manquants' }, { status: 400 });
+    // Validation des paramètres
+    if (!requestId || totalPrice === undefined || totalPrice === null) {
+      console.warn('[createStripeCheckout] Paramètres manquants:', { requestId, totalPrice });
+      return Response.json({ error: 'Paramètres manquants (requestId, totalPrice)' }, { status: 400 });
     }
+
+    if (totalPrice <= 0) {
+      console.warn('[createStripeCheckout] Prix invalide:', totalPrice);
+      return Response.json({ error: 'Prix invalide (doit être > 0)' }, { status: 400 });
+    }
+
+    console.log('[createStripeCheckout] Creating session:', { requestId, totalPrice, categoryName });
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -36,9 +45,16 @@ Deno.serve(async (req) => {
       },
     });
 
+    console.log('[createStripeCheckout] Session créée avec succès:', { sessionId: session.id, requestId });
     return Response.json({ url: session.url, sessionId: session.id });
   } catch (error) {
-    console.error('Stripe checkout error:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[createStripeCheckout] ERREUR:', {
+      message: error.message,
+      type: error.type,
+      code: error.code,
+      statusCode: error.statusCode,
+      stack: error.stack,
+    });
+    return Response.json({ error: error.message || 'Erreur Stripe' }, { status: 500 });
   }
 });
