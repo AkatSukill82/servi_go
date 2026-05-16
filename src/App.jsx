@@ -17,7 +17,7 @@ import MissionHistory from './pages/MissionHistory';
 import TrackingMap from './pages/TrackingMap';
 import ProVerificationOnboarding from './pages/ProVerificationOnboarding';
 import AdminVerification from './pages/AdminVerification';
-import AdminPanel from './pages/AdminPanel';
+import AdminDashboard from './pages/AdminDashboard';
 import CGU from './pages/CGU';
 import EidVerification from './pages/EidVerification';
 import Support from './pages/Support';
@@ -51,8 +51,7 @@ function ExternalRedirect({ to }) {
 
 // Guard routes admin — redirige si l'utilisateur n'est pas admin
 const AdminRoute = ({ children }) => {
-  const { user, isAuthenticated, isLoadingAuth } = useAuth();
-  if (isLoadingAuth) return null;
+  const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/se-connecter" replace />;
   if (user?.role !== 'admin') return <Navigate to="/Home" replace />;
   return children;
@@ -62,7 +61,7 @@ const AdminRoute = ({ children }) => {
 const RootRedirect = () => {
   const { isAuthenticated, user } = useAuth();
   if (isAuthenticated && user) {
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'admin') return <Navigate to="/AdminDashboard" replace />;
     if (user.user_type === 'professionnel') return <Navigate to="/ProDashboard" replace />;
     return <Navigate to="/Home" replace />;
   }
@@ -122,7 +121,7 @@ const AuthenticatedApp = () => {
       <Route path="/Register" element={<Register />} />
       <Route path="/ProVerificationOnboarding" element={<ProVerificationOnboarding />} />
       <Route path="/AdminVerification" element={<AdminRoute><AdminVerification /></AdminRoute>} />
-      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+      <Route path="/AdminDashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
       <Route path="/AdminTestEmail" element={<AdminRoute><AdminTestEmail /></AdminRoute>} />
       <Route path="/CGU" element={<CGU />} />
       <Route path="/EidVerification" element={<EidVerification />} />
