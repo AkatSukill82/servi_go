@@ -557,7 +557,12 @@ export default function Chat() {
                             src={msg.photo_url}
                             alt="Photo"
                             className="w-full max-w-[220px] object-cover rounded-2xl cursor-pointer"
-                            onClick={() => window.open(msg.photo_url, '_blank')}
+                            onClick={() => {
+                              try {
+                                const u = new URL(msg.photo_url);
+                                if (u.protocol === 'https:') window.open(msg.photo_url, '_blank', 'noopener,noreferrer');
+                              } catch {}
+                            }}
                           />
                         ) : (
                           <p className={`px-4 py-2.5 text-sm leading-relaxed ${isMe ? 'text-white' : 'text-foreground'}`}>
