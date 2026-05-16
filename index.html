@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ServiGo" />
     <meta name="application-name" content="ServiGo" />
-    <meta name="theme-color" content="#ffffff" id="theme-color-meta" />
+    <meta name="theme-color" content="#6C5CE7" id="theme-color-meta" />
 
     <!-- SEO -->
     <meta name="description" content="Votre plateforme de confiance pour trouver des professionnels à domicile en Belgique." />
@@ -35,7 +35,22 @@
         margin: 0;
         padding: 0;
         min-height: 100vh;
-        background-color: #ffffff;
+        background: linear-gradient(160deg, #1a0533 0%, #6C5CE7 70%, #a78bfa 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      /* Splash screen logo - before React loads */
+      #root:empty::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, #1a0533 0%, #6C5CE7 70%, #a78bfa 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
       }
     </style>
 

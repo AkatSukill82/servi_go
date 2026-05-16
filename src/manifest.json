@@ -5,13 +5,28 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1A1A2E",
-  "theme_color": "#1A1A2E",
+  "background_color": "#6C5CE7",
+  "theme_color": "#6C5CE7",
   "icons": [
     {
       "src": "https://base44.com/logo_v2.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://base44.com/logo_v2.svg",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "https://base44.com/logo_v2.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
     }
   ]
 }
