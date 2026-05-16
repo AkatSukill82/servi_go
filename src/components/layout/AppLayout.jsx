@@ -91,12 +91,20 @@ export default function AppLayout() {
 
     const cached = queryClient.getQueryData(['currentUser']);
     if (cached) {
+      if (cached?.role === 'admin') {
+        navigate('/admin', { replace: true });
+        return;
+      }
       setCurrentUser(cached);
       resolveUserType(cached).then(() => setLoading(false));
       return;
     }
     base44.auth.me().then(user => {
       queryClient.setQueryData(['currentUser'], user);
+      if (user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+        return;
+      }
       setCurrentUser(user);
       resolveUserType(user).then(() => setLoading(false));
     }).catch(() => {
@@ -141,8 +149,6 @@ export default function AppLayout() {
     <div
       className="bg-background overflow-hidden"
       style={{
-        height: '100vh',
-        // @ts-ignore
         height: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         display: 'flex',
