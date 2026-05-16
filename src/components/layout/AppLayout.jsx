@@ -141,14 +141,18 @@ export default function AppLayout() {
     <div
       className="bg-background overflow-hidden"
       style={{
-        height: '100vh',
-        // @ts-ignore
-        height: '100dvh',
+        width: '100%',
+        height: '100%',
+        minHeight: '100vh',
+        minHeight: '100dvh',
         paddingTop: 'env(safe-area-inset-top)',
         display: 'flex',
         flexDirection: 'column',
-        maxWidth: '100vw',
-        overflowX: 'hidden',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
       }}
     >
 
@@ -170,24 +174,25 @@ export default function AppLayout() {
       <div className="flex-1 overflow-hidden relative">
 
         {/* Onglets — montés seulement après la première visite, jamais démontés */}
-        {tabs.map(tabPath => {
-          const TabComponent = TAB_COMPONENTS[tabPath];
-          const isActive = currentPath === tabPath && !isStackPage;
-          const hasBeenVisited = visitedTabs.current.has(tabPath);
+         {tabs.map(tabPath => {
+           const TabComponent = TAB_COMPONENTS[tabPath];
+           const isActive = currentPath === tabPath && !isStackPage;
+           const hasBeenVisited = visitedTabs.current.has(tabPath);
 
-          // Ne pas monter du tout si jamais visité
-          if (!hasBeenVisited && !isActive) return null;
+           // Ne pas monter du tout si jamais visité
+           if (!hasBeenVisited && !isActive) return null;
 
-          return (
-            <div
-              key={tabPath}
-              className="absolute inset-0 overflow-y-auto"
-              style={{
-                display: isActive ? 'block' : 'none',
-                paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)',
-              }}
-              ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
-            >
+           return (
+             <div
+               key={tabPath}
+               className="absolute inset-0 overflow-y-auto w-full"
+               style={{
+                 display: isActive ? 'block' : 'none',
+                 paddingBottom: 'env(safe-area-inset-bottom)',
+                 maxWidth: '100%',
+               }}
+               ref={el => { if (el) scrollRefs.current[tabPath] = el; }}
+             >
               <Suspense fallback={<TabSpinner />}>
                 <TabComponent />
               </Suspense>
@@ -196,17 +201,17 @@ export default function AppLayout() {
         })}
 
         {/* Stack pages — slide-in, lazy-loaded */}
-        <AnimatePresence>
-          {isStackPage && StackComponent && (
-            <motion.div
-              key={currentPath}
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-0 overflow-y-auto bg-background"
-              style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 20px)' }}
-            >
+         <AnimatePresence>
+           {isStackPage && StackComponent && (
+             <motion.div
+               key={currentPath}
+               initial={{ x: '100%' }}
+               animate={{ x: 0 }}
+               exit={{ x: '100%' }}
+               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+               className="absolute inset-0 overflow-y-auto bg-background w-full"
+               style={{ paddingBottom: 'env(safe-area-inset-bottom)', maxWidth: '100%' }}
+             >
               <Suspense fallback={<TabSpinner />}>
                 <StackComponent />
               </Suspense>
