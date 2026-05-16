@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import {
   LayoutDashboard, Euro, Receipt, AlertTriangle, Ban, Flag,
   Ticket, FileText, Shield, Mail, Menu, X, Bell, ChevronRight,
-  Activity, TrendingUp, Users, Zap,
+  Activity, TrendingUp, Users, Zap, PieChart, Clock, CheckCircle2, AlertCircle,
 } from 'lucide-react';
 
 import OverviewTab from '@/components/admin/OverviewTab';
@@ -103,6 +103,14 @@ export default function AdminDashboard() {
   };
   const totalAlerts = (badges.disputes || 0) + (badges.reports || 0) + (badges.tickets || 0);
 
+  // ── Top statistics ──
+  const stats = [
+    { label: 'Litiges ouverts', value: openDisputes, icon: AlertTriangle, color: 'amber', urgent: openDisputes > 0 },
+    { label: 'Signalements en attente', value: pendingReports.length, icon: Flag, color: 'red', urgent: pendingReports.length > 0 },
+    { label: 'Tickets support', value: newTickets.length, icon: Ticket, color: 'blue', urgent: newTickets.length > 0 },
+    { label: 'Alertes totales', value: totalAlerts, icon: Bell, color: 'orange', urgent: totalAlerts > 5 },
+  ];
+
   const activeTab = TABS.find(t => t.key === tab);
   const initials = (currentUser?.full_name || currentUser?.email || 'A').slice(0, 2).toUpperCase();
 
@@ -114,45 +122,45 @@ export default function AdminDashboard() {
   const SidebarContent = () => (
     <>
       {/* Logo */}
-      <div className="px-5 py-5 shrink-0">
+      <div className="px-5 py-6 shrink-0 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center shrink-0">
-            <Zap className="w-4.5 h-4.5 text-white" style={{ width: 18, height: 18 }} />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
+            <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="font-black text-sm text-slate-900 tracking-tight">ServiGo</p>
-            <p className="text-[10px] text-slate-400 font-medium">Administration</p>
+            <p className="font-black text-sm text-white tracking-tight">ServiGo Admin</p>
+            <p className="text-[11px] text-slate-400 font-medium">Panel de contrôle</p>
           </div>
         </div>
       </div>
 
       {/* Nav groups */}
-      <nav className="flex-1 px-3 pb-4 overflow-y-auto space-y-5">
+      <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-6">
         {GROUPS.map(group => {
           const groupTabs = TABS.filter(t => t.group === group);
           return (
             <div key={group}>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-1.5">{group}</p>
-              <div className="space-y-0.5">
-                {groupTabs.map(({ key, label, icon: Icon }) => {
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2.5">{group}</p>
+              <div className="space-y-1">
+                {groupTabs.map(({ key, label, icon: TabIcon }) => {
                   const badge = badges[key];
                   const isActive = tab === key;
                   return (
                     <button
                       key={key}
                       onClick={() => handleTabChange(key)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer text-left ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer text-left ${
                         isActive
-                          ? 'bg-violet-600 text-white shadow-sm'
-                          : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                          ? 'bg-violet-600/20 text-violet-400 border border-violet-500/30'
+                          : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
                       }`}
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
+                      <TabIcon className="w-4 h-4 shrink-0" />
                       <span className="flex-1 truncate">{label}</span>
                       {badge && (
-                        <span className={`text-[10px] font-bold text-white rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${
-                          isActive ? 'bg-white/30' : BADGE_COLORS[key] || 'bg-slate-400'
-                        }`}>
+                        <span className={`text-[10px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 ${
+                          isActive ? 'bg-violet-500 text-white' : BADGE_COLORS[key] || 'bg-slate-600'
+                        } text-white`}>
                           {badge > 9 ? '9+' : badge}
                         </span>
                       )}
@@ -166,13 +174,13 @@ export default function AdminDashboard() {
       </nav>
 
       {/* User footer */}
-      <div className="px-4 py-4 border-t border-slate-100 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
-            <span className="text-xs font-bold text-violet-700">{initials}</span>
+      <div className="px-4 py-4 border-t border-slate-700 shrink-0">
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/40">
+          <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+            <span className="text-xs font-bold text-white">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-700 truncate">{currentUser?.full_name || 'Admin'}</p>
+            <p className="text-xs font-semibold text-slate-200 truncate">{currentUser?.full_name || 'Admin'}</p>
             <p className="text-[10px] text-slate-400 truncate">{currentUser?.email}</p>
           </div>
         </div>
@@ -186,7 +194,7 @@ export default function AdminDashboard() {
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* ── SIDEBAR DESKTOP ── */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-white border-r border-slate-100 h-full">
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 h-full">
         <SidebarContent />
       </aside>
 
@@ -220,50 +228,87 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top bar */}
-        <header className="shrink-0 h-14 bg-white border-b border-slate-100 flex items-center px-4 gap-3">
+        <header className="shrink-0 bg-white border-b border-slate-200 flex items-center px-4 md:px-6 py-4 gap-4">
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             onClick={() => setSidebarOpen(true)}
             aria-label="Ouvrir le menu"
           >
             <Menu className="w-5 h-5 text-slate-600" />
           </button>
 
-          <div className="flex-1 flex items-center gap-2.5 min-w-0">
+          <div className="flex-1 flex items-center gap-3 min-w-0">
             {activeTab && (
               <>
-                <activeTab.icon className="w-4 h-4 text-violet-600 shrink-0" />
-                <h1 className="font-bold text-slate-900 text-[15px] truncate">{activeTab.label}</h1>
+                <activeTab.icon className="w-5 h-5 text-violet-600 shrink-0" />
+                <h1 className="font-bold text-slate-900 text-lg truncate">{activeTab.label}</h1>
               </>
             )}
           </div>
 
+          {/* Quick stats in header */}
+          <div className="hidden sm:flex items-center gap-4">
+            {[
+              { count: openDisputes, label: 'Litiges', icon: AlertTriangle, color: 'text-amber-600' },
+              { count: pendingReports.length, label: 'Reports', icon: Flag, color: 'text-red-600' },
+              { count: newTickets.length, label: 'Support', icon: Ticket, color: 'text-blue-600' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-1.5">
+                <item.icon className={`w-4 h-4 ${item.color}`} />
+                <span className="text-xs font-semibold text-slate-600">{item.count}</span>
+              </div>
+            ))}
+          </div>
+
           {/* Alert bell */}
           {totalAlerts > 0 && (
-            <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-amber-50 cursor-pointer">
-              <Bell className="w-4 h-4 text-amber-600" />
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
+            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-red-50 cursor-pointer hover:bg-red-100 transition-colors">
+              <Bell className="w-5 h-5 text-red-600" />
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
                 {totalAlerts > 9 ? '9+' : totalAlerts}
               </span>
             </div>
           )}
 
-          <div className="hidden md:flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2">
-            <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-bold text-violet-700">{initials}</span>
+          <div className="hidden md:flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2">
+            <div className="w-6 h-6 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+              <span className="text-[10px] font-bold text-white">{initials}</span>
             </div>
-            <span className="text-xs font-semibold text-slate-600 max-w-[120px] truncate">
+            <span className="text-xs font-semibold text-slate-700 max-w-[100px] truncate">
               {currentUser?.first_name || currentUser?.email?.split('@')[0] || 'Admin'}
             </span>
           </div>
         </header>
 
+        {/* Quick stats grid */}
+        {tab === 'overview' && (
+          <div className="shrink-0 px-4 md:px-6 py-4 border-b border-slate-100">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-6xl">
+              {stats.map((stat, idx) => {
+                const StatIcon = stat.icon;
+                const colorClass = stat.urgent ? 'border-l-4 border-l-red-500 bg-red-50' : `border-l-4 border-l-${stat.color}-500 bg-${stat.color}-50`;
+                return (
+                  <div key={idx} className={`p-4 rounded-lg border ${colorClass}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-slate-600 mb-1">{stat.label}</p>
+                        <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                      </div>
+                      <StatIcon className={`w-5 h-5 ${stat.urgent ? 'text-red-600' : `text-${stat.color}-600`}`} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         <main
-          className="flex-1 overflow-y-auto px-4 md:px-6 pt-5"
+          className="flex-1 overflow-y-auto px-4 md:px-6 py-6"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
         >
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             {tab === 'overview'     && <OverviewTab />}
             {tab === 'finance'      && <AdminFinanceTab />}
             {tab === 'documents'    && <AdminDocumentsTab />}
@@ -279,30 +324,30 @@ export default function AdminDashboard() {
 
         {/* ── BOTTOM NAV MOBILE ── */}
         <nav
-          className="md:hidden shrink-0 bg-white border-t border-slate-100"
+          className="lg:hidden shrink-0 bg-white border-t border-slate-200"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-            {TABS.map(({ key, label, icon: Icon }) => {
+            {TABS.map(({ key, label, icon: NavIcon }) => {
               const badge = badges[key];
               const isActive = tab === key;
               return (
                 <button
                   key={key}
                   onClick={() => setTab(key)}
-                  className={`relative flex-1 shrink-0 flex flex-col items-center gap-0.5 py-3 px-1 min-w-[52px] transition-colors cursor-pointer ${
-                    isActive ? 'text-violet-600' : 'text-slate-400'
+                  className={`relative flex-1 shrink-0 flex flex-col items-center gap-0.5 py-3 px-1 min-w-[56px] transition-all cursor-pointer ${
+                    isActive ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  <Icon style={{ width: 18, height: 18 }} />
-                  <span className="text-[9px] font-semibold truncate w-full text-center">{label}</span>
+                  <NavIcon style={{ width: 20, height: 20 }} />
+                  <span className="text-[8px] font-semibold truncate w-full text-center">{label}</span>
                   {badge && (
-                    <span className="absolute top-2 right-1/2 translate-x-2.5 text-[8px] font-bold text-white rounded-full w-3.5 h-3.5 flex items-center justify-center bg-red-500">
-                      {badge}
+                    <span className="absolute top-1 right-1/4 text-[9px] font-bold text-white rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
+                      {badge > 9 ? '9+' : badge}
                     </span>
                   )}
                   {isActive && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-violet-600 rounded-full" />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-violet-600 rounded-full" />
                   )}
                 </button>
               );
