@@ -35,33 +35,25 @@ function NavItem({ icon: Icon, label, badge, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center gap-1 flex-1 py-2 min-h-[52px] justify-center relative active:scale-90 transition-transform"
+      className="flex flex-col items-center gap-1.5 flex-1 justify-center active:scale-90 transition-transform"
     >
       <div className="relative">
-        {/* Active pill background */}
-        {isActive && (
-          <span
-            className="absolute inset-0 -m-1.5 rounded-xl"
-            style={{ background: `${BRAND}12` }}
-          />
-        )}
         <Icon
-          strokeWidth={isActive ? 2.2 : 1.6}
-          style={{ color: isActive ? BRAND : 'hsl(var(--muted-foreground))', width: 22, height: 22, position: 'relative' }}
+          strokeWidth={isActive ? 2.2 : 1.5}
+          style={{ color: isActive ? BRAND : '#9CA3AF', width: 24, height: 24 }}
         />
-        {/* Badge dot */}
         {badge > 0 && (
           <span
-            className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] rounded-full flex items-center justify-center text-[8px] font-black text-white px-0.5"
-            style={{ background: '#E17055', lineHeight: 1 }}
+            className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+            style={{ background: '#E17055' }}
           >
             {badge > 9 ? '9+' : badge}
           </span>
         )}
       </div>
       <span
-        className="text-[10px] font-semibold tracking-tight"
-        style={{ color: isActive ? BRAND : 'hsl(var(--muted-foreground))' }}
+        className="text-[9px] font-semibold tracking-wide"
+        style={{ color: isActive ? BRAND : '#9CA3AF' }}
       >
         {label}
       </span>
@@ -115,14 +107,10 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="shrink-0 bg-background"
-      style={{
-        paddingBottom: 'env(safe-area-inset-bottom)',
-        borderTop: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.05)',
-      }}
+      className="shrink-0 bg-background border-t border-border/40"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <div className="w-full flex items-center justify-around px-2" style={{ height: 56 }}>
+      <div className="w-full flex items-center justify-around gap-1 px-3 py-2.5">
         {tabs.map((item) => (
           <NavItem
             key={item.path}
