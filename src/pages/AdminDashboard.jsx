@@ -19,19 +19,13 @@ import AdminFinanceTab from '@/components/admin/AdminFinanceTab';
 import AdminEmailTab from '@/components/admin/AdminEmailTab';
 
 const TABS = [
-  { key: 'overview',     label: 'Vue d\'ensemble', icon: LayoutDashboard, group: 'Principal' },
-  { key: 'finance',      label: 'Finances',         icon: Euro,            group: 'Principal' },
-  { key: 'documents',    label: 'Documents',        icon: Receipt,         group: 'Principal' },
-  { key: 'disputes',     label: 'Litiges',          icon: AlertTriangle,   group: 'Modération' },
-  { key: 'reports',      label: 'Signalements',     icon: Flag,            group: 'Modération' },
-  { key: 'blacklist',    label: 'Blacklist',        icon: Ban,             group: 'Modération' },
-  { key: 'tickets',      label: 'Support',          icon: Ticket,          group: 'Outils' },
-  { key: 'email',        label: 'Email',            icon: Mail,            group: 'Outils' },
-  { key: 'dac7',         label: 'DAC7',             icon: FileText,        group: 'Conformité' },
-  { key: 'independence', label: 'Indépendance',     icon: Shield,          group: 'Conformité' },
+  { key: 'overview',     label: 'Vue d\'ensemble', icon: LayoutDashboard },
+  { key: 'disputes',     label: 'Litiges',          icon: AlertTriangle },
+  { key: 'reports',      label: 'Signalements',     icon: Flag },
+  { key: 'finance',      label: 'Finances',         icon: Euro },
+  { key: 'documents',    label: 'Documents',        icon: Receipt },
+  { key: 'tickets',      label: 'Support',          icon: Ticket },
 ];
-
-const GROUPS = ['Principal', 'Modération', 'Outils', 'Conformité'];
 
 const BADGE_COLORS = {
   disputes: 'bg-amber-500',
@@ -122,66 +116,56 @@ export default function AdminDashboard() {
   const SidebarContent = () => (
     <>
       {/* Logo */}
-      <div className="px-5 py-6 shrink-0 border-b border-slate-700">
+      <div className="px-5 py-5 shrink-0 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shrink-0 shadow-md">
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="font-black text-sm text-white tracking-tight">ServiGo Admin</p>
-            <p className="text-[11px] text-slate-400 font-medium">Panel de contrôle</p>
+            <p className="font-black text-sm text-slate-900 tracking-tight">Admin</p>
+            <p className="text-[10px] text-slate-500 font-medium">ServiGo</p>
           </div>
         </div>
       </div>
 
-      {/* Nav groups */}
-      <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-6">
-        {GROUPS.map(group => {
-          const groupTabs = TABS.filter(t => t.group === group);
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-5 overflow-y-auto space-y-1">
+        {TABS.map(({ key, label, icon: TabIcon }) => {
+          const badge = badges[key];
+          const isActive = tab === key;
           return (
-            <div key={group}>
-              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest px-3 mb-2.5">{group}</p>
-              <div className="space-y-1">
-                {groupTabs.map(({ key, label, icon: TabIcon }) => {
-                  const badge = badges[key];
-                  const isActive = tab === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => handleTabChange(key)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer text-left ${
-                        isActive
-                          ? 'bg-violet-600/20 text-violet-400 border border-violet-500/30'
-                          : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
-                      }`}
-                    >
-                      <TabIcon className="w-4 h-4 shrink-0" />
-                      <span className="flex-1 truncate">{label}</span>
-                      {badge && (
-                        <span className={`text-[10px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 ${
-                          isActive ? 'bg-violet-500 text-white' : BADGE_COLORS[key] || 'bg-slate-600'
-                        } text-white`}>
-                          {badge > 9 ? '9+' : badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <button
+              key={key}
+              onClick={() => handleTabChange(key)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer text-left ${
+                isActive
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <TabIcon className="w-4 h-4 shrink-0" />
+              <span className="flex-1 truncate">{label}</span>
+              {badge && (
+                <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${
+                  isActive ? 'bg-violet-600 text-white' : BADGE_COLORS[key] || 'bg-slate-300'
+                }`}>
+                  {badge > 9 ? '9+' : badge}
+                </span>
+              )}
+            </button>
           );
         })}
       </nav>
 
       {/* User footer */}
-      <div className="px-4 py-4 border-t border-slate-700 shrink-0">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-700/40">
-          <div className="w-8 h-8 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+      <div className="px-4 py-4 border-t border-slate-100 shrink-0">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50">
+          <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
             <span className="text-xs font-bold text-white">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-200 truncate">{currentUser?.full_name || 'Admin'}</p>
-            <p className="text-[10px] text-slate-400 truncate">{currentUser?.email}</p>
+            <p className="text-xs font-semibold text-slate-800 truncate">{currentUser?.full_name || 'Admin'}</p>
+            <p className="text-[10px] text-slate-500 truncate">{currentUser?.email}</p>
           </div>
         </div>
       </div>
@@ -194,7 +178,7 @@ export default function AdminDashboard() {
       style={{ paddingTop: 'env(safe-area-inset-top)' }}
     >
       {/* ── SIDEBAR DESKTOP ── */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-gradient-to-b from-slate-900 to-slate-800 border-r border-slate-700 h-full">
+      <aside className="hidden md:flex flex-col w-60 shrink-0 bg-white border-r border-slate-100 h-full">
         <SidebarContent />
       </aside>
 
@@ -202,11 +186,11 @@ export default function AdminDashboard() {
       {sidebarOpen && (
         <>
           <div
-            className="md:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+            className="md:hidden fixed inset-0 z-40 bg-black/20"
             onClick={() => setSidebarOpen(false)}
           />
           <aside
-            className="md:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white flex flex-col shadow-2xl"
+            className="md:hidden fixed inset-y-0 left-0 z-50 w-56 bg-white flex flex-col shadow-2xl"
             style={{ paddingTop: 'env(safe-area-inset-top)' }}
           >
             <div className="flex items-center justify-between px-4 pt-3 pb-2 shrink-0">
@@ -228,9 +212,9 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top bar */}
-        <header className="shrink-0 bg-white border-b border-slate-200 flex items-center px-4 md:px-6 py-4 gap-4">
+        <header className="shrink-0 bg-white border-b border-slate-100 flex items-center px-4 md:px-6 py-4 gap-4">
           <button
-            className="lg:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
             onClick={() => setSidebarOpen(true)}
             aria-label="Ouvrir le menu"
           >
@@ -324,7 +308,7 @@ export default function AdminDashboard() {
 
         {/* ── BOTTOM NAV MOBILE ── */}
         <nav
-          className="lg:hidden shrink-0 bg-white border-t border-slate-200"
+          className="md:hidden shrink-0 bg-white border-t border-slate-100"
           style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
@@ -335,19 +319,19 @@ export default function AdminDashboard() {
                 <button
                   key={key}
                   onClick={() => setTab(key)}
-                  className={`relative flex-1 shrink-0 flex flex-col items-center gap-0.5 py-3 px-1 min-w-[56px] transition-all cursor-pointer ${
+                  className={`relative flex-1 shrink-0 flex flex-col items-center gap-0.5 py-3 px-1 min-w-[52px] transition-colors cursor-pointer ${
                     isActive ? 'text-violet-600' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  <NavIcon style={{ width: 20, height: 20 }} />
+                  <NavIcon style={{ width: 18, height: 18 }} />
                   <span className="text-[8px] font-semibold truncate w-full text-center">{label}</span>
                   {badge && (
-                    <span className="absolute top-1 right-1/4 text-[9px] font-bold text-white rounded-full w-4 h-4 flex items-center justify-center bg-red-500">
-                      {badge > 9 ? '9+' : badge}
+                    <span className="absolute top-2 right-1/4 translate-x-2.5 text-[8px] font-bold text-white rounded-full w-3.5 h-3.5 flex items-center justify-center bg-red-500">
+                      {badge}
                     </span>
                   )}
                   {isActive && (
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-violet-600 rounded-full" />
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-violet-600 rounded-full" />
                   )}
                 </button>
               );
