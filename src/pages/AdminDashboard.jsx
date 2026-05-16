@@ -139,17 +139,18 @@ export default function AdminDashboard() {
             <button
               key={key}
               onClick={() => handleTabChange(key)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer text-left ${
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer text-left relative ${
                 isActive
-                  ? 'bg-violet-100 text-violet-700'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  ? 'bg-violet-600 text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
+              <div className={`w-0.5 h-6 rounded-full absolute left-0 transition-all ${isActive ? 'bg-white' : 'bg-transparent'}`} />
               <TabIcon className="w-4 h-4 shrink-0" />
               <span className="flex-1 truncate">{label}</span>
               {badge && (
-                <span className={`text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 ${
-                  isActive ? 'bg-violet-600 text-white' : BADGE_COLORS[key] || 'bg-slate-300'
+                <span className={`text-[10px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1 ${
+                  isActive ? 'bg-white text-violet-600' : BADGE_COLORS[key] || 'bg-slate-300 text-white'
                 }`}>
                   {badge > 9 ? '9+' : badge}
                 </span>
@@ -238,18 +239,23 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick stats in header */}
-          <div className="hidden sm:flex items-center gap-4">
-            {[
-              { count: openDisputes, label: 'Litiges', icon: AlertTriangle, color: 'text-amber-600' },
-              { count: pendingReports.length, label: 'Reports', icon: Flag, color: 'text-red-600' },
-              { count: newTickets.length, label: 'Support', icon: Ticket, color: 'text-blue-600' },
-            ].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-1.5">
-                <item.icon className={`w-4 h-4 ${item.color}`} />
-                <span className="text-xs font-semibold text-slate-600">{item.count}</span>
-              </div>
-            ))}
-          </div>
+            <div className="hidden lg:flex items-center gap-6">
+              {[
+                { count: openDisputes, label: 'Litiges', icon: AlertTriangle, color: 'text-amber-600' },
+                { count: pendingReports.length, label: 'Signalements', icon: Flag, color: 'text-red-600' },
+                { count: newTickets.length, label: 'Support', icon: Ticket, color: 'text-blue-600' },
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100">
+                    <item.icon className={`w-4 h-4 ${item.color}`} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">{item.label}</span>
+                    <span className="text-lg font-bold text-slate-900">{item.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
 
           {/* Alert bell */}
           {totalAlerts > 0 && (
@@ -277,8 +283,8 @@ export default function AdminDashboard() {
 
         {/* Quick stats grid */}
         {tab === 'overview' && (
-          <div className="shrink-0 px-4 md:px-6 py-4 border-b border-slate-100">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-6xl">
+          <div className="shrink-0 px-4 md:px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-transparent">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-7xl">
               {stats.map((stat, idx) => {
                 const StatIcon = stat.icon;
                 const colorClass = stat.urgent ? 'border-l-4 border-l-red-500 bg-red-50' : `border-l-4 border-l-${stat.color}-500 bg-${stat.color}-50`;
@@ -303,7 +309,7 @@ export default function AdminDashboard() {
           className="flex-1 overflow-y-auto px-4 md:px-6 py-6"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 80px)' }}
         >
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             {tab === 'overview'     && <OverviewTab />}
             {tab === 'finance'      && <AdminFinanceTab />}
             {tab === 'documents'    && <AdminDocumentsTab />}
