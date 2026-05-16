@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import {
   CheckCircle, CreditCard, Shield, Zap,
   RefreshCw, Receipt, Loader2, ChevronRight,
-  Briefcase, MessageCircle, Star, AlertCircle, Calendar,
+  Briefcase, MessageCircle, Star, AlertCircle, Calendar, Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -88,6 +88,11 @@ export default function ProSubscription() {
   // ─── Redirect vers Stripe / site web ───────────────────────────────────────
   const handleSubscribe = async (overridePlan) => {
     const activePlan = overridePlan || plan;
+
+    if (onIOS && !inIframe) {
+      // Apple ne permet pas de traiter un paiement dans l'app sans IAP
+      return;
+    }
 
     if (onAndroid && !inIframe) {
       window.open(PRO_SITE_URL, '_system');
@@ -216,8 +221,8 @@ export default function ProSubscription() {
             </div>
           </div>
 
-          {/* Upgrade annuel */}
-          {subscription.plan === 'monthly' && (
+          {/* Upgrade annuel — masqué sur iOS (pas de paiement in-app) */}
+          {subscription.plan === 'monthly' && !onIOS && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-bold text-amber-900">🎯 Passez à l'annuel</p>
@@ -228,6 +233,17 @@ export default function ProSubscription() {
                 style={{ background: '#D97706' }}>
                 Changer →
               </button>
+            </div>
+          )}
+          {subscription.plan === 'monthly' && onIOS && (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
+              <Globe className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900">Passer à l'annuel via le web</p>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  Gérez votre abonnement depuis <span className="font-bold">servi-go-pro.base44.app</span>
+                </p>
+              </div>
             </div>
           )}
 
@@ -434,45 +450,64 @@ export default function ProSubscription() {
         </div>
 
         {/* CTA */}
-        <div className="space-y-3">
-          <Button
-            onClick={() => handleSubscribe()}
-            disabled={loading || inIframe}
-            className="w-full h-14 rounded-2xl text-base font-bold shadow-lg"
-            style={{ background: inIframe ? '#9CA3AF' : `linear-gradient(135deg, ${BRAND}, #a78bfa)`, border: 'none' }}
-          >
-            {loading
-              ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              : <ChevronRight className="w-5 h-5 mr-2" />
-            }
-            {ctaLabel}
-          </Button>
+        {onIOS ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 text-center space-y-3">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+              <Globe className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-blue-900">Abonnement via le web</p>
+              <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                L'abonnement ServiGo Pro se souscrit depuis notre site web.{'\n'}
+                Visitez <span className="font-bold">servi-go-pro.base44.app</span> depuis votre navigateur.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <Button
+              onClick={() => handleSubscribe()}
+              disabled={loading || inIframe}
+              className="w-full h-14 rounded-2xl text-base font-bold shadow-lg"
+              style={{ background: inIframe ? '#9CA3AF' : `linear-gradient(135deg, ${BRAND}, #a78bfa)`, border: 'none' }}
+            >
+              {loading
+                ? <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                : <ChevronRight className="w-5 h-5 mr-2" />
+              }
+              {ctaLabel}
+            </Button>
 
-          {!isActive && subscription && (
-            <button onClick={() => handleSubscribe()} disabled={loading || inIframe}
-              className="w-full text-center text-sm font-semibold py-2 disabled:opacity-50"
-              style={{ color: BRAND }}>
-              Renouveler mon abonnement →
-            </button>
-          )}
-        </div>
+            {!isActive && subscription && (
+              <button onClick={() => handleSubscribe()} disabled={loading || inIframe}
+                className="w-full text-center text-sm font-semibold py-2 disabled:opacity-50"
+                style={{ color: BRAND }}>
+                Renouveler mon abonnement →
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Trust strip */}
-        <div className="flex items-center justify-center gap-6 py-2">
-          {[
-            { icon: Shield,    label: 'Sans engagement' },
-            { icon: RefreshCw, label: 'Résiliable' },
-            { icon: CreditCard, label: onAndroid ? 'Google Play' : 'Stripe sécurisé' },
-          ].map(({ icon: Icon, label }) => (
-            <div key={label} className="flex flex-col items-center gap-1">
-              <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
-              <span className="text-[10px] text-muted-foreground text-center">{label}</span>
-            </div>
-          ))}
-        </div>
+        {!onIOS && (
+          <div className="flex items-center justify-center gap-6 py-2">
+            {[
+              { icon: Shield,     label: 'Sans engagement' },
+              { icon: RefreshCw,  label: 'Résiliable' },
+              { icon: CreditCard, label: onAndroid ? 'Google Play' : 'Stripe sécurisé' },
+            ].map(({ icon: Icon, label }) => (
+              <div key={label} className="flex flex-col items-center gap-1">
+                <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+                <span className="text-[10px] text-muted-foreground text-center">{label}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <p className="text-center text-[10px] text-muted-foreground px-4 leading-relaxed">
-          {onAndroid
+          {onIOS
+            ? "Les achats in-app ne sont pas disponibles sur cette application. Gérez votre abonnement depuis le web."
+            : onAndroid
             ? "Sur Android, l'abonnement se gère depuis notre site web. Vous serez redirigé automatiquement."
             : 'Paiement sécurisé par Stripe. Vous pouvez résilier à tout moment depuis votre espace Pro.'
           }
