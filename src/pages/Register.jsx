@@ -132,6 +132,8 @@ export default function Register() {
             <StepConfirmation
               userType={userType}
               firstName={personalData.first_name || currentUser?.first_name}
+              userEmail={currentUser?.email}
+              userName={[personalData.first_name, personalData.last_name].filter(Boolean).join(' ') || currentUser?.full_name}
               navigate={navigate}
             />
           </motion.div>

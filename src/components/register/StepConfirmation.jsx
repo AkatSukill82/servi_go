@@ -1,8 +1,43 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, ShieldCheck, ChevronRight } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
-export default function StepConfirmation({ userType, firstName, navigate }) {
+async function createTrialSubscription(userEmail, userName) {
+  // Vérifier si une subscription existe déjà
+  const existing = await base44.entities.ProSubscription.filter({ professional_email: userEmail }, '-created_date', 1);
+  if (existing.length > 0) return;
+
+  const today = new Date();
+  const trialEnd = new Date(today);
+  trialEnd.setMonth(trialEnd.getMonth() + 3);
+
+  const fmt = (d) => d.toISOString().split('T')[0];
+
+  await base44.entities.ProSubscription.create({
+    professional_email: userEmail,
+    professional_name: userName || '',
+    plan: 'monthly',
+    price: 0,
+    status: 'trial',
+    started_date: fmt(today),
+    renewal_date: fmt(trialEnd),
+    trial_ends_date: fmt(trialEnd),
+    payment_method: 'stripe',
+    auto_renew: false,
+  });
+}
+
+export default function StepConfirmation({ userType, firstName, navigate, userEmail, userName }) {
+  const trialCreated = useRef(false);
+
+  useEffect(() => {
+    if (userType === 'professionnel' && userEmail && !trialCreated.current) {
+      trialCreated.current = true;
+      createTrialSubscription(userEmail, userName || firstName).catch(() => {});
+    }
+  }, [userType, userEmail]);
+
   return (
     <div className="w-full md:max-w-lg mx-auto px-5 pb-10 text-center">
       <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}
@@ -26,8 +61,15 @@ export default function StepConfirmation({ userType, firstName, navigate }) {
         <p className="text-xs text-[#6B7280] bg-[#F9FAFB] rounded-xl p-3">
           {userType === 'particulier'
             ? 'Vos documents sont en cours de vérification (24h max). En attendant, vous pouvez découvrir les professionnels disponibles près de chez vous.'
-            : 'Vos documents sont en cours de vérification (24h max). Une fois approuvé, vous pourrez vous abonner et commencer à recevoir des missions.'}
+            : 'Vos documents sont en cours de vérification (24h max). Une fois approuvé, vous pourrez commencer à recevoir des missions.'}
         </p>
+
+        {userType === 'professionnel' && (
+          <div className="mt-3 rounded-xl p-3 flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #E1F5EE, #D1FAE5)', border: '1px solid #6EE7B7' }}>
+            <span className="text-xl shrink-0">🎁</span>
+            <p className="text-xs font-semibold text-emerald-800">3 mois d'abonnement offerts — profitez-en !</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">

@@ -7,6 +7,7 @@ import { isNative } from '@/lib/platform';
 
 
 import BottomNav from './BottomNav.jsx';
+import TrialExpiryBanner from '@/components/subscription/TrialExpiryBanner';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home.jsx'));
@@ -150,6 +151,11 @@ export default function AppLayout() {
         overflowX: 'hidden',
       }}
     >
+
+      {/* Trial expiry warning banner (pro only) */}
+      {userType === 'professionnel' && proSubscription && (
+        <TrialExpiryBanner subscription={proSubscription} />
+      )}
 
       {/* Expired subscription banner (pro only) */}
       {proSubExpired && (
