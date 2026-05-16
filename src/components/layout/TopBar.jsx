@@ -59,17 +59,19 @@ export default function TopBar() {
   return (
     <>
       <div className="sticky top-0 z-30 bg-background border-b border-border/80" style={{ boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
-        <div className="flex items-center justify-center px-5 h-14 relative">
+        <div className="flex items-center justify-between px-5 h-14">
+          {/* Left spacer */}
+          <div className="w-10" />
 
           {/* Logo centré */}
           <span className="text-xl font-black tracking-tight select-none" style={{ color: BRAND }}>
             ServiGo
           </span>
 
-          {/* Bell — positionné à droite */}
+          {/* Bell — droite */}
           <button
             onClick={() => setNotifOpen(o => !o)}
-            className="absolute right-5 relative w-10 h-10 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform shrink-0"
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-muted active:scale-95 transition-transform shrink-0"
           >
             <Bell className="w-4.5 h-4.5 text-foreground" strokeWidth={1.8} style={{ width: 18, height: 18 }} />
             {unreadCount > 0 && (
