@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { FileText, Download, CheckCircle2, Clock, XCircle, Wrench, AlertCircle, Calendar } from 'lucide-react';
+import { FileText, Download, ChevronRight, CheckCircle2, Clock, XCircle, Wrench, AlertCircle, Calendar } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 const STATUS_CONFIG = {

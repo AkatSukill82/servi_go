@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Star, ShieldCheck, MapPin, Briefcase, MessageCircle, Flag, CalendarDays, Camera, Shield, CheckCircle } from 'lucide-react';
+import { Star, ShieldCheck, MapPin, Euro, Clock, Briefcase, MessageCircle, Flag, CalendarDays, Camera, X, Shield, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import BackButton from '@/components/ui/BackButton';
 import { toast } from 'sonner';

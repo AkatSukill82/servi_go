@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, Zap, X, Star, ChevronRight, Shield, FileText, CreditCard, Clock } from 'lucide-react';
+import { Search, Zap, X, Star, ChevronRight, Shield, FileText, CreditCard, MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ServiceCard from '@/components/home/ServiceCard';

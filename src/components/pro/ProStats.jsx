@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Euro, CheckCircle } from 'lucide-react';
-import { subDays, subWeeks, subMonths, format, startOfWeek, startOfMonth } from 'date-fns';
+import { TrendingUp, Euro, CheckCircle, XCircle, CalendarDays } from 'lucide-react';
+import { subDays, subWeeks, subMonths, format, startOfWeek, startOfMonth, eachWeekOfInterval, eachMonthOfInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const PERIODS = [

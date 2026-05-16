@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Star, BadgeCheck } from 'lucide-react';
+import { Star, BadgeCheck, MapPin } from 'lucide-react';
 import { BRAND } from '@/lib/theme';
 
 export default function NearbyProCard({ pro, index, onPress }) {

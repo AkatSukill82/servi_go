@@ -8,11 +8,9 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
   },
   plugins: {
+    // Configuration des plugins Capacitor
     App: {
       launchShowDuration: 0,
-    },
-    PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
     },
   },
   ios: {

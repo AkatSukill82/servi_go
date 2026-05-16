@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Trophy } from 'lucide-react';
+import { Star, Gift, ChevronRight, Trophy, Zap } from 'lucide-react';
 import { BRAND } from '@/lib/theme';
 
 const TIERS = {

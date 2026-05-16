@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Ticket, ChevronDown, ChevronUp, MessageSquare, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Ticket, ChevronDown, ChevronUp, MessageSquare, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';

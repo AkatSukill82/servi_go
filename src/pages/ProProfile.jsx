@@ -14,9 +14,9 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  Camera, Save, LogOut, Briefcase, Euro, MapPin,
+  Camera, Save, LogOut, Briefcase, Euro, MapPin, CalendarDays,
   FileText, Headphones, ShieldCheck, Star, CreditCard, Pencil,
-  Trash2, Check, Shield, User, CheckCircle, Upload, LayoutDashboard, Loader2
+  Trash2, Check, Shield, User, CheckCircle, Clock, Upload, AlertTriangle, LayoutDashboard, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';

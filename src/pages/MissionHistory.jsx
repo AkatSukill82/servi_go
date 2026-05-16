@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, FileText, XCircle } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle, MessageCircle, Star, ChevronRight, FileText, XCircle } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, Users, ChevronDown, ChevronUp, Activity, Flag, Ticket, FileText, Shield, Mail, Receipt, Eye, X } from 'lucide-react';
+import { Euro, TrendingUp, AlertTriangle, Ban, CheckCircle, XCircle, BarChart2, Users, Clock, ChevronDown, ChevronUp, Activity, Flag, Ticket, FileText, Shield, Mail, Receipt, Eye, X } from 'lucide-react';
 import MissionContractFull from '@/components/mission/MissionContractFull';
 import SupportTicketsTab from '@/components/admin/SupportTicketsTab';
 import DAC7Tab from '@/components/admin/DAC7Tab';
 import IndependenceTab from '@/components/admin/IndependenceTab';
-import { formatDateFr } from '@/utils/formatters';
+import { formatPrice, formatDateFr } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';

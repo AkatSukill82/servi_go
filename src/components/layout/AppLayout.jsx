@@ -3,8 +3,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { base44 } from '@/api/base44Client';
+import { isNative } from '@/lib/platform';
+
+
 import BottomNav from './BottomNav.jsx';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 // Lazy load — chaque page chargée uniquement à la première visite
 const Home        = lazy(() => import('@/pages/Home.jsx'));
@@ -59,8 +61,6 @@ export default function AppLayout() {
   const [currentUser, setCurrentUser] = React.useState(null);
   const userEmail = currentUser?.email;
   const queryClient = useQueryClient();
-
-  usePushNotifications(currentUser);
 
   const { data: proSubscription } = useQuery({
     queryKey: ['proSubscription', userEmail],

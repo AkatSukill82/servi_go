@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Wrench, ChevronRight } from 'lucide-react';
+import { Home, Wrench, ChevronRight, ShieldCheck } from 'lucide-react';
 
 export default function AccountTypeSelection() {
   const navigate = useNavigate();

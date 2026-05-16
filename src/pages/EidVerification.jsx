@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, CheckCircle, ShieldCheck, ArrowRight, Loader2, Upload, XCircle, Sparkles } from 'lucide-react';
+import { Camera, CheckCircle, ShieldCheck, ArrowRight, Loader2, Upload, AlertCircle, XCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';

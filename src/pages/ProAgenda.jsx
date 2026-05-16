@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { base44 } from '@/api/base44Client';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, parseISO, subDays } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isSameMonth, isToday, parseISO, addDays, subDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, List, MapPin, Clock, Phone, Euro, CheckCircle, XCircle, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { BRAND } from '@/lib/theme';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const STATUS_CONFIG = {
   pending_pro:      { label: 'En attente',   bg: 'rgba(253,203,110,0.15)', color: '#B7870A' },

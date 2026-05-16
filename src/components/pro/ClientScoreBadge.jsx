@@ -1,7 +1,8 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { Star, Shield, Clock, TrendingUp, AlertTriangle } from 'lucide-react';
+import { BRAND } from '@/lib/theme';
 
 function ScoreRing({ score, size = 56 }) {
   const r = (size / 2) - 5;
