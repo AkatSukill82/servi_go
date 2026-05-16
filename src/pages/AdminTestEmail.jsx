@@ -43,7 +43,7 @@ export default function AdminTestEmail() {
       const bodyHtml = `
         <p>Bonjour,</p>
         <p>${form.message.replace(/\n/g, '<br/>')}</p>
-        <div style="background:#F0F4FF;border-radius:10px;padding:16px 20px;margin:20px 0;border-left:4px solid #1A365D;font-size:13px;color:#718096;">
+        <div style="background:#F5F5F5;border-radius:12px;padding:18px 22px;margin:24px 0;border-left:3px solid #0F0F0F;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:13px;color:#555555;">
           Cet email a été envoyé depuis le panneau d'administration ServiGo par <strong>${user?.email || 'admin'}</strong>.
         </div>
         <p>Cordialement,<br/><strong>L'équipe ServiGo</strong></p>
@@ -127,7 +127,7 @@ export default function AdminTestEmail() {
 
           {/* Preview note */}
           <div className="bg-muted/50 rounded-xl p-3 text-xs text-muted-foreground">
-            L'email sera envoyé avec le <strong>header bleu ServiGo</strong>, votre message en corps, et un footer avec lien de désinscription.
+            L'email sera envoyé avec le <strong>template noir ServiGo</strong> (header #0F0F0F + carte blanche), votre message en corps, et un footer épuré.
           </div>
 
           <Button
