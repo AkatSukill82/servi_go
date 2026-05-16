@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// ─── ServiGo Premium Email Template ──────────────────────────────────────────
 function buildEmailHtml({ title, body, ctaText, ctaUrl }) {
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -11,31 +10,30 @@ function buildEmailHtml({ title, body, ctaText, ctaUrl }) {
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;600;700;800&display=swap" rel="stylesheet"/>
 </head>
-<body style="margin:0;padding:0;background:#F2F2F2;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F2F2F2;padding:40px 16px 48px;">
+<body style="margin:0;padding:0;background:#EBEBEB;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#EBEBEB;padding:48px 16px 56px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
         <tr>
-          <td style="background:#0F0F0F;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
-            <div style="display:inline-block;">
-              <span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:32px;font-weight:800;color:#FFFFFF;letter-spacing:-1px;">Servi</span><span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:32px;font-weight:800;background:#FFFFFF;color:#0F0F0F;padding:0 6px;border-radius:4px;margin-left:1px;letter-spacing:-1px;">Go</span>
+          <td style="background:#0F0F0F;border-radius:20px 20px 0 0;padding:36px 40px 32px;text-align:center;">
+            <div style="margin-bottom:6px;">
+              <span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:34px;font-weight:800;color:#FFFFFF;letter-spacing:-1.5px;">Servi</span><span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:34px;font-weight:800;letter-spacing:-1.5px;background:#FFFFFF;color:#0F0F0F;padding:2px 8px;border-radius:6px;margin-left:2px;">Go</span>
             </div>
-            <p style="margin:8px 0 0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.45);letter-spacing:0.5px;text-transform:uppercase;">Services à domicile en Belgique</p>
+            <p style="margin:10px 0 0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;">Services à domicile · Belgique</p>
           </td>
         </tr>
         <tr>
-          <td style="background:#FFFFFF;padding:40px 40px 32px;border-left:1px solid #E5E5E5;border-right:1px solid #E5E5E5;">
-            <h1 style="margin:0 0 20px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:800;color:#0F0F0F;line-height:1.25;letter-spacing:-0.3px;">${title}</h1>
-            <div style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3D3D3D;line-height:1.75;">${body}</div>
-            ${ctaText && ctaUrl ? `<div style="margin-top:36px;text-align:center;"><a href="${ctaUrl}" style="display:inline-block;background:#0F0F0F;color:#FFFFFF;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;padding:16px 40px;border-radius:10px;text-decoration:none;">${ctaText} →</a></div>` : ''}
-          </td>
-        </tr>
-        <tr><td style="background:#FFFFFF;padding:0 40px;border-left:1px solid #E5E5E5;border-right:1px solid #E5E5E5;"><div style="height:1px;background:#F0F0F0;"></div></td></tr>
-        <tr>
-          <td style="background:#FFFFFF;border:1px solid #E5E5E5;border-top:none;border-radius:0 0 16px 16px;padding:24px 40px 28px;text-align:center;">
-            <p style="margin:0 0 8px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;color:#0F0F0F;">ServiGo</p>
-            <p style="margin:0 0 12px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#8C8C8C;line-height:1.6;">Votre plateforme de services à domicile en Belgique<br/><a href="mailto:contact@servigo.be" style="color:#8C8C8C;text-decoration:none;">contact@servigo.be</a></p>
-            <p style="margin:0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#BBBBBB;"><a href="https://servigo.be/confidentialite" style="color:#BBBBBB;text-decoration:underline;">Politique de confidentialité</a>&nbsp;·&nbsp;<a href="https://servigo.be/cgu" style="color:#BBBBBB;text-decoration:underline;">CGU</a>&nbsp;·&nbsp;<a href="https://servigo.be/confidentialite" style="color:#BBBBBB;text-decoration:underline;">Se désinscrire</a></p>
+          <td style="background:#FFFFFF;padding:40px 40px 36px;border-left:1px solid #E0E0E0;border-right:1px solid #E0E0E0;border-bottom:1px solid #E0E0E0;border-radius:0 0 20px 20px;">
+            <h1 style="margin:0 0 18px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:24px;font-weight:800;color:#0F0F0F;line-height:1.2;letter-spacing:-0.5px;">${title}</h1>
+            <div style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#444444;line-height:1.8;">${body}</div>
+            ${ctaText && ctaUrl ? `<div style="margin-top:36px;"><a href="${ctaUrl}" style="display:block;background:#0F0F0F;color:#FFFFFF;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;padding:18px 32px;border-radius:12px;text-decoration:none;text-align:center;">${ctaText} &nbsp;→</a></div>` : ''}
+            <div style="height:1px;background:#F0F0F0;margin:32px 0 24px;"></div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td><p style="margin:0 0 4px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:700;color:#0F0F0F;">ServiGo</p><p style="margin:0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#AAAAAA;"><a href="mailto:contact@servigo.be" style="color:#AAAAAA;text-decoration:none;">contact@servigo.be</a> · <a href="https://servigo.be" style="color:#AAAAAA;text-decoration:none;">servigo.be</a></p></td>
+                <td style="text-align:right;vertical-align:top;"><p style="margin:0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCCCCC;line-height:1.8;"><a href="https://servigo.be/confidentialite" style="color:#CCCCCC;text-decoration:underline;">Confidentialité</a><br/><a href="https://servigo.be/cgu" style="color:#CCCCCC;text-decoration:underline;">CGU</a> · <a href="https://servigo.be/confidentialite" style="color:#CCCCCC;text-decoration:underline;">Se désinscrire</a></p></td>
+              </tr>
+            </table>
           </td>
         </tr>
       </table>
@@ -45,44 +43,39 @@ function buildEmailHtml({ title, body, ctaText, ctaUrl }) {
 </html>`;
 }
 
+function infoBlock(label, contentHtml) {
+  return `<div style="background:#F5F5F5;border-radius:12px;padding:18px 22px;margin:24px 0;border-left:3px solid #0F0F0F;">${label ? `<p style="margin:0 0 8px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:700;color:#0F0F0F;text-transform:uppercase;letter-spacing:1px;">${label}</p>` : ''}<div style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#333333;line-height:1.8;">${contentHtml}</div></div>`;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
     const { event, data } = payload;
 
-    if (!data) {
-      console.log('No data in payload');
-      return Response.json({ ok: true });
-    }
+    if (!data) return Response.json({ ok: true });
 
     const entityName = event?.entity_name;
     const eventType = event?.type;
 
     // ── ServiceRequestV2 created ───────────────────────────────────────────────
     if (entityName === 'ServiceRequestV2' && eventType === 'create' && data.customer_email) {
-      const scheduledStr = data.scheduled_date
-        ? `<br/><strong>Date souhaitée :</strong> ${data.scheduled_date}${data.scheduled_time ? ' à ' + data.scheduled_time : ''}`
-        : '';
-      const urgentStr = data.is_urgent
-        ? `<br/><span style="font-weight:700;color:#0F0F0F;">⚡ Demande urgente</span>`
-        : '';
+      const detailsHtml = [
+        `<strong>Service :</strong> ${data.category_name || 'Non précisé'}`,
+        data.scheduled_date ? `<strong>Date souhaitée :</strong> ${data.scheduled_date}${data.scheduled_time ? ' à ' + data.scheduled_time : ''}` : null,
+        data.customer_address ? `<strong>Adresse :</strong> ${data.customer_address}` : null,
+        data.estimated_price ? `<strong>Prix estimé :</strong> ${data.estimated_price} €` : null,
+        data.is_urgent ? `<strong style="color:#0F0F0F;">⚡ Demande urgente</strong>` : null,
+      ].filter(Boolean).join('<br/>');
 
       const html = buildEmailHtml({
         title: 'Votre demande a bien été reçue',
         body: `
           <p>Bonjour ${data.customer_first_name || data.customer_name || ''},</p>
           <p>Nous avons bien reçu votre demande de service. Notre équipe recherche actuellement un professionnel disponible près de chez vous.</p>
-          <div style="background:#F7F7F7;border-radius:10px;padding:18px 22px;margin:24px 0;border-left:3px solid #0F0F0F;">
-            <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#0F0F0F;text-transform:uppercase;letter-spacing:0.5px;">Récapitulatif</p>
-            <p style="margin:0;font-size:14px;color:#3D3D3D;line-height:1.8;">
-              <strong>Service :</strong> ${data.category_name || 'Non précisé'}${scheduledStr}${urgentStr}
-              ${data.customer_address ? `<br/><strong>Adresse :</strong> ${data.customer_address}` : ''}
-              ${data.estimated_price ? `<br/><strong>Prix estimé :</strong> ${data.estimated_price} €` : ''}
-            </p>
-          </div>
+          ${infoBlock('Récapitulatif', detailsHtml)}
           <p>Vous recevrez une notification dès qu'un professionnel accepte votre mission. Cela prend généralement moins de 30 minutes.</p>
-          <p style="margin-top:28px;">Cordialement,<br/><strong>L'équipe ServiGo</strong></p>
+          <p style="margin-top:24px;">Cordialement,<br/><strong>L'équipe ServiGo</strong></p>
         `,
         ctaText: 'Suivre ma demande',
         ctaUrl: 'https://servigo.be',
@@ -99,20 +92,19 @@ Deno.serve(async (req) => {
 
     // ── ServiceRequestV2 accepted ──────────────────────────────────────────────
     if (entityName === 'ServiceRequestV2' && eventType === 'update' && data.status === 'accepted' && data.customer_email) {
+      const proHtml = [
+        `<strong>Professionnel :</strong> ${data.professional_name || 'Non communiqué'}`,
+        data.scheduled_date ? `<strong>Intervention prévue :</strong> ${data.scheduled_date}${data.scheduled_time ? ' à ' + data.scheduled_time : ''}` : null,
+      ].filter(Boolean).join('<br/>');
+
       const html = buildEmailHtml({
         title: 'Un professionnel a accepté votre mission',
         body: `
           <p>Bonjour ${data.customer_first_name || data.customer_name || ''},</p>
           <p>Bonne nouvelle ! <strong>${data.professional_name || 'Un professionnel ServiGo'}</strong> a accepté votre demande de <strong>${data.category_name || 'service'}</strong>.</p>
-          <div style="background:#F7F7F7;border-radius:10px;padding:18px 22px;margin:24px 0;border-left:3px solid #0F0F0F;">
-            <p style="margin:0 0 6px;font-weight:700;font-size:13px;color:#0F0F0F;text-transform:uppercase;letter-spacing:0.5px;">Votre professionnel</p>
-            <p style="margin:0;font-size:14px;color:#3D3D3D;line-height:1.8;">
-              ${data.professional_name || 'Non communiqué'}
-              ${data.scheduled_date ? `<br/><strong>Intervention prévue :</strong> ${data.scheduled_date}${data.scheduled_time ? ' à ' + data.scheduled_time : ''}` : ''}
-            </p>
-          </div>
+          ${infoBlock('Votre professionnel', proHtml)}
           <p>Prochaine étape : vous allez recevoir un contrat à signer numériquement dans l'application avant l'intervention.</p>
-          <p style="margin-top:28px;">Cordialement,<br/><strong>L'équipe ServiGo</strong></p>
+          <p style="margin-top:24px;">Cordialement,<br/><strong>L'équipe ServiGo</strong></p>
         `,
         ctaText: 'Voir ma mission',
         ctaUrl: 'https://servigo.be',

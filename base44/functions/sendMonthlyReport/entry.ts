@@ -10,31 +10,30 @@ function buildEmailHtml({ title, body, ctaText, ctaUrl }) {
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;600;700;800&display=swap" rel="stylesheet"/>
 </head>
-<body style="margin:0;padding:0;background:#F2F2F2;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F2F2F2;padding:40px 16px 48px;">
+<body style="margin:0;padding:0;background:#EBEBEB;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#EBEBEB;padding:48px 16px 56px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
         <tr>
-          <td style="background:#0F0F0F;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center;">
-            <div style="display:inline-block;">
-              <span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:32px;font-weight:800;color:#FFFFFF;letter-spacing:-1px;">Servi</span><span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:32px;font-weight:800;background:#FFFFFF;color:#0F0F0F;padding:0 6px;border-radius:4px;margin-left:1px;letter-spacing:-1px;">Go</span>
+          <td style="background:#0F0F0F;border-radius:20px 20px 0 0;padding:36px 40px 32px;text-align:center;">
+            <div style="margin-bottom:6px;">
+              <span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:34px;font-weight:800;color:#FFFFFF;letter-spacing:-1.5px;">Servi</span><span style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:34px;font-weight:800;letter-spacing:-1.5px;background:#FFFFFF;color:#0F0F0F;padding:2px 8px;border-radius:6px;margin-left:2px;">Go</span>
             </div>
-            <p style="margin:8px 0 0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.45);letter-spacing:0.5px;text-transform:uppercase;">Services à domicile en Belgique</p>
+            <p style="margin:10px 0 0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:500;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;">Services à domicile · Belgique</p>
           </td>
         </tr>
         <tr>
-          <td style="background:#FFFFFF;padding:40px 40px 32px;border-left:1px solid #E5E5E5;border-right:1px solid #E5E5E5;">
-            <h1 style="margin:0 0 20px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:22px;font-weight:800;color:#0F0F0F;line-height:1.25;letter-spacing:-0.3px;">${title}</h1>
-            <div style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3D3D3D;line-height:1.75;">${body}</div>
-            ${ctaText && ctaUrl ? `<div style="margin-top:36px;text-align:center;"><a href="${ctaUrl}" style="display:inline-block;background:#0F0F0F;color:#FFFFFF;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;padding:16px 40px;border-radius:10px;text-decoration:none;">${ctaText} →</a></div>` : ''}
-          </td>
-        </tr>
-        <tr><td style="background:#FFFFFF;padding:0 40px;border-left:1px solid #E5E5E5;border-right:1px solid #E5E5E5;"><div style="height:1px;background:#F0F0F0;"></div></td></tr>
-        <tr>
-          <td style="background:#FFFFFF;border:1px solid #E5E5E5;border-top:none;border-radius:0 0 16px 16px;padding:24px 40px 28px;text-align:center;">
-            <p style="margin:0 0 8px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:13px;font-weight:600;color:#0F0F0F;">ServiGo</p>
-            <p style="margin:0 0 12px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#8C8C8C;line-height:1.6;">Votre plateforme de services à domicile en Belgique<br/><a href="mailto:contact@servigo.be" style="color:#8C8C8C;text-decoration:none;">contact@servigo.be</a></p>
-            <p style="margin:0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#BBBBBB;"><a href="https://servigo.be/confidentialite" style="color:#BBBBBB;text-decoration:underline;">Politique de confidentialité</a>&nbsp;·&nbsp;<a href="https://servigo.be/cgu" style="color:#BBBBBB;text-decoration:underline;">CGU</a>&nbsp;·&nbsp;<a href="https://servigo.be/confidentialite" style="color:#BBBBBB;text-decoration:underline;">Se désinscrire</a></p>
+          <td style="background:#FFFFFF;padding:40px 40px 36px;border-left:1px solid #E0E0E0;border-right:1px solid #E0E0E0;border-bottom:1px solid #E0E0E0;border-radius:0 0 20px 20px;">
+            <h1 style="margin:0 0 18px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:24px;font-weight:800;color:#0F0F0F;line-height:1.2;letter-spacing:-0.5px;">${title}</h1>
+            <div style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#444444;line-height:1.8;">${body}</div>
+            ${ctaText && ctaUrl ? `<div style="margin-top:36px;"><a href="${ctaUrl}" style="display:block;background:#0F0F0F;color:#FFFFFF;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;padding:18px 32px;border-radius:12px;text-decoration:none;text-align:center;">${ctaText} &nbsp;→</a></div>` : ''}
+            <div style="height:1px;background:#F0F0F0;margin:32px 0 24px;"></div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td><p style="margin:0 0 4px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:700;color:#0F0F0F;">ServiGo</p><p style="margin:0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#AAAAAA;"><a href="mailto:contact@servigo.be" style="color:#AAAAAA;text-decoration:none;">contact@servigo.be</a> · <a href="https://servigo.be" style="color:#AAAAAA;text-decoration:none;">servigo.be</a></p></td>
+                <td style="text-align:right;vertical-align:top;"><p style="margin:0;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:10px;color:#CCCCCC;line-height:1.8;"><a href="https://servigo.be/confidentialite" style="color:#CCCCCC;text-decoration:underline;">Confidentialité</a><br/><a href="https://servigo.be/cgu" style="color:#CCCCCC;text-decoration:underline;">CGU</a> · <a href="https://servigo.be/confidentialite" style="color:#CCCCCC;text-decoration:underline;">Se désinscrire</a></p></td>
+              </tr>
+            </table>
           </td>
         </tr>
       </table>
@@ -42,6 +41,14 @@ function buildEmailHtml({ title, body, ctaText, ctaUrl }) {
   </table>
 </body>
 </html>`;
+}
+
+function infoBlock(label, contentHtml) {
+  return `<div style="background:#F5F5F5;border-radius:12px;padding:18px 22px;margin:16px 0;border-left:3px solid #0F0F0F;">${label ? `<p style="margin:0 0 8px;font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:11px;font-weight:700;color:#0F0F0F;text-transform:uppercase;letter-spacing:1px;">${label}</p>` : ''}<div style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#333333;line-height:1.8;">${contentHtml}</div></div>`;
+}
+
+function statRow(label, value) {
+  return `<tr><td style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#555555;padding:4px 0;">${label}</td><td style="font-family:'Bricolage Grotesque','Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;padding:4px 0;">${value}</td></tr>`;
 }
 
 Deno.serve(async (req) => {
@@ -54,9 +61,7 @@ Deno.serve(async (req) => {
   } catch {}
 
   const isScheduler = req.headers.get('x-base44-scheduler') === 'true';
-  if (!isAdmin && !isScheduler) {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  if (!isAdmin && !isScheduler) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
   const now = new Date();
   const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -76,92 +81,63 @@ Deno.serve(async (req) => {
   const completed = lastMonthRequests.filter(r => r.status === 'completed').length;
   const cancelled = lastMonthRequests.filter(r => r.status === 'cancelled').length;
   const inProgress = lastMonthRequests.filter(r => ['accepted', 'contract_signed', 'pro_en_route', 'in_progress'].includes(r.status)).length;
-  const searching = lastMonthRequests.filter(r => ['searching', 'pending_pro'].includes(r.status)).length;
   const disputed = lastMonthRequests.filter(r => r.status === 'disputed').length;
   const urgent = lastMonthRequests.filter(r => r.is_urgent).length;
-
-  const totalRevenue = lastMonthRequests.filter(r => r.status === 'completed')
-    .reduce((sum, r) => sum + (r.final_price || r.estimated_price || 0), 0);
+  const totalRevenue = lastMonthRequests.filter(r => r.status === 'completed').reduce((sum, r) => sum + (r.final_price || r.estimated_price || 0), 0);
   const avgRevenue = completed > 0 ? (totalRevenue / completed).toFixed(2) : 0;
-
-  const catCount = {};
-  lastMonthRequests.forEach(r => {
-    if (r.category_name) catCount[r.category_name] = (catCount[r.category_name] || 0) + 1;
-  });
-  const topCategoriesHtml = Object.entries(catCount)
-    .sort((a, b) => b[1] - a[1]).slice(0, 5)
-    .map(([name, count]) => `<li style="margin-bottom:4px;"><strong>${name}</strong> — ${count} demande${count > 1 ? 's' : ''}</li>`)
-    .join('');
-
+  const completionRate = total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
   const uniqueClients = new Set(lastMonthRequests.map(r => r.customer_email).filter(Boolean)).size;
   const uniquePros = new Set(lastMonthRequests.filter(r => r.professional_email).map(r => r.professional_email)).size;
-  const completionRate = total > 0 ? ((completed / total) * 100).toFixed(1) : 0;
+
+  const catCount = {};
+  lastMonthRequests.forEach(r => { if (r.category_name) catCount[r.category_name] = (catCount[r.category_name] || 0) + 1; });
+  const topCategoriesHtml = Object.entries(catCount).sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([name, count]) => `<li style="margin-bottom:4px;"><strong>${name}</strong> — ${count} demande${count > 1 ? 's' : ''}</li>`).join('');
 
   const allSubs = await base44.asServiceRole.entities.ProSubscription.list('-created_date', 200);
-  const newSubs = allSubs.filter(s => {
-    if (!s.created_date) return false;
-    const d = new Date(s.created_date);
-    return d >= firstOfLastMonth && d < firstOfThisMonth;
-  });
+  const newSubs = allSubs.filter(s => { const d = new Date(s.created_date); return d >= firstOfLastMonth && d < firstOfThisMonth; });
   const activeSubs = allSubs.filter(s => s.status === 'active' || s.status === 'trial').length;
   const subRevenue = newSubs.reduce((sum, s) => sum + (s.price || 0), 0);
 
   const allReviews = await base44.asServiceRole.entities.Review.list('-created_date', 200);
-  const monthReviews = allReviews.filter(r => {
-    if (!r.created_date) return false;
-    const d = new Date(r.created_date);
-    return d >= firstOfLastMonth && d < firstOfThisMonth;
-  });
-  const avgRating = monthReviews.length > 0
-    ? (monthReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / monthReviews.length).toFixed(2)
-    : 'N/A';
+  const monthReviews = allReviews.filter(r => { const d = new Date(r.created_date); return d >= firstOfLastMonth && d < firstOfThisMonth; });
+  const avgRating = monthReviews.length > 0 ? (monthReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / monthReviews.length).toFixed(2) : 'N/A';
 
   const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }, '-created_date', 10);
 
+  const monthLabel = lastMonthName.charAt(0).toUpperCase() + lastMonthName.slice(1);
+
   const html = buildEmailHtml({
-    title: `Rapport mensuel — ${lastMonthName.charAt(0).toUpperCase() + lastMonthName.slice(1)}`,
+    title: `Rapport mensuel — ${monthLabel}`,
     body: `
-      <p>Voici le récapitulatif des performances ServiGo pour le mois de <strong>${lastMonthName}</strong>.</p>
+      <p>Voici le récapitulatif des performances ServiGo pour <strong>${lastMonthName}</strong>.</p>
 
-      <div style="background:#F7F7F7;border-radius:10px;padding:18px 22px;margin:24px 0;border-left:3px solid #0F0F0F;">
-        <p style="margin:0 0 10px;font-weight:700;font-size:13px;color:#0F0F0F;text-transform:uppercase;letter-spacing:0.5px;">Missions</p>
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Total demandes</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${total}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Complétées</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${completed} (${completionRate}%)</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">En cours</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${inProgress}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Annulées</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${cancelled}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Litiges</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${disputed}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Urgentes (SOS)</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${urgent}</td></tr>
-        </table>
-      </div>
+      ${infoBlock('Missions', `<table width="100%" cellpadding="0" cellspacing="0">
+        ${statRow('Total demandes', total)}
+        ${statRow('Complétées', `${completed} (${completionRate}%)`)}
+        ${statRow('En cours', inProgress)}
+        ${statRow('Annulées', cancelled)}
+        ${statRow('Litiges', disputed)}
+        ${statRow('Urgentes (SOS)', urgent)}
+      </table>`)}
 
-      <div style="background:#F7F7F7;border-radius:10px;padding:18px 22px;margin:16px 0;border-left:3px solid #0F0F0F;">
-        <p style="margin:0 0 10px;font-weight:700;font-size:13px;color:#0F0F0F;text-transform:uppercase;letter-spacing:0.5px;">Chiffre d'affaires</p>
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">CA missions complétées</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${totalRevenue.toFixed(2)} €</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Panier moyen</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${avgRevenue} €</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Revenus abonnements</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${subRevenue.toFixed(2)} €</td></tr>
-        </table>
-      </div>
+      ${infoBlock('Chiffre d\'affaires', `<table width="100%" cellpadding="0" cellspacing="0">
+        ${statRow('CA missions complétées', `${totalRevenue.toFixed(2)} €`)}
+        ${statRow('Panier moyen', `${avgRevenue} €`)}
+        ${statRow('Revenus abonnements', `${subRevenue.toFixed(2)} €`)}
+      </table>`)}
 
-      <div style="background:#F7F7F7;border-radius:10px;padding:18px 22px;margin:16px 0;border-left:3px solid #0F0F0F;">
-        <p style="margin:0 0 10px;font-weight:700;font-size:13px;color:#0F0F0F;text-transform:uppercase;letter-spacing:0.5px;">Utilisateurs & satisfaction</p>
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Clients actifs</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${uniqueClients}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Pros ayant répondu</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${uniquePros}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Abonnements actifs</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${activeSubs}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Nouveaux abonnements</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${newSubs.length}</td></tr>
-          <tr><td style="font-size:14px;color:#3D3D3D;padding:3px 0;">Note moyenne</td><td style="font-size:14px;font-weight:700;color:#0F0F0F;text-align:right;">${avgRating}/5 (${monthReviews.length} avis)</td></tr>
-        </table>
-      </div>
+      ${infoBlock('Utilisateurs & satisfaction', `<table width="100%" cellpadding="0" cellspacing="0">
+        ${statRow('Clients actifs', uniqueClients)}
+        ${statRow('Pros actifs', uniquePros)}
+        ${statRow('Abonnements actifs', activeSubs)}
+        ${statRow('Nouveaux abonnements', newSubs.length)}
+        ${statRow('Note moyenne', `${avgRating}/5 (${monthReviews.length} avis)`)}
+      </table>`)}
 
-      ${topCategoriesHtml ? `
-      <div style="background:#F7F7F7;border-radius:10px;padding:18px 22px;margin:16px 0;border-left:3px solid #0F0F0F;">
-        <p style="margin:0 0 10px;font-weight:700;font-size:13px;color:#0F0F0F;text-transform:uppercase;letter-spacing:0.5px;">Top catégories</p>
-        <ol style="margin:0;padding-left:18px;font-size:14px;color:#3D3D3D;line-height:1.8;">${topCategoriesHtml}</ol>
-      </div>` : ''}
+      ${topCategoriesHtml ? infoBlock('Top catégories', `<ol style="margin:0;padding-left:18px;line-height:1.8;">${topCategoriesHtml}</ol>`) : ''}
 
-      <p style="margin-top:28px;font-size:12px;color:#8C8C8C;">Rapport généré automatiquement le ${now.toLocaleString('fr-FR')}</p>
+      <p style="margin-top:28px;font-size:12px;color:#AAAAAA;">Rapport généré le ${now.toLocaleString('fr-FR')}</p>
     `,
     ctaText: 'Voir le tableau de bord',
     ctaUrl: 'https://servigo.be/AdminDashboard',
